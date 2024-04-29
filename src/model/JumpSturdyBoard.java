@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class JumpSturdyBoard {
     private static final int EMPTY = 0;
-    private static final int CORNER = 9;
+    private static final int CORNER = 9; // -1
     private static final int RED_ON_RED = 1;  // 'A'
     private static final int RED_ON_BLUE = 2; // 'B'
     private static final int BLUE_ON_BLUE = 3; // 'C'
@@ -21,7 +21,6 @@ public class JumpSturdyBoard {
             {"br", "B"}//Red on blue
     };
     private int[][] board = new int[8][8];
-    ;
 
 
     public JumpSturdyBoard() {
@@ -38,11 +37,7 @@ public class JumpSturdyBoard {
     }
 
     public String boardToFen() {
-
-
         StringBuilder fenBuilder = new StringBuilder();
-
-
         for (int row = 0; row < board.length; row++) {
             if (row > 0) {
                 fenBuilder.append('/');
@@ -50,14 +45,14 @@ public class JumpSturdyBoard {
             int emptyCount = 0;
             for (int col = 0; col < board[row].length; col++) {
                 int piece = board[row][col];
-                if (piece == EMPTY) {
+                if (piece == EMPTY) { // For the number of empty
                     emptyCount++;
                 } else {
                     if (emptyCount > 0) {
                         fenBuilder.append(emptyCount);
                         emptyCount = 0;
                     }
-                    fenBuilder.append(getFenCharacter(piece));
+                    fenBuilder.append(getFenCharacter(piece)); // Just add the character
                 }
             }
             if (emptyCount > 0) {
@@ -65,11 +60,11 @@ public class JumpSturdyBoard {
             }
         }
         String fen = fenBuilder.toString();
-        for (String[] mapping : TEMP_MAPPINGS) {
+        for (String[] mapping : TEMP_MAPPINGS) { // Put in the normal characters instead of mappings again e.g. X to r0
             fen = fen.replace(mapping[1], mapping[0]);
         }
 
-        return fen.replace(".", "");//Finally, remove all .dots
+        return fen.replace(".", "");//Finally, remove all .dots (empty space)
     }
 
     private char getFenCharacter(int piece) {
@@ -87,7 +82,7 @@ public class JumpSturdyBoard {
             case BLUE:
                 return 'Y';
             default:
-                return '.'; // Handle empty spaces as 0 which is an empty char (as int)
+                return '.'; // Handle empty spaces as . because char cant be empty
         }
     }
 
@@ -104,7 +99,7 @@ public class JumpSturdyBoard {
         board[7] = new int[6];
 
         int row = 0, col = 0;
-        fen = cleanFen(fen);
+        fen = cleanFen(fen); // Clean/Map Fen to make it easier
 
         for (int i = 0; i < fen.length(); i++) {
             char c = fen.charAt(i);
@@ -126,15 +121,12 @@ public class JumpSturdyBoard {
     }
 
     public static int[] surroundArray(int[] original) {
-        // Create a new array that is two elements larger than the original
         int[] newArray = new int[original.length + 2];
         // Set the first and last elements to -1
         newArray[0] = CORNER;
         newArray[newArray.length - 1] = CORNER;
-
         // Copy the original array into the new array starting at index 1
         System.arraycopy(original, 0, newArray, 1, original.length);
-
         return newArray;
     }
 
@@ -161,10 +153,7 @@ public class JumpSturdyBoard {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(Arrays.deepToString(board));
-        sb.append("\nFEN: ").append(boardToFen()).append("\n");
-        return sb.toString();
+        return Arrays.deepToString(board) + "\nFEN: " + boardToFen() + "\n";
     }
 
     public void printBoard() {
