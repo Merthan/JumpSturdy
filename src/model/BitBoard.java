@@ -3,6 +3,8 @@ package model;
 import static model.JumpSturdyBoard.*;
 
 public class BitBoard {
+
+    public boolean redsTurn = true;
     private static final int BOARD_WIDTH = 8;
     private static final int BOARD_HEIGHT = 8;
     private static final long CORNER_MASK = ~(1L | (1L << 7) | (1L << 56) | (1L << 63));
@@ -138,8 +140,8 @@ public class BitBoard {
         ownDoubles &= ~(1L << fromIndex);
 
         // Determine the bottom type of the double
-        boolean bottomIsEnemy = (enemyOnOwn & (1L << fromIndex)) != 0;
-
+        boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
+        System.out.println("bt"+bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
             // Landing on own single, turn it into own double
@@ -194,7 +196,7 @@ public class BitBoard {
         //commentedBits("Empty:",emptySpaces);
         //commentedBits("Cornermask",CORNER_MASK);
         //commentedBits("not_a",NOT_A_FILE);
-        commentedBits("Enemy:",enemyPieces);
+        //commentedBits("Enemy:",enemyPieces);
         //commentedBits("Own:",singles);
 
         long emptyOrSingleDoubleable = (emptySpaces| (isRed?redSingles:blueSingles));
@@ -232,6 +234,41 @@ public class BitBoard {
         }
 
         return possibleMoves;
+    }
+
+    public static long positionToIndex(String position) {
+        // Extract the column (file) and row from the position
+        char letter = position.charAt(0); // 'F'
+        char number = position.charAt(1); // '3'// 'F' - 'A' = 5// '3' - '1' = 2
+
+        // Calculate the index for a 0-based array (bottom-left is 0,0)
+        return (7 - (number - '1')) * 8 + (letter - 'A'); // Convert to 0-based index for an 8x8 board
+    }
+
+    public static String indexToPosition(long index) {
+        int fileIndex = (int) (index % 8); // Calculate file index (column)
+        int rankIndex = (int) (index / 8); // Calculate rank index (row)
+        char file = (char) ('A' + fileIndex); // Convert file index to letter (A-H)
+        char rank = (char) ('1' + (7 - rankIndex)); // Convert rank index to number (1-8), adjusting for 0-based index
+        return "" + file + rank; // Concatenate to form the position string
+    }
+
+    // Method to parse a move like "F3-F4" and return fromIndex and toIndex
+    public static long[] parseMove(String move) {
+        // Split the move into the from and to parts
+        String[] parts = move.split("-");
+        // Convert each part to an index
+        long fromIndex = positionToIndex(parts[0]);
+        long toIndex = positionToIndex(parts[1]);
+        // Return the indices as an array
+        return new long[] {fromIndex, toIndex};
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+        String move = "A8-H1";
+        long[] indices = parseMove(move);
+        System.out.println("From Index: " + indices[0] + ", To Index: " + indices[1]);
     }
 
 
