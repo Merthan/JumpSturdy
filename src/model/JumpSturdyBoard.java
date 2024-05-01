@@ -68,23 +68,30 @@ public class JumpSturdyBoard {
     }
 
     private char getFenCharacter(int piece) {
-        switch (piece) {
-            case RED_ON_RED:
-                return 'A';
-            case RED_ON_BLUE:
-                return 'B';
-            case BLUE_ON_BLUE:
-                return 'C';
-            case BLUE_ON_RED:
-                return 'D';
-            case RED:
-                return 'X';
-            case BLUE:
-                return 'Y';
-            default:
-                return '.'; // Handle empty spaces as . because char cant be empty
-        }
+        return switch (piece) {
+            case RED_ON_RED -> 'A';
+            case RED_ON_BLUE -> 'B';
+            case BLUE_ON_BLUE -> 'C';
+            case BLUE_ON_RED -> 'D';
+            case RED -> 'X';
+            case BLUE -> 'Y';
+            default -> '.'; // Handle empty spaces as . because char cant be empty
+        };
     }
+
+    public static int[] coordinatesFromMove(String move){
+        String[] moveFromTo = move.split("-");//Divide
+        int[] first = coordinatesForSinglePosition(moveFromTo[0]);
+        int[] second = coordinatesForSinglePosition(moveFromTo[1]);
+        return new int[]{first[0],first[1],second[0],second[1]}; // First two are the original, next two are the future
+    }
+
+    public static int[] coordinatesForSinglePosition(String position){ //Corners not handled yet, perhaps throw
+        char letter = position.charAt(0);
+        char number = position.charAt(1);
+        return new int[]{ 8-Character.getNumericValue(number)  , (letter-'A') };//8- because started from top, -'A' so B has value 1, G is 6 etc
+    }
+
 
     private String cleanFen(String fen) {// Makes FEN easier to read using mappings that occupy 1 character
         for (String[] mapping : TEMP_MAPPINGS) {
@@ -131,22 +138,15 @@ public class JumpSturdyBoard {
     }
 
     private int getPieceValue(char c) {
-        switch (c) {
-            case 'A':
-                return RED_ON_RED;
-            case 'B':
-                return RED_ON_BLUE;
-            case 'C':
-                return BLUE_ON_BLUE;
-            case 'D':
-                return BLUE_ON_RED;
-            case 'X':
-                return RED;
-            case 'Y':
-                return BLUE;
-            default:
-                return EMPTY; // Default case handles unexpected characters
-        }
+        return switch (c) {
+            case 'A' -> RED_ON_RED;
+            case 'B' -> RED_ON_BLUE;
+            case 'C' -> BLUE_ON_BLUE;
+            case 'D' -> BLUE_ON_RED;
+            case 'X' -> RED;
+            case 'Y' -> BLUE;
+            default -> EMPTY; // Default case handles unexpected characters
+        };
     }
 
 
