@@ -3,14 +3,14 @@ package model;
 import java.util.Arrays;
 
 public class JumpSturdyBoard {
-    private static final int EMPTY = 0;
-    private static final int CORNER = 9; // -1
-    private static final int RED_ON_RED = 1;  // 'A'
-    private static final int RED_ON_BLUE = 2; // 'B'
-    private static final int BLUE_ON_BLUE = 3; // 'C'
-    private static final int BLUE_ON_RED = 4;  // 'D'
-    private static final int RED = 5;          // 'X'
-    private static final int BLUE = 6;         // 'Y'
+    static final int EMPTY = 0;
+    static final int CORNER = 9; // -1
+    static final int RED_ON_RED = 1;  // 'A'
+    static final int RED_ON_BLUE = 2; // 'B'
+    static final int BLUE_ON_BLUE = 3; // 'C'
+    static final int BLUE_ON_RED = 4;  // 'D'
+    static final int RED = 5;          // 'X'
+    static final int BLUE = 6;         // 'Y'
 
     private static final String[][] TEMP_MAPPINGS = {
             {"r0", "X"},
@@ -20,7 +20,7 @@ public class JumpSturdyBoard {
             {"bb", "C"},
             {"br", "B"}//Red on blue
     };
-    private int[][] board = new int[8][8];
+    public int[][] board = new int[8][8];
 
 
     public JumpSturdyBoard() {
@@ -63,7 +63,6 @@ public class JumpSturdyBoard {
         for (String[] mapping : TEMP_MAPPINGS) { // Put in the normal characters instead of mappings again e.g. X to r0
             fen = fen.replace(mapping[1], mapping[0]);
         }
-
         return fen.replace(".", "");//Finally, remove all .dots (empty space)
     }
 
@@ -148,6 +147,87 @@ public class JumpSturdyBoard {
             default -> EMPTY; // Default case handles unexpected characters
         };
     }
+
+
+    public boolean movePiece(int startX, int startY, int endX, int endY) {
+        if (!isValidPosition(endX, endY) || board[startX][startY] == EMPTY) return false;
+
+        int piece = board[startX][startY];
+        int targetPiece = board[endX][endY];
+
+        boolean isValidMove = (isSinglePiece(piece) && handleSinglePieceMove(piece, startX, startY, endX, endY, targetPiece)) ||
+                (isDoublePiece(piece) && handleKnightMove(startX, startY, endX, endY));
+
+        if (isValidMove) {
+            executeMove(startX, startY, endX, endY, piece, targetPiece);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleSinglePieceMove(int piece, int startX, int startY, int endX, int endY, int targetPiece) {
+        // Allow movement into an empty space or capture if the target is an enemy's single piece
+        int direction = piece == RED? 1:-1;//Down or up
+        //Same X, either up or down 1, empty or own (single) to create a double
+        return ((startX == endX && (endY-startY == direction)) && targetPiece == EMPTY||targetPiece==piece) ||
+                //diagonal, forward and one to side when piece is enemy
+                (Math.abs(startX - endX) == 1 && (endY-startY == direction) && isEnemy(piece, targetPiece));
+    }
+
+    private boolean handleKnightMove(int startX, int startY, int endX, int endY) {
+        // Knight-like move validation
+        return (Math.abs(startX - endX) == 2 && Math.abs(startY - endY) == 1) ||
+                (Math.abs(startX - endX) == 1 && Math.abs(startY - endY) == 2);
+    }
+
+    private void executeMove(int startX, int startY, int endX, int endY, int piece, int targetPiece) {
+        int newPiece = determineNewPiece(piece, targetPiece);
+        board[endX][endY] = newPiece;
+        board[startX][startY] = isDoublePiece(piece) ? getBottomPiece(piece) : EMPTY;
+    }
+
+    private int determineNewPiece(int movingPiece, int targetPiece) {
+        if (targetPiece == EMPTY) return movingPiece;
+        if (isSinglePiece(targetPiece)) return createDoublePiece(movingPiece, targetPiece);
+        return movingPiece; // Capture only the top piece if the target is a double
+    }
+
+    private int createDoublePiece(int topPiece, int bottomPiece) {
+        // Logic to create a new double piece based on the types of the top and bottom pieces
+        return switch (topPiece) {
+            case RED -> (bottomPiece == RED) ? RED_ON_RED : RED_ON_BLUE;
+            case BLUE -> (bottomPiece == BLUE) ? BLUE_ON_BLUE : BLUE_ON_RED;
+            default -> topPiece;
+        };
+    }
+
+    private boolean isEnemy(int piece, int targetPiece) {
+        // Simplified checking for enemy pieces
+        return (piece == RED && (targetPiece == BLUE || targetPiece == BLUE_ON_BLUE || targetPiece == BLUE_ON_RED)) ||
+                (piece == BLUE && (targetPiece == RED || targetPiece == RED_ON_RED || targetPiece == RED_ON_BLUE));
+    }
+
+    private boolean isValidPosition(int x, int y) {
+        return x >= 0 && x < board.length && y >= 0 && y < board[0].length && board[x][y] != CORNER;
+    }
+
+    private boolean isSinglePiece(int piece) {
+        return piece == RED || piece == BLUE;
+    }
+
+    private boolean isDoublePiece(int piece) {
+        return piece == RED_ON_RED || piece == RED_ON_BLUE || piece == BLUE_ON_BLUE || piece == BLUE_ON_RED;
+    }
+
+    private int getBottomPiece(int doublePiece) {
+        // Return the bottom piece of a double
+        return switch (doublePiece) {
+            case RED_ON_RED, RED_ON_BLUE -> RED;
+            case BLUE_ON_BLUE, BLUE_ON_RED -> BLUE;
+            default -> EMPTY;
+        };
+    }
+
 
 
 
