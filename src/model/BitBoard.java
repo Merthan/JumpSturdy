@@ -43,8 +43,8 @@ public class BitBoard {
         // Doubles are initially empty
         redDoubles = 0L;
         blueDoubles = 0L;
-        red_on_blue=0L;
-        blue_on_red=0L;
+        red_on_blue = 0L;
+        blue_on_red = 0L;
     }
 
     // Method to read a 2D array and convert it into a bitboard
@@ -79,17 +79,43 @@ public class BitBoard {
             }
         }
     }
-    public boolean checkWinCondition(long redPieces, long bluePieces) {
+
+    public char checkWinCondition(long redPieces, long bluePieces) {
         // Define masks for the top and bottom rows
         long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
         long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
 
-        // Check if any blue piece is in the top row or any red piece is in the bottom row
-        if ((bluePieces & topRowMask) != 0 || (redPieces & bottomRowMask) != 0) {
-            return true;
+        // Check if any blue piece is in the top row
+        if ((bluePieces & topRowMask) != 0) {
+            return 'b';
         }
-        return false;
+        // Check if any red piece is in the bottom row
+        else if ((redPieces & bottomRowMask) != 0) {
+            return 'r';
+        }
+        // Check if there are any red pieces on the field, if no -> blue wins
+        else if (Long.bitCount(redPieces) == 0) {
+            return 'b';
+        }
+        // Chef if there are any blue pieces on the field, if no -> red wins
+        else if (Long.bitCount(bluePieces) == 0) {
+            return 'r';
+        }
+        // Check if there are any possible moves for blue
+        else if (Long.bitCount(getMovesForTeam(false)) == 0){
+            // Check if there are any possible moves for red, if no -> draw
+            if(Long.bitCount(getMovesForTeam(true)) == 0) return 'd';
+            else return 'r';
+        }
+        // Check if there are any possible moves for red
+        else if(Long.bitCount(getMovesForTeam(true)) == 0){
+            // Check if there are any possible moves for blue, if no -> draw
+            if(Long.bitCount(getMovesForTeam(false)) == 0) return 'd';
+            else return 'b';
+        }
+        return 'f';
     }
+
 
     public void moveSinglePiece(long fromIndex, long toIndex, boolean isRed) {
         long ownSingles = isRed ? redSingles : blueSingles;
@@ -128,6 +154,7 @@ public class BitBoard {
         red_on_blue = isRed ? ownOnEnemy : enemyOnOwn;
         blue_on_red = isRed ? enemyOnOwn : ownOnEnemy;
     }
+
     public void moveDoublePiece(long fromIndex, long toIndex, boolean isRed) {
         long ownDoubles = isRed ? redDoubles : blueDoubles;
         long ownSingles = isRed ? redSingles : blueSingles;
@@ -141,7 +168,7 @@ public class BitBoard {
 
         // Determine the bottom type of the double
         boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
-        System.out.println("bt"+bottomIsEnemy);
+        System.out.println("bt" + bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
             // Landing on own single, turn it into own double
@@ -155,11 +182,11 @@ public class BitBoard {
             // Landing on enemy_on_own, turn it into own double
             ownOnEnemy |= (1L << toIndex);
             enemyDoubles &= ~(1L << toIndex);
-        } else if((enemySingles & (1L << toIndex)) != 0){
+        } else if ((enemySingles & (1L << toIndex)) != 0) {
             // Regular move to empty space, place the top of the double as a single
             ownSingles |= (1L << toIndex);
             enemySingles &= ~(1L << toIndex);
-        }else {//TODO: hope all cases are covered and nothing forgotten
+        } else {//TODO: hope all cases are covered and nothing forgotten
             ownSingles |= (1L << toIndex);
         }
 
@@ -172,7 +199,7 @@ public class BitBoard {
 
         // Update the state using ternary operators
         redDoubles = isRed ? ownDoubles : enemyDoubles;
-        blueDoubles = isRed ? enemyDoubles: ownDoubles;
+        blueDoubles = isRed ? enemyDoubles : ownDoubles;
         redSingles = isRed ? ownSingles : enemySingles;
         blueSingles = isRed ? enemySingles : ownSingles;
         blue_on_red = isRed ? enemyOnOwn : ownOnEnemy;
@@ -180,18 +207,18 @@ public class BitBoard {
     }
 
 
-    public long getMovesForTeam(boolean red){
-        if(red){
-            return getPossibleMovesSingles(redSingles,true)|getPossibleMovesDoubles(redDoubles|red_on_blue,true);
-        }else {
-            return getPossibleMovesSingles(blueSingles,false)|getPossibleMovesDoubles(blueDoubles|blue_on_red,false);
+    public long getMovesForTeam(boolean red) {
+        if (red) {
+            return getPossibleMovesSingles(redSingles, true) | getPossibleMovesDoubles(redDoubles | red_on_blue, true);
+        } else {
+            return getPossibleMovesSingles(blueSingles, false) | getPossibleMovesDoubles(blueDoubles | blue_on_red, false);
         }
     }
 
     public long getPossibleMovesSingles(long singles, boolean isRed) {
         int direction = isRed ? RED_DIRECTION : BLUE_DIRECTION;
         long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
-        long enemyPieces = isRed ? (blue_on_red|blueDoubles|blueSingles) : (redSingles|redDoubles|red_on_blue); // Enemy single figures
+        long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
 
         //commentedBits("Empty:",emptySpaces);
         //commentedBits("Cornermask",CORNER_MASK);
@@ -199,7 +226,7 @@ public class BitBoard {
         //commentedBits("Enemy:",enemyPieces);
         //commentedBits("Own:",singles);
 
-        long emptyOrSingleDoubleable = (emptySpaces| (isRed?redSingles:blueSingles));
+        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles));
         // Forward moves (no capture)
         long forwardMoves = shift(singles, direction) & emptyOrSingleDoubleable;//Removes all occupied spaces, TODO maybe readd doubleGenesis
         //commentedBits("Fwd:",forwardMoves);
@@ -215,7 +242,7 @@ public class BitBoard {
     }
 
     public long getPossibleMovesDoubles(long doubles, boolean isRed) {
-        int[] moves ={ 17, 15, 10, 6 };// Precalculated, negative for other direction,
+        int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
 
         // All occupied spaces
         long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
@@ -226,9 +253,9 @@ public class BitBoard {
 
         // Calculate moves
         long possibleMoves = 0L;
-        for (int i=0;i<moves.length;i++) {
+        for (int i = 0; i < moves.length; i++) {
             long moveTargets;
-            int move = isRed?moves[i]:-moves[i]; //Negative
+            int move = isRed ? moves[i] : -moves[i]; //Negative
             moveTargets = shift(doubles, move) & (emptySpaces | jumpableSpaces); // Shift right or down
             possibleMoves |= moveTargets;
         }
@@ -261,7 +288,7 @@ public class BitBoard {
         long fromIndex = positionToIndex(parts[0]);
         long toIndex = positionToIndex(parts[1]);
         // Return the indices as an array
-        return new long[] {fromIndex, toIndex};
+        return new long[]{fromIndex, toIndex};
     }
 
     public static void main(String[] args) {
@@ -274,7 +301,7 @@ public class BitBoard {
 
     // Utility method to shift bitboards for movement
     private long shift(long bitboard, int offset) {
-        return offset > 0 ? (bitboard << offset &CORNER_MASK) : (bitboard >>> -offset &CORNER_MASK);
+        return offset > 0 ? (bitboard << offset & CORNER_MASK) : (bitboard >>> -offset & CORNER_MASK);
     }
 
     public void displayBitboard(long bitboard) {
@@ -323,9 +350,8 @@ public class BitBoard {
         return sb.toString();
     }
 
-    public void commentedBits(String comment, long bits){
+    public void commentedBits(String comment, long bits) {
         System.out.println(comment);
         displayBitboard(bits);
     }
-
 }

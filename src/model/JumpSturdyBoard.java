@@ -107,7 +107,7 @@ public class JumpSturdyBoard {
         int row = 0, col = 0;
         fen = cleanFen(fen); // Clean/Map Fen to make it easier
 
-        for (int i = 0; i < fen.length(); i++) {
+        for (int i = fen.length()-1; i >= 0 ; i--) {
             char c = fen.charAt(i);
             if (c == '/') {
                 row++;
