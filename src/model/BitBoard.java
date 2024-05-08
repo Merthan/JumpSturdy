@@ -1,7 +1,6 @@
 package model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static model.JumpSturdyBoard.*;
 
@@ -244,6 +243,7 @@ public class BitBoard {
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
     }
 
+    // Return all possible moves as String List
     public List<String> getPossibleMovesSinglesString(long singles, boolean isRed) {
         int direction = isRed ? RED_DIRECTION : BLUE_DIRECTION;
         long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
@@ -278,9 +278,10 @@ public class BitBoard {
             }
         }
 
-        return possibleMoves;
+        return cleanCorners(possibleMoves);
     }
 
+    // Translate Bitboards to Strings
     public String getMoveString(int srcIndex, int destIndex) {
         int srcRank = 8 - (srcIndex / 8);
         int srcFile = (srcIndex % 8) + 1;
@@ -292,6 +293,21 @@ public class BitBoard {
 
         return "" + srcFileChar + srcRank + "-" + destFileChar + destRank;
     }
+
+    public static List<String> cleanCorners(List<String> toRemove){
+        Iterator<String> iterator = toRemove.iterator();
+        while (iterator.hasNext()) {
+            String string = iterator.next();
+            if ((string.charAt(3) == 'A' && (string.charAt(4) == '1')) ||
+                (string.charAt(3) == 'A' && (string.charAt(4) == '8')) ||
+                (string.charAt(3) == 'H' && (string.charAt(4) == '1')) ||
+                (string.charAt(3) == 'H' && (string.charAt(4) == '8'))) {
+                iterator.remove();
+            }
+        }
+        return toRemove;
+    }
+    
 
 
     public long getPossibleMovesDoubles(long doubles, boolean isRed) {
@@ -315,6 +331,40 @@ public class BitBoard {
 
         return possibleMoves;
     }
+
+
+    public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed) {
+    int[] moves = {17, 15, 10, 6}; // Precalculated, negative for other direction
+
+    // All occupied spaces
+    long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
+    long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
+    long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
+
+    // Calculate moves
+    long possibleMoves = 0L;
+    for (int i = 0; i < moves.length; i++) {
+        long moveTargets;
+        int move = isRed ? moves[i] : -moves[i]; // Negative
+        moveTargets = shift(doubles, move) & (emptySpaces | jumpableSpaces); // Shift right or down
+        possibleMoves |= moveTargets;
+    }
+
+    List<String> possibleMovesStrings = new ArrayList<>();
+    
+    // Convert each set bit index to a source and destination square string
+    for (int i = 0; i < 64; i++) {
+        long mask = 1L << i;
+        if ((possibleMoves & mask) != 0) {
+            possibleMovesStrings.add(getMoveString(i, i + moves[0])); // Add move as string
+            possibleMovesStrings.add(getMoveString(i, i + moves[1])); // Add move as string
+            possibleMovesStrings.add(getMoveString(i, i + moves[2])); // Add move as string
+            possibleMovesStrings.add(getMoveString(i, i + moves[3])); // Add move as string
+        }
+    }
+    
+    return cleanCorners(possibleMovesStrings);
+}
 
     public static long positionToIndex(String position) {
         // Extract the column (file) and row from the position
