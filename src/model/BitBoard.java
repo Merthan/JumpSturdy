@@ -1,5 +1,8 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static model.JumpSturdyBoard.*;
 
 public class BitBoard {
@@ -241,6 +244,56 @@ public class BitBoard {
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
     }
 
+    public List<String> getPossibleMovesSinglesString(long singles, boolean isRed) {
+        int direction = isRed ? RED_DIRECTION : BLUE_DIRECTION;
+        long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
+        long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
+
+        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles));
+        long forwardMoves = shift(singles, direction) & emptyOrSingleDoubleable;
+        long leftMoves = shift(singles & NOT_A_FILE, -1) & emptyOrSingleDoubleable;
+        long rightMoves = shift(singles & NOT_H_FILE, 1) & emptyOrSingleDoubleable;
+        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces;
+        long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
+
+        List<String> possibleMoves = new ArrayList<>();
+
+        // Convert each set bit index to a source and destination square string
+        for (int i = 0; i < 64; i++) {
+            long mask = 1L << i;
+            if ((forwardMoves & mask) != 0) {
+                possibleMoves.add(getMoveString(i, i + direction));
+            }
+            if ((leftMoves & mask) != 0) {
+                possibleMoves.add(getMoveString(i, i - 1));
+            }
+            if ((rightMoves & mask) != 0) {
+                possibleMoves.add(getMoveString(i, i + 1));
+            }
+            if ((leftCapture & mask) != 0) {
+                possibleMoves.add(getMoveString(i, i + direction - 1));
+            }
+            if ((rightCapture & mask) != 0) {
+                possibleMoves.add(getMoveString(i, i + direction + 1));
+            }
+        }
+
+        return possibleMoves;
+    }
+
+    public String getMoveString(int srcIndex, int destIndex) {
+        int srcRank = 8 - (srcIndex / 8);
+        int srcFile = (srcIndex % 8) + 1;
+        int destRank = 8 - (destIndex / 8);
+        int destFile = (destIndex % 8) + 1;
+
+        char srcFileChar = (char) ('A' + srcFile - 1);
+        char destFileChar = (char) ('A' + destFile - 1);
+
+        return "" + srcFileChar + srcRank + "-" + destFileChar + destRank;
+    }
+
+
     public long getPossibleMovesDoubles(long doubles, boolean isRed) {
         int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
 
@@ -353,5 +406,23 @@ public class BitBoard {
     public void commentedBits(String comment, long bits) {
         System.out.println(comment);
         displayBitboard(bits);
+    }
+
+    public static List<String> getSetBitPositions(long bitboard) {
+        List<String> positions = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            long mask = 1L << i;
+            if ((bitboard & mask) != 0) {
+                positions.add(getPositionFromIndex(i));
+            }
+        }
+        return positions;
+    }
+
+    public static String getPositionFromIndex(int index) {
+        int row = 8 - (index / 8);
+        int column = (index % 8) + 1;
+        char file = (char) ('A' + column - 1);
+        return "" + file + row;
     }
 }

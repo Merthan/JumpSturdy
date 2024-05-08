@@ -1,21 +1,16 @@
 import model.BitBoard;
 import model.JumpSturdyBoard;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-
-import static model.BitBoard.indexToPosition;
-import static model.BitBoard.positionToIndex;
 
 public class Main {
 
     private static Random random = new Random();
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "6/8/6rr1/7r0/8/2r0r04/2r01r0r0r01/r0r0r0r0r0r0"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0rrr0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "6/8/6rr1/7r0/8/2r0r04/2r01r0r0r01/r0r0r0r0r0r0"};
         //{"r0r0r0r0r0r0/1r0r0r0r0r0r01/8/8/8/8/1b0b0b0b0b0b01/b0b0b0b0b0b0","2rr3/5r02/1rr1rr2r0r0/2rb3b01/2r0b04/5b0bb1/2bb2b02/3b02"};
 
-        String fen = fens[2];
+        String fen = fens[0];
 
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard b = new BitBoard();
@@ -24,13 +19,27 @@ public class Main {
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,true));
         //b.displayBitboard(b.getPossibleMovesDoubles(b.blueDoubles,false));
         //System.out.println(b.checkWinCondition(b.redSingles, b.blueSingles));
-        System.out.println(b.getMovesForTeam(true));
+       // System.out.println(b.getMovesForTeam(true));
         b.displayBitboard(b.getMovesForTeam(true));
 
 
 
         //System.out.println("DISPLAYall");
-        //b.displayBitboard(b.redSingles);
+        b.displayBitboard(b.redSingles);
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println( b.getSetBitPositions(b.redDoubles) ) ;
+        System.out.println( b.getSetBitPositions(b.redSingles) ) ;
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println( b.getSetBitPositions(b.getMovesForTeam(true)) ) ;
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println( b.getPossibleMovesSinglesString(b.redSingles,true) ) ;
+
         //b.displayBitboard(b.redSingles | b.blueSingles | b.redDoubles |b.blueDoubles | b.red_on_blue | b.blue_on_red);
         //System.out.println(b);
         //long[] move = BitBoard.parseMove("F7-F6");
