@@ -244,57 +244,8 @@ public class BitBoard {
         //System.out.println("Possible moves:");
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
     }
-
-    // Return all possible moves as String List
-    public List<String> getPossibleMovesSinglesString(long singles, boolean isRed) {
-        int direction = isRed ? RED_DIRECTION : BLUE_DIRECTION;
-        long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
-        long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
-
-        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles));
-        long forwardMoves = shift(singles, direction) & emptyOrSingleDoubleable;
-        long leftMoves = shift(singles & NOT_A_FILE, -1) & emptyOrSingleDoubleable;
-        long rightMoves = shift(singles & NOT_H_FILE, 1) & emptyOrSingleDoubleable;
-        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces;
-        long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
-
-        List<String> possibleMoves = new ArrayList<>();
-
-        // Convert each set bit index to a source and destination square string
-        
-
-        return cleanCorners(possibleMoves);
-    }
-
-    // Translate Bitboards to Strings
-    /*public String getMoveString(int srcIndex, int destIndex) {
-        int srcRank = 8 - (srcIndex / 8);
-        int srcFile = (srcIndex % 8) + 1;
-        int destRank = 8 - (destIndex / 8);
-        int destFile = (destIndex % 8) + 1;
-
-        char srcFileChar = (char) ('A' + srcFile - 1);
-        char destFileChar = (char) ('A' + destFile - 1);
-
-        return "" + srcFileChar + srcRank + "-" + destFileChar + destRank;
-    }*/
-
-    public static List<String> cleanCorners(List<String> toRemove){
-        Iterator<String> iterator = toRemove.iterator();
-        while (iterator.hasNext()) {
-            String string = iterator.next();
-            if ((string.charAt(3) == 'A' && (string.charAt(4) == '1')) ||
-                (string.charAt(3) == 'A' && (string.charAt(4) == '8')) ||
-                (string.charAt(3) == 'H' && (string.charAt(4) == '1')) ||
-                (string.charAt(3) == 'H' && (string.charAt(4) == '8'))) {
-                iterator.remove();
-            }
-        }
-        return toRemove;
-    }
     
-
-
+    //Die Version von @Merthan
    /*public long getPossibleMovesDoubles(long doubles, boolean isRed) {
         int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
 
@@ -317,6 +268,7 @@ public class BitBoard {
         return possibleMoves;
     }*/
 
+
     public long getPossibleMovesDoubles(long doubles, boolean isRed){
         int[] moves = {17, 15, 10, 6};
 
@@ -324,12 +276,9 @@ public class BitBoard {
         long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
         long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
 
-        //long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
-        //long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
-
         long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
 
-        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture
+        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
         long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
         long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & emptyOrSingleDoubleable;
 
@@ -337,70 +286,80 @@ public class BitBoard {
         long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & emptyOrSingleDoubleable;
 
         return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
-
     }
 
-    public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed){
-        int[] moves = {17, 15, 10, 6};
 
-        // All occupied spaces
-        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
-        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
-
-        //long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
-        //long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
-
-        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
-
-        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture
-        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & emptyOrSingleDoubleable;
-        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
-
-        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & emptyOrSingleDoubleable;
-        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & emptyOrSingleDoubleable;
-
-
-        List<String> possibleMoves = new ArrayList<>();
-
-        // Convert each set bit index to a source and destination square string
+    /**
+    * Gathers all possible moves for the current player.
+    * This method decides the piece color based on whose turn it is,
+    * gathers all singles and doubles, and calculates possible moves for each.
+    *
+    * @return List of all possible moves in standard chess notation, like "A2-A3".
+    */
+    public List<String> getAllPossibleMoves(boolean isRed) {
+        List<String> moves = new ArrayList<>();
+        long singles = isRed ? redSingles : blueSingles;
+        long doubles = isRed ? redDoubles | red_on_blue : blueDoubles | blue_on_red;
     
-
-        return cleanCorners(possibleMoves);
-    }
-
-   /* public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed) {
-    int[] moves = {17, 15, 10, 6}; // Precalculated, negative for other direction
-
-    // All occupied spaces
-    long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
-    long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
-    long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
-
-    // Calculate moves
-    long possibleMoves = 0L;
-    for (int i = 0; i < moves.length; i++) {
-        long moveTargets;
-        int move = isRed ? moves[i] : -moves[i]; // Negative
-        moveTargets = shift(doubles, move) & (emptySpaces | jumpableSpaces); // Shift right or down
-        possibleMoves |= moveTargets;
-    }
-
-    List<String> possibleMovesStrings = new ArrayList<>();
+        moves.addAll(generateMovesForPieces(singles, getPossibleMovesSingles(singles, isRed), isRed));
+        moves.addAll(generateMovesForPieces(doubles, getPossibleMovesDoubles(doubles, isRed), isRed));
     
-    // Convert each set bit index to a source and destination square string
-    for (int i = 0; i < 64; i++) {
-        long mask = 1L << i;
-        if ((possibleMoves & mask) != 0) {
-            possibleMovesStrings.add(getMoveString(i, i + moves[0])); // Add move as string
-            possibleMovesStrings.add(getMoveString(i, i + moves[1])); // Add move as string
-            possibleMovesStrings.add(getMoveString(i, i + moves[2])); // Add move as string
-            possibleMovesStrings.add(getMoveString(i, i + moves[3])); // Add move as string
+        return moves;
+    }
+    
+    /**
+    * Generates a list of moves from a given set of pieces and their possible moves.
+    * This method iterates through each bit of the pieces' bitboard, checks if a piece is present,
+    * and then calculates valid moves for it using another provided bitboard of possible moves.
+    *
+    * @param pieces A long representing the bitboard of pieces.
+    * @param possibleMoves A long representing the bitboard of all possible moves for these pieces.
+    * @param isRed A boolean indicating if the current moves are for Red pieces.
+    * @return A list of moves in the format "from-to" like "E2-E4".
+    */
+    private List<String> generateMovesForPieces(long pieces, long possibleMoves, boolean isRed) {
+        List<String> moveList = new ArrayList<>();
+        for (int fromIndex = 0; fromIndex < 64; fromIndex++) {
+            if ((pieces & (1L << fromIndex)) != 0) {  // There is a piece at fromIndex
+                long movesFromThisPiece = possibleMoves & getPossibleMovesForIndividualPiece(fromIndex, isRed);
+                for (int toIndex = 0; toIndex < 64; toIndex++) {
+                    if ((movesFromThisPiece & (1L << toIndex)) != 0) {  // Valid move to toIndex
+                        String fromPos = indexToPosition(fromIndex);
+                        String toPos = indexToPosition(toIndex);
+                        moveList.add(fromPos + "-" + toPos);
+                    }
+                }
+            }
         }
+        return moveList;
     }
     
-    return cleanCorners(possibleMovesStrings);
-}
-*/
+    public long getPossibleMovesForIndividualPiece(int index, boolean isRed) {
+        long singlePieceMask = 1L << index;
+        long moves = 0L;
+    
+        // Überprüfen, ob es sich um einen Einzelstein handelt
+        if (((isRed ? redSingles : blueSingles) & singlePieceMask) != 0) {
+            // Erzeuge ein Bitboard, das nur diesen Stein enthält
+            long singles = singlePieceMask;
+    
+            // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Stein zu ermitteln
+            moves |= getPossibleMovesSingles(singles, isRed);
+        }
+    
+        // Überprüfen, ob es sich um einen Doppelstein handelt
+        if (((isRed ? (redDoubles | red_on_blue) : (blueDoubles | blue_on_red)) & singlePieceMask) != 0) {
+            // Erzeuge ein Bitboard, das nur diesen Stein enthält
+            long doubles = singlePieceMask;
+    
+            // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Doppelstein zu ermitteln
+            moves |= getPossibleMovesDoubles(doubles, isRed);
+        }
+    
+        return moves;
+    }
+    
+    //TODO: Wir brauchen eine Methode movePiece, die unterscheidet zwischen moveSinglePiece und moveDoublePiece
     public static long positionToIndex(String position) {
         // Extract the column (file) and row from the position
         char letter = position.charAt(0); // 'F'
@@ -493,46 +452,4 @@ public class BitBoard {
         displayBitboard(bits);
     }
 
-    
-  /*  public static List<String> getSetBitPositions(long bitboard) {
-        List<String> positions = new ArrayList<>();
-        for (int i = 0; i < 64; i++) {
-            long mask = 1L << i;
-            if ((bitboard & mask) != 0) {
-                positions.add(getPositionFromIndex(i));
-            }
-        }
-        return positions;
-    }
-    */
-
-   /*  public static String getPositionFromIndex(int index) {
-        int row = 8 - (index / 8);
-        int column = (index % 8) + 1;
-        char file = (char) ('A' + column - 1);
-        return "" + file + row;
-    } */
-
-    // Method to transform possible moves into a list array of strings
-     public static List<String> transformMoves(long possibleMoves, long redDoubles) {
-       List<String> movesList = new ArrayList<>();
-    
-            for (int row = 0; row < 8; row++) {
-                for (int column = 0; column < 8; column++) {
-                    // Check if the corresponding bit is set in possibleMoves
-                    if ((possibleMoves & (1L << (row * 8 + column))) != 0) {
-                        // Convert row and column indices to board coordinates (e.g., 0,0 -> A8)
-                        char sourceColChar = (char) ('A' + column);
-                        int sourceRowNum = 8 - row;
-    
-                        // Format the move string (e.g., "H5-F4")
-                        String move = "" + sourceColChar + sourceRowNum;
-                        movesList.add(move);
-                    }
-                }
-            }
-            return movesList;
-        }
-          
-    
 }
