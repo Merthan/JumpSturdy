@@ -1,7 +1,6 @@
 import model.BitBoard;
 import model.JumpSturdyBoard;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -9,14 +8,22 @@ public class Main {
 
     private static Random random = new Random();
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0rrr0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
 
-        String fen = fens[2];
+        String fen = fens[0];
 
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard b = new BitBoard();
 
         b.readBoard(temp.board);
+        System.out.println(b);
+
+
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        long[] moves = BitBoard.parseMove("B7-B6");
+        b.moveSinglePiece(moves[0],moves[1],true);
         System.out.println(b);
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));
         //b.displayBitboard(b.getPossibleMovesDoubles(b.redDoubles,true));
@@ -32,7 +39,7 @@ public class Main {
         //System.out.println("DISPLAYall");
         //System.out.println(b.getPossibleMovesSinglesString(b.redSingles,true)) ;
     
-        System.out.println(b.getAllPossibleMoves(false));
+      /*  System.out.println(b.getAllPossibleMoves(false));
         long[] move = BitBoard.parseMove(b.getAllPossibleMoves(false).get(4));
 
        
@@ -40,12 +47,16 @@ public class Main {
         b.moveDoublePiece(move[0],move[1],false);
         System.out.println(b);
         
-        if(true)return;
+        if(true)return;*/
 
-        System.out.println(b);
-        //long[] move = BitBoard.parseMove("C5-E6");
-        //b.moveDoublePiece(move[0],move[1],false);
-        //System.out.println(b);
+       /* System.out.println(b);
+
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        long[] moves = BitBoard.parseMove("C5-E6");
+        b.moveDoublePiece(moves[0],moves[1],false);
+        System.out.println(b);*/
 
         System.out.println("-------------\n\n\n");
 
