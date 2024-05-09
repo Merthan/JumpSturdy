@@ -23,6 +23,8 @@ public class BitBoard {
     // Masks for edges to handle movements correctly
     private static final long NOT_A_FILE = 0xfefefefefefefefeL; // 11111110...
     private static final long NOT_H_FILE = 0x7f7f7f7f7f7f7f7fL; // 01111111...
+    private static long NOT_AB_FILE = 0xfcfcfcfcfcfcfcfcl;
+    private static long NOT_GH_FILE = 0x3f3f3f3f3f3f3f3fl;
 
     // Directions for single figures based on team
     private static final int RED_DIRECTION = 8;   // Red moves down
@@ -237,7 +239,7 @@ public class BitBoard {
         long rightMoves = shift(singles & NOT_H_FILE, 1) & emptyOrSingleDoubleable;
 
         // Capture moves (diagonal)
-        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces;//+-7 9 so diagonal
+        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces; //+-7 9 so diagonal
         long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
         //System.out.println("Possible moves:");
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
@@ -259,30 +261,13 @@ public class BitBoard {
         List<String> possibleMoves = new ArrayList<>();
 
         // Convert each set bit index to a source and destination square string
-        for (int i = 0; i < 64; i++) {
-            long mask = 1L << i;
-            if ((forwardMoves & mask) != 0) {
-                possibleMoves.add(getMoveString(i, i + direction));
-            }
-            if ((leftMoves & mask) != 0) {
-                possibleMoves.add(getMoveString(i, i - 1));
-            }
-            if ((rightMoves & mask) != 0) {
-                possibleMoves.add(getMoveString(i, i + 1));
-            }
-            if ((leftCapture & mask) != 0) {
-                possibleMoves.add(getMoveString(i, i + direction - 1));
-            }
-            if ((rightCapture & mask) != 0) {
-                possibleMoves.add(getMoveString(i, i + direction + 1));
-            }
-        }
+        
 
         return cleanCorners(possibleMoves);
     }
 
     // Translate Bitboards to Strings
-    public String getMoveString(int srcIndex, int destIndex) {
+    /*public String getMoveString(int srcIndex, int destIndex) {
         int srcRank = 8 - (srcIndex / 8);
         int srcFile = (srcIndex % 8) + 1;
         int destRank = 8 - (destIndex / 8);
@@ -292,7 +277,7 @@ public class BitBoard {
         char destFileChar = (char) ('A' + destFile - 1);
 
         return "" + srcFileChar + srcRank + "-" + destFileChar + destRank;
-    }
+    }*/
 
     public static List<String> cleanCorners(List<String> toRemove){
         Iterator<String> iterator = toRemove.iterator();
@@ -310,7 +295,7 @@ public class BitBoard {
     
 
 
-    public long getPossibleMovesDoubles(long doubles, boolean isRed) {
+   /*public long getPossibleMovesDoubles(long doubles, boolean isRed) {
         int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
 
         // All occupied spaces
@@ -330,10 +315,60 @@ public class BitBoard {
         }
 
         return possibleMoves;
+    }*/
+
+    public long getPossibleMovesDoubles(long doubles, boolean isRed){
+        int[] moves = {17, 15, 10, 6};
+
+        // All occupied spaces
+        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
+        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
+
+        //long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
+        //long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
+
+        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+
+        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture
+        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
+        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & emptyOrSingleDoubleable;
+
+        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & emptyOrSingleDoubleable;
+        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & emptyOrSingleDoubleable;
+
+        return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
+
     }
 
+    public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed){
+        int[] moves = {17, 15, 10, 6};
 
-    public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed) {
+        // All occupied spaces
+        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
+        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
+
+        //long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
+        //long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
+
+        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+
+        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture
+        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & emptyOrSingleDoubleable;
+        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
+
+        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & emptyOrSingleDoubleable;
+        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & emptyOrSingleDoubleable;
+
+
+        List<String> possibleMoves = new ArrayList<>();
+
+        // Convert each set bit index to a source and destination square string
+    
+
+        return cleanCorners(possibleMoves);
+    }
+
+   /* public List<String> getPossibleMovesDoublesString(long doubles, boolean isRed) {
     int[] moves = {17, 15, 10, 6}; // Precalculated, negative for other direction
 
     // All occupied spaces
@@ -365,7 +400,7 @@ public class BitBoard {
     
     return cleanCorners(possibleMovesStrings);
 }
-
+*/
     public static long positionToIndex(String position) {
         // Extract the column (file) and row from the position
         char letter = position.charAt(0); // 'F'
@@ -458,7 +493,8 @@ public class BitBoard {
         displayBitboard(bits);
     }
 
-    public static List<String> getSetBitPositions(long bitboard) {
+    
+  /*  public static List<String> getSetBitPositions(long bitboard) {
         List<String> positions = new ArrayList<>();
         for (int i = 0; i < 64; i++) {
             long mask = 1L << i;
@@ -468,11 +504,35 @@ public class BitBoard {
         }
         return positions;
     }
+    */
 
-    public static String getPositionFromIndex(int index) {
+   /*  public static String getPositionFromIndex(int index) {
         int row = 8 - (index / 8);
         int column = (index % 8) + 1;
         char file = (char) ('A' + column - 1);
         return "" + file + row;
-    }
+    } */
+
+    // Method to transform possible moves into a list array of strings
+     public static List<String> transformMoves(long possibleMoves, long redDoubles) {
+       List<String> movesList = new ArrayList<>();
+    
+            for (int row = 0; row < 8; row++) {
+                for (int column = 0; column < 8; column++) {
+                    // Check if the corresponding bit is set in possibleMoves
+                    if ((possibleMoves & (1L << (row * 8 + column))) != 0) {
+                        // Convert row and column indices to board coordinates (e.g., 0,0 -> A8)
+                        char sourceColChar = (char) ('A' + column);
+                        int sourceRowNum = 8 - row;
+    
+                        // Format the move string (e.g., "H5-F4")
+                        String move = "" + sourceColChar + sourceRowNum;
+                        movesList.add(move);
+                    }
+                }
+            }
+            return movesList;
+        }
+          
+    
 }
