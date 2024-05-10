@@ -437,6 +437,11 @@ public class BitBoard {
             // 😎😎😎😎😎😎😎😎😎😎
             for (int col = 0; col < BOARD_WIDTH; col++) {
                 int index = row * BOARD_WIDTH + col;
+                if(index==0||index==7||index==56||index==63){
+                    sb.append("\uD83D\uDD33 ");
+                    continue;
+                }
+
                 if ((redSingles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDD34 ");//🔴   😎😎😎😎😎😎😎😎
                 } else if ((blueSingles & (1L << index)) != 0) {
