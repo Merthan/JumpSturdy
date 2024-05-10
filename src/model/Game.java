@@ -24,7 +24,7 @@ public class Game {
 
         while (winner == 'f') {
 
-            System.out.println("Possiblemoves for red="+isRedTurn);
+            System.out.println("Possible moves for you");
             System.out.println(board.getAllPossibleMoves(isRedTurn));
             System.out.println();
 
@@ -80,8 +80,6 @@ public class Game {
 
     private void makeMove(BitBoard board ,String move) {
         long[] indices = BitBoard.parseMove(move);
-        System.out.println("Makemove start");
-        System.out.println(board);
         if (isRedTurn) {
             if (board.redDoubles != 0 && (board.redDoubles & (1L << indices[0])) != 0) {
                 board.moveDoublePiece(indices[0], indices[1], true);
@@ -96,22 +94,19 @@ public class Game {
             }
         }
         isRedTurn = !isRedTurn; // Switch turns
-
-        System.out.println("Makemove end");
-        System.out.println(board);
     }
 
     public static void main(String[] args) {
 
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05"};
 
-        String fen = fens[2];
+        String fen = fens[0];
 
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard board = new BitBoard();
 
         board.readBoard(temp.board);
-        System.out.println(board.getAllPossibleMoves(false));
+        //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
         game.play(board);
     }
