@@ -280,7 +280,8 @@ public class BitBoard {
         long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
         long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
 
-        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+        //long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+        long emptyOrSingleDoubleable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
 
         //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
         long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
@@ -423,31 +424,38 @@ public class BitBoard {
         System.out.println();
     }
 
-    // String representation of the board for debugging
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+
+        // Append column labels (A-H)
+        sb.append("   A  B  C  D   E  F  G  H\n");
+
         for (int row = 0; row < BOARD_HEIGHT; row++) {
+            // Append row number
+            sb.append((8 - row)).append(" ");
+            // 😎😎😎😎😎😎😎😎😎😎
             for (int col = 0; col < BOARD_WIDTH; col++) {
                 int index = row * BOARD_WIDTH + col;
                 if ((redSingles & (1L << index)) != 0) {
-                    sb.append("r ");
+                    sb.append("\uD83D\uDD34 ");//🔴   😎😎😎😎😎😎😎😎
                 } else if ((blueSingles & (1L << index)) != 0) {
-                    sb.append("b ");
+                    sb.append("\uD83D\uDD35 ");//🔵
                 } else if ((redDoubles & (1L << index)) != 0) {
-                    sb.append("R ");
+                    sb.append("\uD83D\uDFE5 ");//🟥
                 } else if ((blueDoubles & (1L << index)) != 0) {
-                    sb.append("B ");
+                    sb.append("\uD83D\uDFE6 ");//🟦
                 } else if ((blue_on_red & (1L << index)) != 0) {
-                    sb.append("X ");
+                    sb.append("\uD83D\uDD37 ");//🔷
                 } else if ((red_on_blue & (1L << index)) != 0) {
-                    sb.append("Y ");
+                    sb.append("\uD83D\uDD36 ");//🔶 red diamond in this form doesnt exist, only diamond suit. Orange diamond instead then :)
                 } else {
-                    sb.append(". ");
+                    sb.append("⬜ ");
                 }
             }
-            sb.append("\n");
+            sb.append(" ").append(8 - row).append("\n"); // Append row number
         }
+        sb.append("   A  B  C  D   E  F  G  H\n");
         return sb.toString();
     }
 
