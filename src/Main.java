@@ -1,3 +1,4 @@
+import benchmark.Benchmark;
 import model.BitBoard;
 import model.JumpSturdyBoard;
 
@@ -11,18 +12,16 @@ public class Main {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
 
         String fen = fens[0];
-
+        System.out.println(fen);
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard b = new BitBoard();
 
         b.readBoard(temp.board);
         System.out.println(b);
+        //Benchmark.benchmark(b);
 
 
-        System.out.println("DISPLAYall");
-        System.out.println("DISPLAYall");
-        System.out.println("DISPLAYall");
-        long[] moves = BitBoard.parseMove("B7-B6");
+        long[] moves = BitBoard.parseMove("B8-B7");
         b.moveSinglePiece(moves[0],moves[1],true);
         System.out.println(b);
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));

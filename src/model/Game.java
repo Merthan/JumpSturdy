@@ -24,6 +24,10 @@ public class Game {
 
         while (winner == 'f') {
 
+            System.out.println("Possiblemoves for red="+isRedTurn);
+            System.out.println(board.getAllPossibleMoves(isRedTurn));
+            System.out.println();
+
             System.out.println(board); // Display the current board
             System.out.println("Enter your move");
             String playerMove = scanner.nextLine();
@@ -37,9 +41,10 @@ public class Game {
                 System.out.println(board);
 
 
-                winner = board.checkWinCondition(board.redSingles, board.blueSingles); // check if it's a winning move
+                winner = board.checkWinCondition(board.redSingles|board.redDoubles|board.red_on_blue, board.blueSingles|board.blueDoubles|board.blue_on_red); // check if it's a winning move
 
                 if (winner != 'f') {
+                    System.out.println("Game over "+(winner=='r'?"Red":"Blue") + " wins");
                     break;
                 }
 
@@ -69,11 +74,14 @@ public class Game {
 
     private boolean isValidMove(BitBoard board , String move) {
         List<String> possibleMoves = board.getAllPossibleMoves(isRedTurn);
+
         return possibleMoves.contains(move);
     }
 
     private void makeMove(BitBoard board ,String move) {
         long[] indices = BitBoard.parseMove(move);
+        System.out.println("Makemove start");
+        System.out.println(board);
         if (isRedTurn) {
             if (board.redDoubles != 0 && (board.redDoubles & (1L << indices[0])) != 0) {
                 board.moveDoublePiece(indices[0], indices[1], true);
@@ -88,13 +96,16 @@ public class Game {
             }
         }
         isRedTurn = !isRedTurn; // Switch turns
+
+        System.out.println("Makemove end");
+        System.out.println(board);
     }
 
     public static void main(String[] args) {
 
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05"};
 
-        String fen = fens[0];
+        String fen = fens[2];
 
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard board = new BitBoard();

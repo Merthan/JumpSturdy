@@ -104,13 +104,13 @@ public class JumpSturdyBoard {
         board[0] = new int[6];
         board[7] = new int[6];
 
-        int row = 0, col = 0;
+        int row = 7, col = 0;
         fen = cleanFen(fen); // Clean/Map Fen to make it easier
 
-        for (int i = fen.length()-1; i >= 0 ; i--) {
+        for (int i = 0; i < fen.length() ; i++) {
             char c = fen.charAt(i);
             if (c == '/') {
-                row++;
+                row--;
                 col = 0;
             } else if (Character.isDigit(c)) {
                 int count = c - '0'; // Convert char to number

@@ -134,13 +134,17 @@ public class BitBoard {
 
         // Handling different scenarios on the destination
         if ((enemySingles & (1L << toIndex)) != 0) {
-            // Capture enemy single, transform to double
+            // Capture enemy single, transform to own single
             ownSingles |= (1L << toIndex);
             enemySingles &= ~(1L << toIndex);
         } else if ((enemyDoubles & (1L << toIndex)) != 0) {
             // Lands on enemy double, transforms to ownOnEnemy
             ownOnEnemy |= (1L << toIndex);
             enemyDoubles &= ~(1L << toIndex);
+        } else if ((ownSingles & (1L << toIndex)) != 0) {
+            // Lands on enemy double, transforms to ownOnEnemy
+            ownDoubles |= (1L << toIndex);
+            ownSingles &= ~(1L << toIndex);
         } else if ((enemyOnOwn & (1L << toIndex)) != 0) {
             // Lands on enemyOnOwn, transforms to own double
             ownDoubles |= (1L << toIndex);
