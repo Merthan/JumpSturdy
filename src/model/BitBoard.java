@@ -234,13 +234,13 @@ public class BitBoard {
         //commentedBits("Enemy:",enemyPieces);
         //commentedBits("Own:",singles);
 
-        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles));
+        long jumpable = (emptySpaces | (isRed ? redSingles : blueSingles));
         // Forward moves (no capture)
-        long forwardMoves = shift(singles, direction) & emptyOrSingleDoubleable;//Removes all occupied spaces, TODO maybe readd doubleGenesis
+        long forwardMoves = shift(singles, direction) & jumpable;//Removes all occupied spaces, TODO maybe readd doubleGenesis
         //commentedBits("Fwd:",forwardMoves);
         // Side moves (left and right)
-        long leftMoves = shift(singles & NOT_A_FILE, -1) & emptyOrSingleDoubleable;
-        long rightMoves = shift(singles & NOT_H_FILE, 1) & emptyOrSingleDoubleable;
+        long leftMoves = shift(singles & NOT_A_FILE, -1) & jumpable;
+        long rightMoves = shift(singles & NOT_H_FILE, 1) & jumpable;
 
         // Capture moves (diagonal)
         long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces; //+-7 9 so diagonal
@@ -280,14 +280,15 @@ public class BitBoard {
         long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
         long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
 
-        long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+        //long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+        long jumpable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
 
         //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
-        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & emptyOrSingleDoubleable;
-        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & emptyOrSingleDoubleable;
+        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & jumpable;
+        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & jumpable;
 
-        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & emptyOrSingleDoubleable;
-        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & emptyOrSingleDoubleable;
+        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & jumpable;
+        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & jumpable;
 
         return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
     }
