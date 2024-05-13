@@ -1,5 +1,6 @@
 import benchmark.Benchmark;
 import model.BitBoard;
+import model.Game;
 import model.JumpSturdyBoard;
 
 import java.util.List;
@@ -9,6 +10,10 @@ public class Main {
 
     private static Random random = new Random();
     public static void main(String[] args) {
+        Game.main(args);//Only call Game Main, then skip rest of this method
+
+        if(true)return;
+
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
 
         String fen = fens[0];
@@ -60,7 +65,7 @@ public class Main {
         System.out.println("-------------\n\n\n");
 
 
-        if(true)return;
+
 
 
         System.out.println("FEN: "+fen);

@@ -1,6 +1,7 @@
 package model;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static model.JumpSturdyBoard.*;
 
@@ -84,11 +85,26 @@ public class BitBoard {
         }
     }
 
-    public char checkWinCondition(long redPieces, long bluePieces) {
+    //Returns if the piece at position belongs to red
+    public boolean isItRedsTurnByPositionOfPieces(long position){
+        boolean redSingleBitSet = (redSingles & (1L << position)) != 0;
+        boolean blueSingleBitSet = (blueSingles & (1L << position)) != 0;
+        boolean redDoubleBitSet = (redDoubles & (1L << position)) != 0;
+        boolean blueDoubleBitSet = (blueDoubles & (1L << position)) != 0;
+        boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
+        boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
+        if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
+            throw new RuntimeException("Invalid position, either empty or corner" + position);
+        }
+        return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
+    }
+
+    public char checkWinCondition() {
         // Define masks for the top and bottom rows
         long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
         long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
-
+        long bluePieces = blueSingles | blueDoubles | blue_on_red;
+        long redPieces = redSingles | redDoubles|red_on_blue;
         // Check if any blue piece is in the top row
         if ((bluePieces & topRowMask) != 0) {
             return 'b';
@@ -118,6 +134,35 @@ public class BitBoard {
             else return 'b';
         }
         return 'f';
+    }
+
+    public boolean doMove(String move, boolean isRedTurn,boolean checkIfPossible) {
+        long[] indices = BitBoard.parseMove(move);
+        if(isItRedsTurnByPositionOfPieces(indices[0])!=isRedTurn){
+            throw new IllegalMoveException("Player cant move enemy piece");
+        }
+        if(checkIfPossible){
+            long possibleMoves =getPossibleMovesForIndividualPiece(indices[0],isRedTurn);
+
+            if((possibleMoves & (1L << indices[1])) == 0){//Move not included, index conversion
+                throw new IllegalMoveException("Move is not possible:" +move);
+            }
+        }
+        if (isRedTurn) {
+            if ((redDoubles != 0 && (redDoubles & (1L << indices[0])) != 0)
+                    ||(red_on_blue != 0 && (red_on_blue & (1L << indices[0])) != 0)    ) {
+                moveDoublePiece(indices[0], indices[1], true);
+            } else {
+                moveSinglePiece(indices[0], indices[1], true);
+            }
+        } else {
+            if ((blueDoubles != 0 && (blueDoubles & (1L << indices[0])) != 0)||(blue_on_red != 0 && (blue_on_red & (1L << indices[0])) != 0)) {
+                moveDoublePiece(indices[0], indices[1], false);
+            } else {
+                moveSinglePiece(indices[0], indices[1], false);
+            }
+        }
+        return !isRedTurn;//Now optionally returns whose turn it is in case we test chaining same team calls etc in later steps
     }
 
 
@@ -309,7 +354,7 @@ public class BitBoard {
         moves.addAll(generateMovesForPieces(singles, getPossibleMovesSingles(singles, isRed), isRed));
         moves.addAll(generateMovesForPieces(doubles, getPossibleMovesDoubles(doubles, isRed), isRed));
     
-        return moves;
+        return moves.stream().sorted().collect(Collectors.toList());
     }
     
     /**
@@ -339,7 +384,7 @@ public class BitBoard {
         return moveList;
     }
     
-    public long getPossibleMovesForIndividualPiece(int index, boolean isRed) {
+    public long getPossibleMovesForIndividualPiece(long index, boolean isRed) {
         long singlePieceMask = 1L << index;
         long moves = 0L;
     
@@ -365,7 +410,7 @@ public class BitBoard {
     }
     
     //TODO: Wir brauchen eine Methode movePiece, die unterscheidet zwischen moveSinglePiece und moveDoublePiece
-    public static long positionToIndex(String position) {
+    public static long positionToIndex(String position) { //index, not bitboard, needs to be shifted
         // Extract the column (file) and row from the position
         char letter = position.charAt(0); // 'F'
         char number = position.charAt(1); // '3'// 'F' - 'A' = 5// '3' - '1' = 2
@@ -444,16 +489,16 @@ public class BitBoard {
 
                 if ((redSingles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDD34 ");//🔴   😎😎😎😎😎😎😎😎
-                } else if ((blueSingles & (1L << index)) != 0) {
+                } else if ((blueSingles & (1L << index)) != 0) {//\u001B[41mRed background\u001B[0m
                     sb.append("\uD83D\uDD35 ");//🔵
                 } else if ((redDoubles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDFE5 ");//🟥
                 } else if ((blueDoubles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDFE6 ");//🟦
                 } else if ((blue_on_red & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDD37 ");//🔷
+                    sb.append("\u001B[41m\uD83D\uDD35\u001B[0m ");//🔷
                 } else if ((red_on_blue & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDD36 ");//🔶 red diamond in this form doesnt exist, only diamond suit. Orange diamond instead then :)
+                    sb.append("\u001B[44m\uD83D\uDD34\u001B[0m ");//🔶 red diamond in this form doesnt exist, only diamond suit. Orange diamond instead then :)
                 } else {
                     sb.append("⬜ ");
                 }
