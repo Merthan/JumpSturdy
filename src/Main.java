@@ -1,47 +1,71 @@
+import benchmark.Benchmark;
 import model.BitBoard;
+import model.Game;
 import model.JumpSturdyBoard;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import static model.BitBoard.indexToPosition;
-import static model.BitBoard.positionToIndex;
 
 public class Main {
 
     private static Random random = new Random();
     public static void main(String[] args) {
-        String[] fens = new String[]{"r0r0r0r0r0r0/1r0r0r0r0r0r0/8/8/8/8/1b0b0b0b0b0b0/b0b0b0b0b0b0","2rr3/5r02/1rr1rr2r0r0/2rb3b01/2r0b04/5b0bb1/2bb2b02/3b02"};
-        String fen = fens[0];
+        Game.main(args);//Only call Game Main, then skip rest of this method
 
-        JumpSturdyBoard temp= new JumpSturdyBoard(fen);
+        if(true)return;
+
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
+
+        String fen = fens[0];
+        System.out.println(fen);
+        JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard b = new BitBoard();
 
         b.readBoard(temp.board);
+        System.out.println(b);
+        //Benchmark.benchmark(b);
 
-        //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,true));
-        //b.displayBitboard(b.getPossibleMovesDoubles(b.blueDoubles,false));
-        b.displayBitboard(b.getMovesForTeam(true));
 
+        long[] moves = BitBoard.parseMove("B8-B7");
+        b.moveSinglePiece(moves[0],moves[1],true);
+        System.out.println(b);
+        //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));
+        //b.displayBitboard(b.getPossibleMovesDoubles(b.redDoubles,true));
+        //System.out.println(b.checkWinCondition(b.redSingles, b.blueSingles));
+        //System.out.println(b.getMovesForTeam(true));
+        //System.out.println(b);
+        //b.displayBitboard(b.getMovesForTeam(true));
+        //System.out.println(BitBoard.indexToPosition(49));
+        //System.out.println(BitBoard.positionToIndex("B2"));
         //System.out.println("DISPLAYall");
         //b.displayBitboard(b.redSingles);
-        //b.displayBitboard(b.redSingles | b.blueSingles | b.redDoubles |b.blueDoubles | b.red_on_blue | b.blue_on_red);
-        System.out.println(b);
-        long[] move = BitBoard.parseMove("F7-F6");
-        b.moveSinglePiece(move[0],move[1],true);
-        System.out.println(b);
-        if(true)return;
+       
+        //System.out.println("DISPLAYall");
+        //System.out.println(b.getPossibleMovesSinglesString(b.redSingles,true)) ;
+    
+      /*  System.out.println(b.getAllPossibleMoves(false));
+        long[] move = BitBoard.parseMove(b.getAllPossibleMoves(false).get(4));
 
+       
+
+        b.moveDoublePiece(move[0],move[1],false);
         System.out.println(b);
-        ///long[] move = BitBoard.parseMove("C5-E6");
-        //b.moveDoublePiece(move[0],move[1],false);
-        //System.out.println(b);
+        
+        if(true)return;*/
+
+       /* System.out.println(b);
+
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        System.out.println("DISPLAYall");
+        long[] moves = BitBoard.parseMove("C5-E6");
+        b.moveDoublePiece(moves[0],moves[1],false);
+        System.out.println(b);*/
 
         System.out.println("-------------\n\n\n");
 
 
-        if(true)return;
+
 
 
         System.out.println("FEN: "+fen);
@@ -52,6 +76,11 @@ public class Main {
 
 
 
+    }
+
+    public static List<String> mergeLists(List<String> a, List<String> b){
+        a.addAll(b);
+        return a;
     }
 /*
 

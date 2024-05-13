@@ -16,9 +16,9 @@ public class JumpSturdyBoard {
             {"r0", "X"},
             {"b0", "Y"},
             {"rr", "A"},
-            {"rb", "D"},//Blue on red
+            {"rb", "D"}, // Blue on red
             {"bb", "C"},
-            {"br", "B"}//Red on blue
+            {"br", "B"} // Red on blue
     };
     public int[][] board = new int[8][8];
 
@@ -78,17 +78,17 @@ public class JumpSturdyBoard {
         };
     }
 
-    public static int[] coordinatesFromMove(String move){
+    public static int[] coordinatesFromMove(String move) {
         String[] moveFromTo = move.split("-");//Divide
         int[] first = coordinatesForSinglePosition(moveFromTo[0]);
         int[] second = coordinatesForSinglePosition(moveFromTo[1]);
-        return new int[]{first[0],first[1],second[0],second[1]}; // First two are the original, next two are the future
+        return new int[]{first[0], first[1], second[0], second[1]}; // First two are the original, next two are the future
     }
 
-    public static int[] coordinatesForSinglePosition(String position){ //Corners not handled yet, perhaps throw
+    public static int[] coordinatesForSinglePosition(String position) { //Corners not handled yet, perhaps throw
         char letter = position.charAt(0);
         char number = position.charAt(1);
-        return new int[]{ 8-Character.getNumericValue(number)  , (letter-'A') };//8- because started from top, -'A' so B has value 1, G is 6 etc
+        return new int[]{8 - Character.getNumericValue(number), (letter - 'A')};//8- because started from top, -'A' so B has value 1, G is 6 etc
     }
 
 
@@ -104,13 +104,13 @@ public class JumpSturdyBoard {
         board[0] = new int[6];
         board[7] = new int[6];
 
-        int row = 0, col = 0;
+        int row = 7, col = 0;
         fen = cleanFen(fen); // Clean/Map Fen to make it easier
 
-        for (int i = 0; i < fen.length(); i++) {
+        for (int i = 0; i < fen.length() ; i++) {
             char c = fen.charAt(i);
             if (c == '/') {
-                row++;
+                row--;
                 col = 0;
             } else if (Character.isDigit(c)) {
                 int count = c - '0'; // Convert char to number
@@ -167,11 +167,11 @@ public class JumpSturdyBoard {
 
     private boolean handleSinglePieceMove(int piece, int startX, int startY, int endX, int endY, int targetPiece) {
         // Allow movement into an empty space or capture if the target is an enemy's single piece
-        int direction = piece == RED? 1:-1;//Down or up
+        int direction = piece == RED ? 1 : -1;//Down or up
         //Same X, either up or down 1, empty or own (single) to create a double
-        return ((startX == endX && (endY-startY == direction)) && targetPiece == EMPTY||targetPiece==piece) ||
+        return ((startX == endX && (endY - startY == direction)) && targetPiece == EMPTY || targetPiece == piece) ||
                 //diagonal, forward and one to side when piece is enemy
-                (Math.abs(startX - endX) == 1 && (endY-startY == direction) && isEnemy(piece, targetPiece));
+                (Math.abs(startX - endX) == 1 && (endY - startY == direction) && isEnemy(piece, targetPiece));
     }
 
     private boolean handleKnightMove(int startX, int startY, int endX, int endY) {
@@ -227,8 +227,6 @@ public class JumpSturdyBoard {
             default -> EMPTY;
         };
     }
-
-
 
 
     @Override
