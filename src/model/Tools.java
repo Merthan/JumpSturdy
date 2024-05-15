@@ -38,7 +38,18 @@ public class Tools {
 
         return move;
     }
-
+    public static String bitboardToString(long bitboard) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 63; i >= 0; i--) {
+            long mask = 1L << i;
+            if ((bitboard & mask) != 0) {
+                sb.append('1');
+            } else {
+                sb.append('0');
+            }
+        }
+        return sb.toString();
+    }
 
 /*    public String cleanMove(String move){
 

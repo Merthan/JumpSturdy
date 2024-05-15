@@ -451,7 +451,7 @@ public class BitBoard {
         return offset > 0 ? (bitboard << offset & CORNER_MASK) : (bitboard >>> -offset & CORNER_MASK);
     }
 
-    public void displayBitboard(long bitboard) {
+    public static void displayBitboard(long bitboard) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
                 int position = row * 8 + col;  // Start from top left, no inversion
@@ -469,6 +469,12 @@ public class BitBoard {
         System.out.println();
     }
 
+    /**
+     * Method using emojis 😎 to display the JumpSturdy board effectively
+     *
+     * @return String representation with Emojis and multiple control characters for advanced visualisation
+     * Credits: Merthan Erdem
+     * */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -476,29 +482,28 @@ public class BitBoard {
         // Append column labels (A-H)
         sb.append("   A  B  C  D   E  F  G  H\n");
 
-        for (int row = 0; row < BOARD_HEIGHT; row++) {
+        for (int row = 0; row < 8; row++) {
             // Append row number
             sb.append((8 - row)).append(" ");
-            // 😎😎😎😎😎😎😎😎😎😎
-            for (int col = 0; col < BOARD_WIDTH; col++) {
-                int index = row * BOARD_WIDTH + col;
-                if(index==0||index==7||index==56||index==63){
-                    sb.append("\uD83D\uDD33 ");
+            // 😎😎😎😎😎😎😎😎😎
+            for (int col = 0; col < 8; col++) {
+                int index = row * 8 + col;
+                if(index==0||index==7||index==56||index==63){// all corners
+                    sb.append("\uD83D\uDD33 ");//🔳
                     continue;
                 }
-
                 if ((redSingles & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDD34 ");//🔴   😎😎😎😎😎😎😎😎
-                } else if ((blueSingles & (1L << index)) != 0) {//\u001B[41mRed background\u001B[0m
+                    sb.append("\uD83D\uDD34 ");//🔴   😎
+                } else if ((blueSingles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDD35 ");//🔵
                 } else if ((redDoubles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDFE5 ");//🟥
                 } else if ((blueDoubles & (1L << index)) != 0) {
                     sb.append("\uD83D\uDFE6 ");//🟦
                 } else if ((blue_on_red & (1L << index)) != 0) {
-                    sb.append("\u001B[41m\uD83D\uDD35\u001B[0m ");//🔷
+                    sb.append("\u001B[41m\uD83D\uDD35\u001B[0m ");// NO FITTING EMOJI, uses Red Background Control Characters - blue on red
                 } else if ((red_on_blue & (1L << index)) != 0) {
-                    sb.append("\u001B[44m\uD83D\uDD34\u001B[0m ");//🔶 red diamond in this form doesnt exist, only diamond suit. Orange diamond instead then :)
+                    sb.append("\u001B[44m\uD83D\uDD34\u001B[0m ");// NO FITTING EMOJI, uses Blue Background Control Characters - blue on red
                 } else {
                     sb.append("⬜ ");
                 }
