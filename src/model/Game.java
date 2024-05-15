@@ -11,6 +11,8 @@ public class Game {
     private JumpSturdyBoard jumpSturdyBoard;
     private boolean isRedTurn;
 
+    final String PLAYER_ONE = "[\uD83D\uDC68\u200D\uD83D\uDCBBPlayer 1]";
+    final String PLAYER_TWO ="[\uD83D\uDC7DPlayer 2]";
     public Game() {
         board = new BitBoard();
         jumpSturdyBoard = new JumpSturdyBoard() ;
@@ -26,6 +28,43 @@ public class Game {
         jumpSturdyBoard = new JumpSturdyBoard(fen);
         board = new BitBoard();
         board.readBoard(jumpSturdyBoard.board);
+    }
+
+    public void playAgainst(BitBoard board,boolean alwaysRed){
+        Scanner scanner = new Scanner(System.in);
+        char winner = 'f';
+        System.out.println(board); // Display the current board
+        while (winner == 'f') {
+
+            System.out.println("Possible moves for you"); //Sorted now
+            Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(),Tools.PURPLE);
+            System.out.println();
+            String player = isRedTurn?PLAYER_ONE:PLAYER_TWO;
+            Tools.printInColor("Enter your move ⬇\uFE0F "+player,"\u001B[5m");
+            String playerMove = Tools.cleanMove(scanner.nextLine());
+
+            if (isValidMove(board,playerMove)) {
+                // My Turn
+                isRedTurn = board.doMove(playerMove,isRedTurn,true);//Do and switch turn
+                if(alwaysRed) isRedTurn = true;
+                Tools.printInColor("\t\t"+player+" Move:",!isRedTurn);
+                System.out.println(board);
+
+                winner = board.checkWinCondition(); // check if it's a winning move
+
+                if (winner != 'f') {
+                    System.out.println("\u001B[41m\uD83C\uDFC5Game over "+(winner=='r'?"Red":"Blue") + " wins"+"\u001B[0m");
+                    //System.out.println("\u001B[41mRed background\u001B[0m"); red background
+                    break;
+                }
+                System.out.println("Game evaluated red:"+Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                // Check if there's a winner after the bot's move
+                winner = board.checkWinCondition();
+            } else {
+                Tools.printInColor("Invalid move. Please enter a valid move.\uD83E\uDD22",true);
+            }
+        }
     }
 
     public void play(BitBoard board) {
@@ -52,7 +91,6 @@ public class Game {
                 Tools.printInColor("\t\t\uD83D\uDC68\u200D\uD83D\uDCBBMy move:",true);
                 System.out.println(board);
 
-
                 winner = board.checkWinCondition(); // check if it's a winning move
 
                 if (winner != 'f') {
@@ -74,6 +112,8 @@ public class Game {
                 Tools.printInColor("\t\t\uD83E\uDD16Bot's move:",false);
                 System.out.println(board);
 
+                System.out.println("Game evaluated red:"+Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
                 // Check if there's a winner after the bot's move
                 winner = board.checkWinCondition();
             } else {
@@ -99,7 +139,7 @@ public class Game {
     public static void main(String[] args) {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05"};
 
-        String fen = fens[1];
+        String fen = fens[0];
 
         JumpSturdyBoard temp = new JumpSturdyBoard(fen);
         BitBoard board = new BitBoard();
@@ -107,7 +147,8 @@ public class Game {
         board.readBoard(temp.board);
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        game.play(board);
+        //game.play(board);
+        game.playAgainst(board,false);
     }
 }
 
