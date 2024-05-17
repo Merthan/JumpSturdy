@@ -4,13 +4,16 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static model.JumpSturdyBoard.*;
+import static model.JumpSturdyBoard.BLUE;
+import static model.JumpSturdyBoard.RED;
+import static model.Tools.*;
 
 public class BitBoard {
 
     public boolean redsTurn = true;
     private static final int BOARD_WIDTH = 8;
     private static final int BOARD_HEIGHT = 8;
-    private static final long CORNER_MASK = ~(1L | (1L << 7) | (1L << 56) | (1L << 63));
+    public static final long CORNER_MASK = ~(1L | (1L << 7) | (1L << 56) | (1L << 63));
     // Bitboards for the game pieces
     public long redSingles;   // Bitboard for red single pieces
     public long blueSingles;  // Bitboard for blue single pieces
@@ -137,7 +140,7 @@ public class BitBoard {
     }
 
     public boolean doMove(String move, boolean isRedTurn,boolean checkIfPossible) {
-        long[] indices = BitBoard.parseMove(move);
+        byte[] indices = parseMove(move);
         if(isItRedsTurnByPositionOfPieces(indices[0])!=isRedTurn){
             throw new IllegalMoveException("Player cant move enemy piece");
         }
@@ -166,7 +169,7 @@ public class BitBoard {
     }
 
 
-    public void moveSinglePiece(long fromIndex, long toIndex, boolean isRed) {
+    public void moveSinglePiece(byte fromIndex, byte toIndex, boolean isRed) {
         long ownSingles = isRed ? redSingles : blueSingles;
         long enemySingles = isRed ? blueSingles : redSingles;
         long ownDoubles = isRed ? redDoubles : blueDoubles;
@@ -208,7 +211,7 @@ public class BitBoard {
         blue_on_red = isRed ? enemyOnOwn : ownOnEnemy;
     }
 
-    public void moveDoublePiece(long fromIndex, long toIndex, boolean isRed) {
+    public void moveDoublePiece(byte fromIndex, byte toIndex, boolean isRed) {
         long ownDoubles = isRed ? redDoubles : blueDoubles;
         long ownSingles = isRed ? redSingles : blueSingles;
         long enemySingles = isRed ? blueSingles : redSingles;
@@ -258,6 +261,10 @@ public class BitBoard {
         blue_on_red = isRed ? enemyOnOwn : ownOnEnemy;
         red_on_blue = isRed ? ownOnEnemy : enemyOnOwn;
     }
+
+
+
+
 
 
     public long getMovesForTeam(boolean red) {
@@ -318,7 +325,7 @@ public class BitBoard {
     }*/
 
 
-    public long getPossibleMovesDoubles(long doubles, boolean isRed){
+    public long getPossibleMovesDoubles(long doubles, boolean isRed){//TODO: FIX KNIGHTS ON EDGES WRONG POSSIBLE MOVES
         int[] moves = {17, 15, 10, 6};
 
         // All occupied spaces
@@ -369,10 +376,10 @@ public class BitBoard {
     */
     private List<String> generateMovesForPieces(long pieces, long possibleMoves, boolean isRed) {
         List<String> moveList = new ArrayList<>();
-        for (int fromIndex = 0; fromIndex < 64; fromIndex++) {
+        for (byte fromIndex = 0; fromIndex < 64; fromIndex++) {
             if ((pieces & (1L << fromIndex)) != 0) {  // There is a piece at fromIndex
                 long movesFromThisPiece = possibleMoves & getPossibleMovesForIndividualPiece(fromIndex, isRed);
-                for (int toIndex = 0; toIndex < 64; toIndex++) {
+                for (byte toIndex = 0; toIndex < 64; toIndex++) {
                     if ((movesFromThisPiece & (1L << toIndex)) != 0) {  // Valid move to toIndex
                         String fromPos = indexToPosition(fromIndex);
                         String toPos = indexToPosition(toIndex);
@@ -384,7 +391,7 @@ public class BitBoard {
         return moveList;
     }
     
-    public long getPossibleMovesForIndividualPiece(long index, boolean isRed) {
+    public long getPossibleMovesForIndividualPiece(byte index, boolean isRed) {
         long singlePieceMask = 1L << index;
         long moves = 0L;
     
@@ -410,63 +417,13 @@ public class BitBoard {
     }
     
     //TODO: Wir brauchen eine Methode movePiece, die unterscheidet zwischen moveSinglePiece und moveDoublePiece
-    public static long positionToIndex(String position) { //index, not bitboard, needs to be shifted
-        // Extract the column (file) and row from the position
-        char letter = position.charAt(0); // 'F'
-        char number = position.charAt(1); // '3'// 'F' - 'A' = 5// '3' - '1' = 2
 
-        // Calculate the index for a 0-based array (bottom-left is 0,0)
-        return (7 - (number - '1')) * 8 + (letter - 'A'); // Convert to 0-based index for an 8x8 board
-    }
-
-    public static String indexToPosition(long index) {
-        int fileIndex = (int) (index % 8); // Calculate file index (column)
-        int rankIndex = (int) (index / 8); // Calculate rank index (row)
-        char file = (char) ('A' + fileIndex); // Convert file index to letter (A-H)
-        char rank = (char) ('1' + (7 - rankIndex)); // Convert rank index to number (1-8), adjusting for 0-based index
-        return "" + file + rank; // Concatenate to form the position string
-    }
-
-    // Method to parse a move like "F3-F4" and return fromIndex and toIndex
-    public static long[] parseMove(String move) {
-        // Split the move into the from and to parts
-        String[] parts = move.split("-");
-        // Convert each part to an index
-        long fromIndex = positionToIndex(parts[0]);
-        long toIndex = positionToIndex(parts[1]);
-        // Return the indices as an array
-        return new long[]{fromIndex, toIndex};
-    }
 
     public static void main(String[] args) {
         // Example usage
         String move = "A8-H1";
-        long[] indices = parseMove(move);
+        byte[] indices = parseMove(move);
         System.out.println("From Index: " + indices[0] + ", To Index: " + indices[1]);
-    }
-
-
-    // Utility method to shift bitboards for movement
-    private long shift(long bitboard, int offset) {
-        return offset > 0 ? (bitboard << offset & CORNER_MASK) : (bitboard >>> -offset & CORNER_MASK);
-    }
-
-    public static void displayBitboard(long bitboard) {
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-                int position = row * 8 + col;  // Start from top left, no inversion
-                // IF Corner
-                if ((row == 0 || row == 7) && (col == 0 || col == 7)) {
-                    System.out.print("X ");
-                } else if ((bitboard & (1L << position)) != 0) {
-                    System.out.print("1 ");
-                } else {
-                    System.out.print("0 ");
-                }
-            }
-            System.out.println();
-        }
-        System.out.println();
     }
 
     /**
@@ -514,9 +471,6 @@ public class BitBoard {
         return sb.toString();
     }
 
-    public void commentedBits(String comment, long bits) {
-        System.out.println(comment);
-        displayBitboard(bits);
-    }
+
 
 }

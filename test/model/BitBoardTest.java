@@ -3,11 +3,14 @@ package model;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class BitBoardTest {
 
-    final String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
+    public final String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
     JumpSturdyBoard jumpSturdyBoard = new JumpSturdyBoard();
     BitBoard board = new BitBoard();
 
@@ -34,6 +37,7 @@ public class BitBoardTest {
 
     @BeforeEach
     void setUp() {
+        setupBoardsWithFen(DEFAULT_BOARD);
     }
 
     @Test
@@ -47,8 +51,42 @@ public class BitBoardTest {
     }
 
     @Test
+    void evaluateMoveTest(){
+        displayBoard();
+
+        int startEval =Evaluate.evaluateSimple(board.redsTurn, board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+        String moveText = "B7-B6"; //CHANGE AS WANTED, CLEANED TOO
+        byte[] move = Tools.parseMove(Tools.cleanMove(moveText));
+        System.out.println("Move:"+moveText+" -> "+ move[0] +" to "+move[1]);
+        int afterEval = Evaluate.evaluateMove(board.redsTurn,move[0],move[1], board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+
+        System.out.println("Start "+startEval+" After move "+ afterEval);
+    }
+
+    @Test
+    void evaluateMultipleMoveTest(){
+        displayBoard();
+
+        int startEval =Evaluate.evaluateSimple(board.redsTurn, board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+        String[] moveText = new String[]{ "B7-B6", "B6-B5"}; //CHANGE AS WANTED, CLEANED TOO
+        byte[][] move = Arrays.stream(moveText).map( text -> Tools.parseMove(Tools.cleanMove(text))).toArray(byte[][]::new);
+        for (byte[] moveSingle : move) {
+            System.out.println("Move:"+ Arrays.toString(moveText) +" -> "+ moveSingle[0] +" to "+moveSingle[1]);
+
+        }
+
+        System.out.println(Arrays.deepToString(move));
+
+        int afterEval = Evaluate.evaluateMultipleMoves(board.redsTurn,move[0],move[1], board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+
+
+        //int afterEval = Evaluate.evaluateMove(board.redsTurn,move[0],move[1], board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+
+        System.out.println("Start multiple: "+startEval+" After moves "+ afterEval);
+    }
+
+    @Test
     void simpleMoveTest(){
-        setupBoardsWithFen(DEFAULT_BOARD);
         displayBoard();
         doMoves(true,true,"B7-B6","B2-B3","B6-B5","B3-B4","B5-C5","B4-B5","C5-C4","B5-B6","C4-C3","B6-C7");//,"C3-B2","G2-G3","B2-C1"
         //board.displayBitboard(board.getPossibleMovesSingles(board.redSingles,true));

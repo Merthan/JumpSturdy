@@ -2,6 +2,7 @@ package model;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ToolsTest {
@@ -20,5 +21,10 @@ public class ToolsTest {
         assertEquals("C8-F6",Tools.cleanMove("C8-F6")); // Test with uppercase input
         assertEquals("D4-D5",Tools.cleanMove("D4-D5")); // Test with no change needed
         assertEquals("A3-A2", Tools.cleanMove("A32")); // Test with a move ending with a number
+    }
+
+    @Test
+    void testParseMove(){
+        assertArrayEquals(Tools.parseMove("B7-B6"),new byte[]{9,17});
     }
 }

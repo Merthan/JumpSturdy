@@ -1,6 +1,7 @@
 package model;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
@@ -34,8 +35,11 @@ public class Game {
         Scanner scanner = new Scanner(System.in);
         char winner = 'f';
         System.out.println(board); // Display the current board
+        int result = Evaluate.evaluateMove(isRedTurn,(byte)9,(byte)17,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+        System.out.println("Result after move applied:"+result);
+        System.out.println("Result currently:"+ Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
         while (winner == 'f') {
-
+            //System.out.println("ParseMove:"+Arrays.toString(Tools.parseMove("B7-B6")));
             System.out.println("Possible moves for you"); //Sorted now
             Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(),Tools.PURPLE);
             System.out.println();
@@ -46,6 +50,9 @@ public class Game {
             if (isValidMove(board,playerMove)) {
                 // My Turn
                 isRedTurn = board.doMove(playerMove,isRedTurn,true);//Do and switch turn
+                System.out.println("ParseMove:"+Arrays.toString(Tools.parseMove(playerMove)));
+                //BitBoardManipulation.doMoveAndReturnModifiedBitBoards((byte)9,(byte)17,isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,board.red_on_blue,board.blue_on_red);
+
                 if(alwaysRed) isRedTurn = true;
                 Tools.printInColor("\t\t"+player+" Move:",!isRedTurn);
                 System.out.println(board);

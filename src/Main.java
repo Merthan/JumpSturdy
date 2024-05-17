@@ -2,6 +2,7 @@ import benchmark.Benchmark;
 import model.BitBoard;
 import model.Game;
 import model.JumpSturdyBoard;
+import model.Tools;
 
 import java.util.List;
 import java.util.Random;
@@ -26,7 +27,7 @@ public class Main {
         //Benchmark.benchmark(b);
 
 
-        long[] moves = BitBoard.parseMove("B8-B7");
+        byte[] moves = Tools.parseMove("B8-B7");
         b.moveSinglePiece(moves[0],moves[1],true);
         System.out.println(b);
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));

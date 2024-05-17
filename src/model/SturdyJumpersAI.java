@@ -5,7 +5,7 @@ import java.util.List;
 public class SturdyJumpersAI {
     private static final int MAX_DEPTH = 3; // Example depth limit
 
-    public String findBestMove(BitBoard board, Boolean isRed) {
+   /* public String findBestMove(BitBoard board, Boolean isRed) {
         int bestValue = Integer.MIN_VALUE;
         String bestMove = null;
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
@@ -54,6 +54,6 @@ public class SturdyJumpersAI {
             }
             return minEval;
         }
-    }
+    }*/
 
 }

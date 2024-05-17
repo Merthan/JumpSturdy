@@ -8,6 +8,29 @@ public class Evaluate {
      boolean redsTurn,long r, long b, long rr, long bb, long br, long rb
      */
 
+
+    public static int evaluateMove(boolean redsTurn,byte fromIndex, byte toIndex, long r, long b, long rr, long bb, long br, long rb){
+        long[] bitboards = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(fromIndex,toIndex,redsTurn,r,b,rr,bb,br,rb);
+        if(redsTurn){//Converting the method based on which caller, can be refactored in the future when BitBoardManipulation is changed
+            return evaluateSimple(true,bitboards[0],bitboards[1],bitboards[2],bitboards[3],bitboards[5],bitboards[4]);
+        }else {
+            return evaluateSimple(false,bitboards[1],bitboards[0],bitboards[3],bitboards[2],bitboards[4],bitboards[5]);
+        }
+    }
+
+    public static int evaluateMultipleMoves(boolean redsTurn,byte[] fromIndex, byte[] toIndex, long r, long b, long rr, long bb, long br, long rb){
+        long[] bitboards = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(fromIndex[0],toIndex[0],redsTurn,r,b,rr,bb,br,rb);
+        for (int i = 1; i < fromIndex.length; i++) {
+            bitboards = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(fromIndex[i],toIndex[i],redsTurn,
+                    bitboards[redsTurn?0:1],bitboards[redsTurn?1:0],bitboards[redsTurn?2:3],bitboards[redsTurn?3:2],bitboards[redsTurn?5:4],bitboards[redsTurn?4:5]);
+        }
+        if(redsTurn){//Converting the method based on which caller, can be refactored in the future when BitBoardManipulation is changed
+            return evaluateSimple(true,bitboards[0],bitboards[1],bitboards[2],bitboards[3],bitboards[5],bitboards[4]);
+        }else {
+            return evaluateSimple(false,bitboards[1],bitboards[0],bitboards[3],bitboards[2],bitboards[4],bitboards[5]);
+        }
+    }
+
     public static int evaluateSimple(boolean redsTurn,long r, long b, long rr, long bb, long br, long rb) {
         return 2*(8-calculateDistanceToEnd(redsTurn, r, b, rr, bb, br, rb))+(calculatePieceWorthValue(redsTurn, r, b, rr, bb, br, rb)-calculatePieceWorthValue(!redsTurn, r, b, rr, bb, br, rb));
     }

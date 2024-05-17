@@ -3,6 +3,8 @@ package model;
 import java.io.IOException;
 import java.util.Scanner;
 
+import static model.BitBoard.CORNER_MASK;
+
 public class Tools {
 
     public static final String RESET = "\u001B[0m";
@@ -49,6 +51,63 @@ public class Tools {
             }
         }
         return sb.toString();
+    }
+
+    public static byte positionToIndex(String position) { //index, not bitboard, needs to be shifted
+        // Extract the column (file) and row from the position
+        char letter = position.charAt(0); // 'F'
+        char number = position.charAt(1); // '3'// 'F' - 'A' = 5// '3' - '1' = 2
+
+        // Calculate the index for a 0-based array (bottom-left is 0,0)
+        return (byte) ((7 - (number - '1')) * 8 + (letter - 'A')); // Convert to 0-based index for an 8x8 board
+    }
+
+    public static String indexToPosition(long index) {
+        byte fileIndex = (byte) (index % 8); // Calculate file index (column)
+        byte rankIndex = (byte) (index / 8); // Calculate rank index (row)
+        char file = (char) ('A' + fileIndex); // Convert file index to letter (A-H)
+        char rank = (char) ('1' + (7 - rankIndex)); // Convert rank index to number (1-8), adjusting for 0-based index
+        return "" + file + rank; // Concatenate to form the position string
+    }
+
+    // Method to parse a move like "F3-F4" and return fromIndex and toIndex
+    public static byte[] parseMove(String move) {
+        // Split the move into the from and to parts
+        String[] parts = move.split("-");
+        // Convert each part to an index
+        byte fromIndex= positionToIndex(parts[0]);
+        byte toIndex = positionToIndex(parts[1]);
+        // Return the indices as an array
+        return new byte[]{fromIndex, toIndex};
+    }
+
+
+    // Utility method to shift bitboards for movement
+
+    public static long shift(long bitboard, int offset) {
+        return offset > 0 ? (bitboard << offset & CORNER_MASK) : (bitboard >>> -offset & CORNER_MASK);
+    }
+    public static void displayBitboard(long bitboard) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
+                int position = row * 8 + col;  // Start from top left, no inversion
+                // IF Corner
+                if ((row == 0 || row == 7) && (col == 0 || col == 7)) {
+                    System.out.print("X ");
+                } else if ((bitboard & (1L << position)) != 0) {
+                    System.out.print("1 ");
+                } else {
+                    System.out.print("0 ");
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    public static void commentedBits(String comment, long bits) {
+        System.out.println(comment);
+        displayBitboard(bits);
     }
 
 /*    public String cleanMove(String move){
