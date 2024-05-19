@@ -1,5 +1,6 @@
 package model;
 
+import deprecated.JumpSturdyBoard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

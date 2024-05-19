@@ -1,16 +1,16 @@
-package model;
+package deprecated;
 
 import java.util.Arrays;
 
 public class JumpSturdyBoard {
-    static final int EMPTY = 0;
-    static final int CORNER = 9; // -1
-    static final int RED_ON_RED = 1;  // 'A'
-    static final int RED_ON_BLUE = 2; // 'B'
-    static final int BLUE_ON_BLUE = 3; // 'C'
-    static final int BLUE_ON_RED = 4;  // 'D'
-    static final int RED = 5;          // 'X'
-    static final int BLUE = 6;         // 'Y'
+    public static final int EMPTY = 0;
+    public static final int CORNER = 9; // -1
+    public static final int RED_ON_RED = 1;  // 'A'
+    public static final int RED_ON_BLUE = 2; // 'B'
+    public static final int BLUE_ON_BLUE = 3; // 'C'
+    public static final int BLUE_ON_RED = 4;  // 'D'
+    public static final int RED = 5;          // 'X'
+    public static final int BLUE = 6;         // 'Y'
 
     private static final String[][] TEMP_MAPPINGS = {
             {"r0", "X"},

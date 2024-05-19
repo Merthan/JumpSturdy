@@ -3,9 +3,9 @@ package model;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static model.JumpSturdyBoard.*;
-import static model.JumpSturdyBoard.BLUE;
-import static model.JumpSturdyBoard.RED;
+import static deprecated.JumpSturdyBoard.*;
+import static deprecated.JumpSturdyBoard.BLUE;
+import static deprecated.JumpSturdyBoard.RED;
 import static model.Tools.*;
 
 public class BitBoard {
@@ -53,6 +53,112 @@ public class BitBoard {
         blueDoubles = 0L;
         red_on_blue = 0L;
         blue_on_red = 0L;
+    }
+
+    public BitBoard(String fen){
+        readFEN(fen);
+    }
+
+    public void readFEN(String fen) {
+
+        // Define the FEN mappings
+        final String[][] TEMP_MAPPINGS = {
+                {"r0", "X"},
+                {"b0", "Y"},
+                {"rr", "A"},
+                {"rb", "D"}, // Blue on red
+                {"bb", "C"},
+                {"br", "B"} // Red on blue
+        };
+
+        for (String[] mapping : TEMP_MAPPINGS) { // For easier indexes
+            fen = fen.replace(mapping[0], mapping[1]);
+        }
+
+        String[] rows = fen.split("/");
+
+        for (int row = 0; row < rows.length; row++) {
+            int col = (row==0||row==7)?1:0;
+            for (int i = 0; i < rows[row].length(); i++) {
+                char c = rows[row].charAt(i);
+                if (Character.isDigit(c)) {
+                    // Empty squares
+                    col += c - '0';
+                } else {
+                    byte index = (byte)((7 - row) * 8 + col);
+                    switch (c) {
+                        case 'X' -> {
+                            redSingles |= 1L << index;
+                        }
+                        case 'Y' -> {
+                            blueSingles |= 1L << index;
+                        }
+                        case 'A' -> {
+                            redDoubles |= 1L << index;
+                        }
+                        case 'C' -> {
+                            blueDoubles |= 1L << index;
+                        }
+                        case 'D' -> {
+                            blue_on_red |= 1L << index;
+                        }
+                        case 'B' -> {
+                            red_on_blue |= 1L << index;
+                        }
+                    }
+                    col++;
+                }
+            }
+        }
+    }
+
+    public String toFEN() {
+        StringBuilder fen = new StringBuilder();
+
+        for (int row = 0; row < 8; row++) {
+            int emptyCount = 0;
+
+            for (int col = (row == 0 || row == 7) ? 1 : 0; col < ((row == 0 || row == 7) ? 7 : 8); col++) {//Start end have corners,6 length
+                int index = (7 - row) * 8 + col;
+                if (index == 0 || index == 7 || index == 56) {//63 never happens
+                    continue; // Skip corners
+                }
+                String piece; // Set depending on bitboards
+                if ((redSingles & (1L << index)) != 0) {
+                    piece = "r0";
+                } else if ((blueSingles & (1L << index)) != 0) {
+                    piece = "b0";
+                } else if ((redDoubles & (1L << index)) != 0) {
+                    piece = "rr";
+                } else if ((blueDoubles & (1L << index)) != 0) {
+                    piece = "bb";
+                } else if ((blue_on_red & (1L << index)) != 0) {
+                    piece = "rb";
+                } else if ((red_on_blue & (1L << index)) != 0) {
+                    piece = "br";
+                } else {
+                    emptyCount++;
+                    piece = "";
+                }
+
+                if (!piece.isEmpty()) { // Count if empty for number
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                    fen.append(piece);
+                } else if (col == 7 || col == 6 && (row == 0 || row == 7)) {
+                    if (emptyCount > 0) {
+                        fen.append(emptyCount);
+                        emptyCount = 0;
+                    }
+                }
+            }
+            if (row < 7) {
+                fen.append('/');
+            }
+        }
+        return fen.toString();
     }
 
     // Method to read a 2D array and convert it into a bitboard

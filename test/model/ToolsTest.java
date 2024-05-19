@@ -30,10 +30,9 @@ public class ToolsTest {
 
     @Test
     void testFenToString(){// "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
-        JumpSturdyBoard jumpSturdyBoard = new JumpSturdyBoard("2bb3/5b02/1bb1bb2b0b0/2br3rb1/2b0r04/5r0rr1/2rr2r02/3r02");
-        BitBoard bitBoard = new BitBoard();
-        bitBoard.readBoard(jumpSturdyBoard.board);
+        //JumpSturdyBoard jumpSturdyBoard = new JumpSturdyBoard();
+        BitBoard bitBoard = new BitBoard("2bb3/5b02/1bb1bb2b0b0/2br3rb1/2b0r04/5r0rr1/2rr2r02/3r02");
         System.out.println(bitBoard);
-        System.out.println(Tools.fenToString("2bb3/5b02/1bb1bb2b0b0/2b03b01/2b0r04/5r0rr1/2rr2r02/3r02"));
+        System.out.println(Tools.fenToString("2bb3/5b02/1bb1bb2b0b0/2br3rb1/2b0r04/5r0rr1/2rr2r02/3r02"));
     }
 }

@@ -1,7 +1,6 @@
-import benchmark.Benchmark;
 import model.BitBoard;
 import model.Game;
-import model.JumpSturdyBoard;
+import deprecated.JumpSturdyBoard;
 import model.Tools;
 
 import java.util.List;

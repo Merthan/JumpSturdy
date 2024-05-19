@@ -1,11 +1,11 @@
 package model;
 
+import deprecated.JumpSturdyBoard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,9 +17,9 @@ public class BitBoardTest {
 
     //Helper methods
     void setupBoardsWithFen(String fen){
-        jumpSturdyBoard=new JumpSturdyBoard(fen);
-        board = new BitBoard();
-        board.readBoard(jumpSturdyBoard.board);
+        //jumpSturdyBoard=new JumpSturdyBoard(fen);
+        board = new BitBoard(fen);
+        //board.readBoard(jumpSturdyBoard.board);
     }
     void displayBoard(){
         System.out.println(board);
@@ -51,6 +51,21 @@ public class BitBoardTest {
         position = "B1-G8";
         expected = new int[]{ 7,1,  0,6};
         assertArrayEquals(JumpSturdyBoard.coordinatesFromMove(position),expected);
+    }
+
+    @Test
+    void fromFenTest(){
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
+        String fen = fens[1];
+        BitBoard b = new BitBoard(fen);
+        System.out.println(b);
+        Tools.displayBitboard(b.redSingles);
+        System.out.println(b.toFEN());
+
+        assertEquals(fen,b.toFEN());
+        setupBoardsWithFen(fen);
+        displayBoard();
+
     }
 
     @Test
@@ -141,12 +156,7 @@ public class BitBoardTest {
     void doubleMoveTestThree(){
         setupBoardsWithFen("6/8/4rb3/3br4/8/8/8/6");
         displayBoard();
-        //doMoves();
-        //doMoves(true,true,"H4-G2");
 
-        /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
-            doMoves(true,false,"A3-C2");
-        });*/
         System.out.println(board.getAllPossibleMoves(true));
         //doMoves(true,false,"A3-C4");
         //TODO: FIX KNIGHT MOVE HERE

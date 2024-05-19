@@ -9,14 +9,13 @@ import java.util.Scanner;
 
 public class Game {
     private BitBoard board;
-    private JumpSturdyBoard jumpSturdyBoard;
+
     private boolean isRedTurn;
 
     final String PLAYER_ONE = "[\uD83D\uDC68\u200D\uD83D\uDCBBPlayer 1]";
     final String PLAYER_TWO ="[\uD83D\uDC7DPlayer 2]";
     public Game() {
         board = new BitBoard();
-        jumpSturdyBoard = new JumpSturdyBoard() ;
         isRedTurn = true;
     }
 
@@ -26,9 +25,8 @@ public class Game {
             isRedTurn = fen.charAt(fen.length() - 1) == 'r';//Else its blue
             fen = fen.substring(0,fen.length()-2);//Remove rest
         }
-        jumpSturdyBoard = new JumpSturdyBoard(fen);
-        board = new BitBoard();
-        board.readBoard(jumpSturdyBoard.board);
+
+        board = new BitBoard(fen);
     }
 
     public void playAgainst(BitBoard board,boolean alwaysRed){
@@ -64,6 +62,7 @@ public class Game {
                     //System.out.println("\u001B[41mRed background\u001B[0m"); red background
                     break;
                 }
+                System.out.println("New Game FEN: "+board.toFEN());
                 System.out.println("Game evaluated red:"+Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
                 System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
                 // Check if there's a winner after the bot's move
@@ -148,10 +147,9 @@ public class Game {
 
         String fen = fens[0];
 
-        JumpSturdyBoard temp = new JumpSturdyBoard(fen);
-        BitBoard board = new BitBoard();
 
-        board.readBoard(temp.board);
+        BitBoard board = new BitBoard(fen);
+
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
         //game.play(board);
