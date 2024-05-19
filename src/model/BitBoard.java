@@ -27,8 +27,8 @@ public class BitBoard {
     // Masks for edges to handle movements correctly
     private static final long NOT_A_FILE = 0xfefefefefefefefeL; // 11111110...
     private static final long NOT_H_FILE = 0x7f7f7f7f7f7f7f7fL; // 01111111...
-    private static long NOT_AB_FILE = 0xfcfcfcfcfcfcfcfcl;
-    private static long NOT_GH_FILE = 0x3f3f3f3f3f3f3f3fl;
+    private static final long NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCL; // Not columns A and B
+    private static final long NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FL; // Not columns G and H
 
     // Directions for single figures based on team
     private static final int RED_DIRECTION = 8;   // Red moves down
@@ -89,7 +89,7 @@ public class BitBoard {
     }
 
     //Returns if the piece at position belongs to red
-    public boolean isItRedsTurnByPositionOfPieces(long position){
+    public boolean isItRedsTurnByPositionOfPieces(byte position){
         boolean redSingleBitSet = (redSingles & (1L << position)) != 0;
         boolean blueSingleBitSet = (blueSingles & (1L << position)) != 0;
         boolean redDoubleBitSet = (redDoubles & (1L << position)) != 0;
@@ -97,7 +97,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
-            throw new RuntimeException("Invalid position, either empty or corner" + position);
+            throw new RuntimeException("Invalid position, either empty or corner" + position+" "+ Tools.indexToPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
@@ -325,7 +325,7 @@ public class BitBoard {
     }*/
 
 
-    public long getPossibleMovesDoubles(long doubles, boolean isRed){//TODO: FIX KNIGHTS ON EDGES WRONG POSSIBLE MOVES
+/*    public long getPossibleMovesDoubles(long doubles, boolean isRed){//TODO: FIX KNIGHTS ON EDGES WRONG POSSIBLE MOVES
         int[] moves = {17, 15, 10, 6};
 
         // All occupied spaces
@@ -336,16 +336,72 @@ public class BitBoard {
         long jumpable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
 
         //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
-        long twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[1] : -moves[1]) & jumpable;
+*//*        long twoLeftOneForwardMoves = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed ? moves[1] : -moves[1]) & jumpable;
         long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & jumpable;
 
         long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & jumpable;
-        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & jumpable;
+        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & jumpable;*//*
+        long twoLeftOneForwardMoves, twoForwardOneLeftMoves, twoRightOneForwardMoves, twoForwardOneRightMoves;
 
+        if (isRed) {
+            twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, moves[1]) & jumpable;
+            twoForwardOneLeftMoves = shift(doubles & NOT_A_FILE, moves[3]) & jumpable;
+
+            twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, moves[0]) & jumpable;
+            twoForwardOneRightMoves = shift(doubles & NOT_H_FILE, moves[2]) & jumpable;
+        } else {
+            twoLeftOneForwardMoves = shift(doubles & NOT_GH_FILE, -moves[1]) & jumpable;
+            twoForwardOneLeftMoves = shift(doubles & NOT_H_FILE, -moves[3]) & jumpable;
+
+            twoRightOneForwardMoves = shift(doubles & NOT_AB_FILE, -moves[0]) & jumpable;
+            twoForwardOneRightMoves = shift(doubles & NOT_A_FILE, -moves[2]) & jumpable;
+        }
+
+
+        System.out.println("BB moves,"+isRed);
+        displayBitboard(twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves);
         return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
+    }*/
+
+    public long getPossibleMovesDoubles(long doubles, boolean isRed){//FIXED
+        // All occupied spaces
+        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
+        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
+
+        //long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
+        long jumpable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
+
+        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
+
+/*        long twoLeftOneForwardMoves = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?15:-15) & jumpable;
+        long twoForwardOneLeftMoves = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?6:-6) & jumpable;
+        long twoRightOneForwardMoves = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?17:-17) & jumpable;
+        long twoForwardOneRightMoves = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?10:-10) & jumpable;*/
+
+/*        long twoForwardOneLeft = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?15:-15) & jumpable;
+        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?6:-6) & jumpable;
+        System.out.println("HERE");
+        Tools.displayBitboard(oneForwardTwoLeft);
+        Tools.displayBitboard(doubles);
+        Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));
+
+
+        long twoForwardOneRight = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?17:-17) & jumpable;
+        long oneForwardTwoRight = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?10:-10) & jumpable;*/
+
+        long twoForwardOneLeft = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?15:-15);
+        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?6:-6);
+/*        System.out.println("HERE");
+        Tools.displayBitboard(oneForwardTwoLeft);
+        Tools.displayBitboard(doubles);
+        Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));*/
+
+
+        long twoForwardOneRight = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?17:-17);
+        long oneForwardTwoRight = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?10:-10);
+
+        return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
     }
-
-
     /**
     * Gathers all possible moves for the current player.
     * This method decides the piece color based on whose turn it is,
@@ -381,9 +437,7 @@ public class BitBoard {
                 long movesFromThisPiece = possibleMoves & getPossibleMovesForIndividualPiece(fromIndex, isRed);
                 for (byte toIndex = 0; toIndex < 64; toIndex++) {
                     if ((movesFromThisPiece & (1L << toIndex)) != 0) {  // Valid move to toIndex
-                        String fromPos = indexToPosition(fromIndex);
-                        String toPos = indexToPosition(toIndex);
-                        moveList.add(fromPos + "-" + toPos);
+                        moveList.add(indexToPosition(fromIndex) + "-" + indexToPosition(toIndex));
                     }
                 }
             }
@@ -398,19 +452,16 @@ public class BitBoard {
         // Überprüfen, ob es sich um einen Einzelstein handelt
         if (((isRed ? redSingles : blueSingles) & singlePieceMask) != 0) {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
-            long singles = singlePieceMask;
-    
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Stein zu ermitteln
-            moves |= getPossibleMovesSingles(singles, isRed);
+            moves |= getPossibleMovesSingles(singlePieceMask, isRed);
         }
     
         // Überprüfen, ob es sich um einen Doppelstein handelt
         if (((isRed ? (redDoubles | red_on_blue) : (blueDoubles | blue_on_red)) & singlePieceMask) != 0) {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
-            long doubles = singlePieceMask;
-    
+
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Doppelstein zu ermitteln
-            moves |= getPossibleMovesDoubles(doubles, isRed);
+            moves |= getPossibleMovesDoubles(singlePieceMask, isRed);
         }
     
         return moves;

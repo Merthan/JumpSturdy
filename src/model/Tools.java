@@ -15,9 +15,11 @@ public class Tools {
     public static final String PURPLE = "\u001B[35m";
     public static final String CYAN = "\u001B[36m";
     public static final String BOLD = "\u001B[1m";
+
     public static void printInColor(String text, boolean isRed) {
-        System.out.println((isRed ? RED:BLUE) + text + RESET);
+        System.out.println((isRed ? RED : BLUE) + text + RESET);
     }
+
     public static void printInColor(String text, String color) {
         System.out.println((color) + text + RESET);
     }
@@ -26,12 +28,12 @@ public class Tools {
     public static String cleanMove(String move) {
         // Remove any whitespace and convert to uppercase
         move = move.trim().toUpperCase();
-        if(move.length()==5){
-            move = move.substring(0,2)+"-"+move.substring(3,5);
+        if (move.length() == 5) {
+            move = move.substring(0, 2) + "-" + move.substring(3, 5);
         }
         if (move.length() == 3) {
             // Insert a dash between the first and second characters
-            move = move.substring(0,2) +"-"+move.charAt(0)+move.charAt(2) ;
+            move = move.substring(0, 2) + "-" + move.charAt(0) + move.charAt(2);
         } else if (move.length() == 4) {
             // Insert a dash between the second and third characters
             move = move.substring(0, 2) + "-" + move.substring(2);
@@ -40,6 +42,7 @@ public class Tools {
 
         return move;
     }
+
     public static String bitboardToString(long bitboard) {
         StringBuilder sb = new StringBuilder();
         for (int i = 63; i >= 0; i--) {
@@ -62,7 +65,7 @@ public class Tools {
         return (byte) ((7 - (number - '1')) * 8 + (letter - 'A')); // Convert to 0-based index for an 8x8 board
     }
 
-    public static String indexToPosition(long index) {
+    public static String indexToPosition(byte index) {
         byte fileIndex = (byte) (index % 8); // Calculate file index (column)
         byte rankIndex = (byte) (index / 8); // Calculate rank index (row)
         char file = (char) ('A' + fileIndex); // Convert file index to letter (A-H)
@@ -75,7 +78,7 @@ public class Tools {
         // Split the move into the from and to parts
         String[] parts = move.split("-");
         // Convert each part to an index
-        byte fromIndex= positionToIndex(parts[0]);
+        byte fromIndex = positionToIndex(parts[0]);
         byte toIndex = positionToIndex(parts[1]);
         // Return the indices as an array
         return new byte[]{fromIndex, toIndex};
@@ -83,10 +86,12 @@ public class Tools {
 
 
     // Utility method to shift bitboards for movement
-
+    // TODO: Performance, checked and seems to be VERY similar to inline, so no further opt necessary after 0 check
     public static long shift(long bitboard, int offset) {
+        if (bitboard == 0) return 0;
         return offset > 0 ? (bitboard << offset & CORNER_MASK) : (bitboard >>> -offset & CORNER_MASK);
     }
+
     public static void displayBitboard(long bitboard) {
         for (int row = 0; row < 8; row++) {
             for (int col = 0; col < 8; col++) {
@@ -110,9 +115,49 @@ public class Tools {
         displayBitboard(bits);
     }
 
-/*    public String cleanMove(String move){
+    /*    public String cleanMove(String move){
 
-    }*/
+        }*/
+    public static String fenToString(String fen) {
+        // Replace numbers with corresponding number of empty squares
+        for (int i = 1; i <= 8; i++) {
+            fen = fen.replace(i+"", "⬜ ".repeat(i));
+        }
+        String[][] mappings = {
+                {"rb", "\u001B[41m\uD83D\uDD35\u001B[0m "}, // Blue on red
+                {"br", "\u001B[44m\uD83D\uDD34\u001B[0m "},  // Red on blue
+                {"r0", "\uD83D\uDD34 "}, // 🔴
+                {"b0", "\uD83D\uDD35 "}, // 🔵
+                {"rr", "\uD83D\uDFE5 "}, // 🟥
+                {"bb", "\uD83D\uDFE6 "} // 🟦
+
+        };
+        // Replace custom notations with corresponding emojis
+        for (String[] mapping : mappings) {
+            fen = fen.replace(mapping[0], mapping[1]);
+        }
+        StringBuilder sb = new StringBuilder();
+        String[] rows = fen.split("/");
+        // Append column labels (A-H)
+        sb.append("   A  B  C  D   E  F  G  H\n");
+        for (int row = 7; row >=0; row--) { // Process rows in correct order
+            sb.append((row+1)).append(" ");
+            // Add left corner for the first and last row
+            if (row == 0 || row == 7) {
+                sb.append("\uD83D\uDD33 ");
+            }
+            sb.append(rows[row]);
+            // Add right corner for the first and last row
+            if (row == 0 || row == 7) {
+                sb.append("\uD83D\uDD33 ");
+            }
+            sb.append(" ").append(8 - row).append("\n");
+        }
+        // Append column labels (A-H)
+        sb.append("   A  B  C  D   E  F  G  H\n");
+
+        return sb.toString();
+    }
 
 }
 
@@ -125,20 +170,22 @@ class ProgressBarExample { // Might be needed in the future for very pretty cons
         }
     }
 
-    public static void clrscr(){
+    public static void clrscr() {
         //Clears Screen in java
         try {
             if (System.getProperty("os.name").contains("Windows"))
                 new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
             else
                 Runtime.getRuntime().exec("clear");
-        } catch (IOException | InterruptedException ex) {}
+        } catch (IOException | InterruptedException ex) {
+        }
     }
 
     public static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
+
     private static String getProgressBar(int percent) {
         int length = 20;
         int progress = (int) ((percent / 100.0) * length);

@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,6 +18,7 @@ public class BitBoardTest {
     //Helper methods
     void setupBoardsWithFen(String fen){
         jumpSturdyBoard=new JumpSturdyBoard(fen);
+        board = new BitBoard();
         board.readBoard(jumpSturdyBoard.board);
     }
     void displayBoard(){
@@ -33,6 +35,7 @@ public class BitBoardTest {
             }
         }
     }
+
 
 
     @BeforeEach
@@ -105,6 +108,7 @@ public class BitBoardTest {
     @Test
     void doubleMoveTest(){
         setupBoardsWithFen("b0b0b0b0b0b0/1b0b0b0b0b0b01/rb7/7br/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0");
+
         displayBoard();
         //doMoves();
         doMoves(true,true,"H4-G2");
@@ -117,5 +121,56 @@ public class BitBoardTest {
         //TODO: FIX KNIGHT MOVE HERE
     }
 
+
+    @Test
+    void doubleMoveTestTwo(){
+        setupBoardsWithFen("6/8/rb7/7br/8/8/8/6");
+        displayBoard();
+        //doMoves();
+        //doMoves(true,true,"H4-G2");
+
+        /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
+            doMoves(true,false,"A3-C2");
+        });*/
+        System.out.println(board.getAllPossibleMoves(true));
+        //doMoves(true,false,"A3-C4");
+        //TODO: FIX KNIGHT MOVE HERE
+    }
+
+    @Test
+    void doubleMoveTestThree(){
+        setupBoardsWithFen("6/8/4rb3/3br4/8/8/8/6");
+        displayBoard();
+        //doMoves();
+        //doMoves(true,true,"H4-G2");
+
+        /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
+            doMoves(true,false,"A3-C2");
+        });*/
+        System.out.println(board.getAllPossibleMoves(true));
+        //doMoves(true,false,"A3-C4");
+        //TODO: FIX KNIGHT MOVE HERE
+    }
+
+    @Test
+    void doubleMoveTestEdges(){
+        setupBoardsWithFen("br5/8/br7/rb7/7rb/7br/8/rb4rb");
+        displayBoard();
+        //doMoves();
+        //doMoves(true,true,"H4-G2");
+
+        /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
+            doMoves(true,false,"A3-C2");
+        });*/
+        List<String> redMoves =  board.getAllPossibleMoves(true);
+        assertArrayEquals(redMoves.toArray(),new String[]{"A3-C2","H6-F5","H6-G4"});
+        System.out.println(redMoves);
+
+        List<String> blueMoves =  board.getAllPossibleMoves(false);
+        assertArrayEquals(blueMoves.toArray(),new String[]{"A4-B6","A4-C5", "H5-F6", "H5-G7"});
+        System.out.println(blueMoves);
+        doMoves(true,false,"H5-G7");
+
+    }
 
 }

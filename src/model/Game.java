@@ -24,7 +24,7 @@ public class Game {
         isRedTurn=true;
         if(fen.contains(" ")){
             isRedTurn = fen.charAt(fen.length() - 1) == 'r';//Else its blue
-            fen = fen.substring(0,fen.length()-3);//Remove rest
+            fen = fen.substring(0,fen.length()-2);//Remove rest
         }
         jumpSturdyBoard = new JumpSturdyBoard(fen);
         board = new BitBoard();
