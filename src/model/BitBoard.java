@@ -203,7 +203,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
-            throw new RuntimeException("Invalid position, either empty or corner" + position+" "+ Tools.indexToPosition(position));
+            throw new RuntimeException("Invalid position, either empty or corner" + position +" "+ Tools.indexToPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
@@ -273,6 +273,36 @@ public class BitBoard {
         }
         return !isRedTurn;//Now optionally returns whose turn it is in case we test chaining same team calls etc in later steps
     }
+    /*
+    public void doMoveVoid(String move, boolean isRedTurn,boolean checkIfPossible) {
+        byte[] indices = parseMove(move);
+        if(isItRedsTurnByPositionOfPieces(indices[0])!=isRedTurn){
+            throw new IllegalMoveException("Player cant move enemy piece");
+        }
+        if(checkIfPossible){
+            long possibleMoves =getPossibleMovesForIndividualPiece(indices[0],isRedTurn);
+
+            if((possibleMoves & (1L << indices[1])) == 0){//Move not included, index conversion
+                throw new IllegalMoveException("Move is not possible:" +move);
+            }
+        }
+        if (isRedTurn) {
+            if ((redDoubles != 0 && (redDoubles & (1L << indices[0])) != 0)
+                    ||(red_on_blue != 0 && (red_on_blue & (1L << indices[0])) != 0)    ) {
+                moveDoublePiece(indices[0], indices[1], true);
+            } else {
+                moveSinglePiece(indices[0], indices[1], true);
+            }
+        } else {
+            if ((blueDoubles != 0 && (blueDoubles & (1L << indices[0])) != 0)||(blue_on_red != 0 && (blue_on_red & (1L << indices[0])) != 0)) {
+                moveDoublePiece(indices[0], indices[1], false);
+            } else {
+                moveSinglePiece(indices[0], indices[1], false);
+            }
+        }
+    }
+
+     */
 
 
     public void moveSinglePiece(byte fromIndex, byte toIndex, boolean isRed) {
@@ -572,6 +602,26 @@ public class BitBoard {
     
         return moves;
     }
+    public BitBoard copy(){
+        BitBoard newBoard = new BitBoard();
+        newBoard.redSingles = this.redSingles;
+        newBoard.blueSingles = this.blueSingles;
+        newBoard.redDoubles = this.redDoubles;
+        newBoard.blueDoubles = this.blueDoubles;
+        newBoard.red_on_blue = this.red_on_blue;
+        newBoard.blue_on_red = this.blue_on_red;
+        return newBoard;
+    }
+    public BitBoard longToBit (long[] bitBoards){
+        BitBoard newBoard = new BitBoard();
+        newBoard.redSingles = bitBoards[0];
+        newBoard.blueSingles = bitBoards[1];
+        newBoard.redDoubles = bitBoards[2];
+        newBoard.blueDoubles = bitBoards[3];
+        newBoard.red_on_blue = bitBoards[4];
+        newBoard.blue_on_red = bitBoards[5];
+        return newBoard;
+    }
     
     //TODO: Wir brauchen eine Methode movePiece, die unterscheidet zwischen moveSinglePiece und moveDoublePiece
 
@@ -581,6 +631,7 @@ public class BitBoard {
         String move = "A8-H1";
         byte[] indices = parseMove(move);
         System.out.println("From Index: " + indices[0] + ", To Index: " + indices[1]);
+
     }
 
     /**

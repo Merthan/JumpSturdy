@@ -73,7 +73,7 @@ public class Game {
         }
     }
 
-    public void play(BitBoard board) {
+    public void play(BitBoard board, boolean smartBot) {
 
 
         Scanner scanner = new Scanner(System.in);
@@ -106,7 +106,8 @@ public class Game {
                 }
 
 
-                // Bot Turn
+                // Bot Turn (Random Move)
+                if (!smartBot) {
                 List<String> possibleMoves = board.getAllPossibleMoves(false);
                 if(!possibleMoves.isEmpty()){
                     String botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
@@ -122,6 +123,30 @@ public class Game {
                 System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
                 // Check if there's a winner after the bot's move
                 winner = board.checkWinCondition();
+                }
+                // Bot Turn (Smart Move)
+                else {
+                    List<String> possibleMoves = board.getAllPossibleMoves(false);
+                    if(!possibleMoves.isEmpty()){
+                        String botMove = SturdyJumpersAI.findBestMove(board,false);
+                        isRedTurn = board.doMove(botMove,isRedTurn,true);
+                    }else{
+                        isRedTurn = !isRedTurn;//Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
+                    }
+                    Tools.printInColor("\t\t\uD83E\uDD16Bot's move:",false);
+                    System.out.println(board);
+
+                    System.out.println("Game evaluated red:"+Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                    System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                    // Check if there's a winner after the bot's move
+                    winner = board.checkWinCondition();
+
+                    if (winner != 'f') {
+                        System.out.println("\u001B[41m\uD83C\uDFC5Game over "+(winner=='r'?"Red":"Blue") + " wins"+"\u001B[0m");
+                        //System.out.println("\u001B[41mRed background\u001B[0m"); red background
+                        break;
+                    }
+                }
             } else {
                 Tools.printInColor("Invalid move. Please enter a valid move.\uD83E\uDD22",true);
             }
@@ -152,8 +177,8 @@ public class Game {
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        //game.play(board);
-        game.playAgainst(board,false);
+        game.play(board,true);
+        //game.playAgainst(board,true);
     }
 }
 

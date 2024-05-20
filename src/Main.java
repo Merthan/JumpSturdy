@@ -1,7 +1,5 @@
-import model.BitBoard;
-import model.Game;
+import model.*;
 import deprecated.JumpSturdyBoard;
-import model.Tools;
 
 import java.util.List;
 import java.util.Random;
@@ -29,6 +27,10 @@ public class Main {
         byte[] moves = Tools.parseMove("B8-B7");
         b.moveSinglePiece(moves[0],moves[1],true);
         System.out.println(b);
+
+        System.out.println("-------------------------------------------");
+        System.out.println(SturdyJumpersAI.findBestMove(b,false));
+        System.out.println("-------------------------------------------");
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));
         //b.displayBitboard(b.getPossibleMovesDoubles(b.redDoubles,true));
         //System.out.println(b.checkWinCondition(b.redSingles, b.blueSingles));
