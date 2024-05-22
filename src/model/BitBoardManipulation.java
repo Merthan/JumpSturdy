@@ -77,10 +77,10 @@ public class BitBoardManipulation {
 
         // Remove the double piece from the original position
         ownDoubles &= ~(1L << fromIndex);
-
+        ownOnEnemy &= ~(1L << fromIndex);
         // Determine the bottom type of the double
         boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
-        System.out.println("bt" + bottomIsEnemy);
+        //System.out.println("bt" + bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
             // Landing on own single, turn it into own double

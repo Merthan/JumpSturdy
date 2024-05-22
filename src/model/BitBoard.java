@@ -196,6 +196,7 @@ public class BitBoard {
 
     //Returns if the piece at position belongs to red
     public boolean isItRedsTurnByPositionOfPieces(byte position){
+        detectOverlap(redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
         boolean redSingleBitSet = (redSingles & (1L << position)) != 0;
         boolean blueSingleBitSet = (blueSingles & (1L << position)) != 0;
         boolean redDoubleBitSet = (redDoubles & (1L << position)) != 0;
@@ -206,6 +207,33 @@ public class BitBoard {
             throw new RuntimeException("Invalid position, either empty or corner" + position +" "+ Tools.indexToPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
+    }
+
+    //Static as it might be used in other classes too
+    //TODO: REMOVE LATER FOR PERFORMANCE REASONS WHEN NOT THROWING
+    public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {  //Should not be called after bug has been detected/only in tests for performance reasons
+        boolean noOverlap = true;
+
+        for (byte position = 0; position < 64; position++) {
+            int bitCount = 0;
+
+            if ((redSingles & (1L << position)) != 0) bitCount++;
+            if ((blueSingles & (1L << position)) != 0) bitCount++;
+            if ((redDoubles & (1L << position)) != 0) bitCount++;
+            if ((blueDoubles & (1L << position)) != 0) bitCount++;
+            if ((red_on_blue & (1L << position)) != 0) bitCount++;
+            if ((blue_on_red & (1L << position)) != 0) bitCount++;
+
+            if (bitCount > 1) {
+                noOverlap = false;
+                Tools.printInColor("Overlap detected at position: " + position + " " + Tools.indexToPosition(position), true);
+            }
+        }
+
+        if (!noOverlap) {
+            // Tools.printInColor("No overlap in bit positions.", false);
+            throw new IllegalStateException("Overlaps in bitboards detected");
+        }
     }
 
     public char checkWinCondition() {
@@ -357,10 +385,10 @@ public class BitBoard {
 
         // Remove the double piece from the original position
         ownDoubles &= ~(1L << fromIndex);
-
+        ownOnEnemy &= ~(1L << fromIndex);
         // Determine the bottom type of the double
         boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
-        System.out.println("bt" + bottomIsEnemy);
+        //System.out.println("bt" + bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
             // Landing on own single, turn it into own double
@@ -380,6 +408,7 @@ public class BitBoard {
             enemySingles &= ~(1L << toIndex);
         } else {//TODO: hope all cases are covered and nothing forgotten
             ownSingles |= (1L << toIndex);
+
         }
 
         // Always turn the former bottom of the double into a single at the original position
