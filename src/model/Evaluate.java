@@ -5,7 +5,7 @@ public class Evaluate {
      * Shortened names cause they might be passed lots of times br= red_on_blue as in the board
      * Passing board would be simpler, but better performance without object
      * Copy this for most:
-     boolean redsTurn,long r, long b, long rr, long bb, long br, long rb
+     * boolean redsTurn, long r, long b, long rr, long bb, long br, long rb
      */
 
 

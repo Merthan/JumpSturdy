@@ -6,16 +6,16 @@ public class BitBoardManipulation {
     // No board passed for performance reasons again, only pass board when its called once, not when called in a tree etc
     public static long[] doMoveAndReturnModifiedBitBoards(byte from,byte to, boolean isRedTurn, long redSingles, long blueSingles,long redDoubles,long blueDoubles, long red_on_blue,long blue_on_red) {
         if (isRedTurn) {
-            if ((redDoubles != 0 && (redDoubles & (1L << from)) != 0) ||(red_on_blue != 0 && (red_on_blue & (1L << from)) != 0)    ) {
-                return moveDoublePieceOnBitBoards(from, to, true, redSingles,blueSingles,redDoubles,blueDoubles,blue_on_red,red_on_blue);
+            if ((redDoubles != 0 && (redDoubles & (1L << from)) != 0) || (red_on_blue != 0 && (red_on_blue & (1L << from)) != 0)) {
+                return moveDoublePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
             } else {
-                return moveSinglePieceOnBitBoards(from, to, true,redSingles,blueSingles,redDoubles,blueDoubles,blue_on_red,red_on_blue);
+                return moveSinglePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
             }
         } else {
-            if ((blueDoubles != 0 && (blueDoubles & (1L << from)) != 0)||(blue_on_red != 0 && (blue_on_red & (1L << from)) != 0)) {
-                return moveDoublePieceOnBitBoards(from, to, false,redSingles,blueSingles,redDoubles,blueDoubles,blue_on_red,red_on_blue);
+            if ((blueDoubles != 0 && (blueDoubles & (1L << from)) != 0)|| (blue_on_red != 0 && (blue_on_red & (1L << from)) != 0)) {
+                return moveDoublePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
             } else {
-                return moveSinglePieceOnBitBoards(from, to, false,redSingles,blueSingles,redDoubles,blueDoubles,blue_on_red,red_on_blue);
+                return moveSinglePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
             }
         }
     }
