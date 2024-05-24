@@ -1,7 +1,5 @@
 package model;
 
-import java.util.ArrayList;
-
 public class TestWrapper {
     // wie viele Zustaende wurden untersucht
     public int untersuchteZustaende;

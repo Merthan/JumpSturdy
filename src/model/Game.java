@@ -128,9 +128,9 @@ public class Game {
                 else {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     if(!possibleMoves.isEmpty()){
-                        System.out.println("Untersuchte Zustände: " + SturdyJumpersAI.findBestMoveTestWrapper(SearchType.ALPHABETA, board,  false, 1).untersuchteZustaende);
-                        System.out.println("Bester Zug: " + SturdyJumpersAI.findBestMoveTestWrapper(SearchType.ALPHABETA, board,  false, 1).bestMove);
-                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board,false, 3), isRedTurn,true);
+                        System.out.println("Untersuchte Zustände: " + SturdyJumpersAI.findBestMoveTestWrapper(SearchType.MINIMAX, board,  false, 1).untersuchteZustaende);
+                        //System.out.println("Bester Zug: " + SturdyJumpersAI.findBestMoveTestWrapper(SearchType.ALPHABETA, board,  false, 0).bestMove);
+                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.MINIMAX, board,false, 1), isRedTurn,true);
 
 
                     }else{
@@ -171,9 +171,9 @@ public class Game {
     }
 
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "3bb2/b02b02b01/3b02bbb0/1b06/1r0r02r01r0/5r02/5r0r0r0/6"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/4r0r0"};
 
-        String fen = fens[3];
+        String fen = fens[0];
 
 
         BitBoard board = new BitBoard(fen);
