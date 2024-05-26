@@ -29,30 +29,30 @@ public class Game {
         board = new BitBoard(fen);
     }
 
-    public void playAgainst(BitBoard board,boolean alwaysRed){
+    public void playAgainst(BitBoard board, boolean alwaysRed){
         Scanner scanner = new Scanner(System.in);
         char winner = 'f';
         System.out.println(board); // Display the current board
-        int result = Evaluate.evaluateMove(isRedTurn,(byte)9,(byte)17,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
-        System.out.println("Result after move applied:"+result);
-        System.out.println("Result currently:"+ Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+        int result = Evaluate.evaluateMove(isRedTurn, (byte)9, (byte)17, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+        System.out.println("Result after move applied:" + result);
+        System.out.println("Result currently:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
         while (winner == 'f') {
             //System.out.println("ParseMove:"+Arrays.toString(Tools.parseMove("B7-B6")));
             System.out.println("Possible moves for you"); //Sorted now
             Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(),Tools.PURPLE);
             System.out.println();
             String player = isRedTurn?PLAYER_ONE:PLAYER_TWO;
-            Tools.printInColor("Enter your move ⬇\uFE0F "+player,"\u001B[5m");
+            Tools.printInColor("Enter your move ⬇\uFE0F " + player,"\u001B[5m");
             String playerMove = Tools.cleanMove(scanner.nextLine());
 
-            if (isValidMove(board,playerMove)) {
+            if (isValidMove(board, playerMove)) {
                 // My Turn
-                isRedTurn = board.doMove(playerMove,isRedTurn,true);//Do and switch turn
-                System.out.println("ParseMove:"+Arrays.toString(Tools.parseMove(playerMove)));
+                isRedTurn = board.doMove(playerMove, isRedTurn,true);//Do and switch turn
+                System.out.println("ParseMove:" + Arrays.toString(Tools.parseMove(playerMove)));
                 //BitBoardManipulation.doMoveAndReturnModifiedBitBoards((byte)9,(byte)17,isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,board.red_on_blue,board.blue_on_red);
 
                 if(alwaysRed) isRedTurn = true;
-                Tools.printInColor("\t\t"+player+" Move:",!isRedTurn);
+                Tools.printInColor("\t\t" + player + " Move:",!isRedTurn);
                 System.out.println(board);
 
                 winner = board.checkWinCondition(); // check if it's a winning move
@@ -62,9 +62,9 @@ public class Game {
                     //System.out.println("\u001B[41mRed background\u001B[0m"); red background
                     break;
                 }
-                System.out.println("New Game FEN: "+board.toFEN());
-                System.out.println("Game evaluated red:"+Evaluate.evaluateSimple(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
-                System.out.println("Game evaluated blue:"+Evaluate.evaluateSimple(!isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red));
+                System.out.println("New Game FEN: " + board.toFEN());
+                System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                 // Check if there's a winner after the bot's move
                 winner = board.checkWinCondition();
             } else {
@@ -124,14 +124,13 @@ public class Game {
                 // Check if there's a winner after the bot's move
                 winner = board.checkWinCondition();
                 }
-                // Bot Turn (Smart Move)
+                // Bot's Turn (Smart Move)
                 else {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     if(!possibleMoves.isEmpty()){
-                        String botMove = SturdyJumpersAI.findBestMove(board,false);
-                        isRedTurn = board.doMove(botMove,isRedTurn,true);
+                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board,false), isRedTurn,false);
                     }else{
-                        isRedTurn = !isRedTurn;//Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
+                        isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
                     }
                     Tools.printInColor("\t\t\uD83E\uDD16Bot's move:",false);
                     System.out.println(board);
@@ -161,6 +160,25 @@ public class Game {
         } */
     }
 
+    public void botGame(BitBoard board) {
+        char winner = 'f';
+
+
+        while (winner == 'f') {
+            System.out.println(board); // Display the current board
+            Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(),Tools.PURPLE);
+            System.out.println();
+            String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
+            isRedTurn = board.doMove(botMove,isRedTurn,true);//Do and switch turn
+            winner = board.checkWinCondition(); // check if it's a winning move
+            if (winner != 'f') {
+                System.out.println("\u001B[41m\uD83C\uDFC5Game over "+(winner=='r'?"Red":"Blue") + " wins"+"\u001B[0m");
+                //System.out.println("\u001B[41mRed background\u001B[0m"); red background
+                break;
+            }
+        }
+    }
+
     private boolean isValidMove(BitBoard board , String move) {
         List<String> possibleMoves = board.getAllPossibleMoves(isRedTurn);
 
@@ -168,9 +186,14 @@ public class Game {
     }
 
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0"};
 
-        String fen = fens[1];
+        String[] testsMstTwo = new String[]{/*Early Game*/"b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/2rr1r0r01r0/r0r0r0r0r0r0" /*Mein Zug: h7g7*/,
+                                            /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
+                                            /*End Game*/"b04b0/8/7r0/1b03b02/1rr5r0/4r0b02/b07/4r01" /*Mein Zug: f8e8*/};
+
+        String fen = testsMstTwo[0];
+                //fens[0];
 
 
         BitBoard board = new BitBoard(fen);
@@ -179,6 +202,7 @@ public class Game {
         Game game = new Game();
         game.play(board,true);
         //game.playAgainst(board,true);
+        //game.botGame(board);
     }
 }
 

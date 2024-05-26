@@ -242,6 +242,7 @@ public class BitBoard {
         long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
         long bluePieces = blueSingles | blueDoubles | blue_on_red;
         long redPieces = redSingles | redDoubles|red_on_blue;
+
         // Check if any blue piece is in the top row
         if ((bluePieces & topRowMask) != 0) {
             return 'b';
@@ -273,34 +274,36 @@ public class BitBoard {
         return 'f';
     }
 
-    public boolean doMove(String move, boolean isRedTurn,boolean checkIfPossible) {
+    public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
         byte[] indices = parseMove(move);
-        if(isItRedsTurnByPositionOfPieces(indices[0])!=isRedTurn){
-            throw new IllegalMoveException("Player cant move enemy piece");
+        if(isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn){
+            throw new IllegalMoveException("Player can't move enemy piece");
         }
         if(checkIfPossible){
-            long possibleMoves =getPossibleMovesForIndividualPiece(indices[0],isRedTurn);
+            long possibleMoves = getPossibleMovesForIndividualPiece(indices[0], isRedTurn);
 
-            if((possibleMoves & (1L << indices[1])) == 0){//Move not included, index conversion
-                throw new IllegalMoveException("Move is not possible:" +move);
+            if((possibleMoves & (1L << indices[1])) == 0){ //Move not included, index conversion
+                throw new IllegalMoveException("Move is not possible:" + move);
             }
         }
         if (isRedTurn) {
             if ((redDoubles != 0 && (redDoubles & (1L << indices[0])) != 0)
-                    ||(red_on_blue != 0 && (red_on_blue & (1L << indices[0])) != 0)    ) {
+                    || (red_on_blue != 0 && (red_on_blue & (1L << indices[0])) != 0)) {
                 moveDoublePiece(indices[0], indices[1], true);
             } else {
                 moveSinglePiece(indices[0], indices[1], true);
             }
         } else {
-            if ((blueDoubles != 0 && (blueDoubles & (1L << indices[0])) != 0)||(blue_on_red != 0 && (blue_on_red & (1L << indices[0])) != 0)) {
+            if ((blueDoubles != 0 && (blueDoubles & (1L << indices[0])) != 0)
+                    || (blue_on_red != 0 && (blue_on_red & (1L << indices[0])) != 0)) {
                 moveDoublePiece(indices[0], indices[1], false);
             } else {
                 moveSinglePiece(indices[0], indices[1], false);
             }
         }
-        return !isRedTurn;//Now optionally returns whose turn it is in case we test chaining same team calls etc in later steps
+        return !isRedTurn; //Now optionally returns whose turn it is in case we test chaining same team calls etc in later steps
     }
+
     /*
     public void doMoveVoid(String move, boolean isRedTurn,boolean checkIfPossible) {
         byte[] indices = parseMove(move);
@@ -328,9 +331,7 @@ public class BitBoard {
                 moveSinglePiece(indices[0], indices[1], false);
             }
         }
-    }
-
-     */
+    }*/
 
 
     public void moveSinglePiece(byte fromIndex, byte toIndex, boolean isRed) {
@@ -399,14 +400,15 @@ public class BitBoard {
             ownDoubles |= (1L << toIndex);
             enemyOnOwn &= ~(1L << toIndex);
         } else if ((enemyDoubles & (1L << toIndex)) != 0) {
-            // Landing on enemy_on_own, turn it into own double
+            // Landing on enemy double, turn it into own double
             ownOnEnemy |= (1L << toIndex);
             enemyDoubles &= ~(1L << toIndex);
         } else if ((enemySingles & (1L << toIndex)) != 0) {
-            // Regular move to empty space, place the top of the double as a single
+            // Landing on enemy single, turn it into own single
             ownSingles |= (1L << toIndex);
             enemySingles &= ~(1L << toIndex);
-        } else {//TODO: hope all cases are covered and nothing forgotten
+        } else { //TODO: hope all cases are covered and nothing forgotten
+            // Regular move to empty space, place the top of the double as a single
             ownSingles |= (1L << toIndex);
 
         }
@@ -453,7 +455,7 @@ public class BitBoard {
 
         long jumpable = (emptySpaces | (isRed ? redSingles : blueSingles));
         // Forward moves (no capture)
-        long forwardMoves = shift(singles, direction) & jumpable;//Removes all occupied spaces, TODO maybe readd doubleGenesis
+        long forwardMoves = shift(singles, direction) & jumpable;//Removes all occupied spaces, TODO: maybe read doubleGenesis
         //commentedBits("Fwd:",forwardMoves);
         // Side moves (left and right)
         long leftMoves = shift(singles & NOT_A_FILE, -1) & jumpable;
@@ -554,19 +556,20 @@ public class BitBoard {
         long twoForwardOneRight = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?17:-17) & jumpable;
         long oneForwardTwoRight = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?10:-10) & jumpable;*/
 
-        long twoForwardOneLeft = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?15:-15);
-        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?6:-6);
-/*        System.out.println("HERE");
+        long twoForwardOneLeft = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed ? 15 : -15);
+        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed ? 6 : -6);
+/*      System.out.println("HERE");
         Tools.displayBitboard(oneForwardTwoLeft);
         Tools.displayBitboard(doubles);
         Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));*/
 
 
-        long twoForwardOneRight = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?17:-17);
-        long oneForwardTwoRight = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?10:-10);
+        long twoForwardOneRight = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed ? 17 : -17);
+        long oneForwardTwoRight = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed ? 10 : -10);
 
         return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
     }
+
     /**
     * Gathers all possible moves for the current player.
     * This method decides the piece color based on whose turn it is,
@@ -574,6 +577,7 @@ public class BitBoard {
     *
     * @return List of all possible moves in standard chess notation, like "A2-A3".
     */
+
     public List<String> getAllPossibleMoves(boolean isRed) {
         List<String> moves = new ArrayList<>();
         long singles = isRed ? redSingles : blueSingles;
@@ -631,16 +635,7 @@ public class BitBoard {
     
         return moves;
     }
-    public BitBoard copy(){
-        BitBoard newBoard = new BitBoard();
-        newBoard.redSingles = this.redSingles;
-        newBoard.blueSingles = this.blueSingles;
-        newBoard.redDoubles = this.redDoubles;
-        newBoard.blueDoubles = this.blueDoubles;
-        newBoard.red_on_blue = this.red_on_blue;
-        newBoard.blue_on_red = this.blue_on_red;
-        return newBoard;
-    }
+
     public BitBoard longToBit (long[] bitBoards){
         BitBoard newBoard = new BitBoard();
         newBoard.redSingles = bitBoards[0];
@@ -651,9 +646,6 @@ public class BitBoard {
         newBoard.blue_on_red = bitBoards[5];
         return newBoard;
     }
-    
-    //TODO: Wir brauchen eine Methode movePiece, die unterscheidet zwischen moveSinglePiece und moveDoublePiece
-
 
     public static void main(String[] args) {
         // Example usage

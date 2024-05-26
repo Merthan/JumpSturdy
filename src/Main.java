@@ -8,7 +8,7 @@ public class Main {
 
     private static Random random = new Random();
     public static void main(String[] args) {
-        Game.main(args);//Only call Game Main, then skip rest of this method
+        Game.main(args); //Only call Game Main, then skip rest of this method
 
         if(true)return;
 
@@ -29,7 +29,6 @@ public class Main {
         System.out.println(b);
 
         System.out.println("-------------------------------------------");
-        System.out.println(SturdyJumpersAI.findBestMove(b,false));
         System.out.println("-------------------------------------------");
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));
         //b.displayBitboard(b.getPossibleMovesDoubles(b.redDoubles,true));

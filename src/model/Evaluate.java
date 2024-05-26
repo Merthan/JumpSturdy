@@ -5,7 +5,7 @@ public class Evaluate {
      * Shortened names cause they might be passed lots of times br= red_on_blue as in the board
      * Passing board would be simpler, but better performance without object
      * Copy this for most:
-     boolean redsTurn,long r, long b, long rr, long bb, long br, long rb
+     * boolean redsTurn, long r, long b, long rr, long bb, long br, long rb
      */
 
 
@@ -31,8 +31,13 @@ public class Evaluate {
         }
     }
 
-    public static int evaluateSimple(boolean redsTurn,long r, long b, long rr, long bb, long br, long rb) {
-        return 2*(8-calculateDistanceToEnd(redsTurn, r, b, rr, bb, br, rb))+(calculatePieceWorthValue(redsTurn, r, b, rr, bb, br, rb)-calculatePieceWorthValue(!redsTurn, r, b, rr, bb, br, rb));
+    public static int evaluateSimple(boolean redsTurn, long r, long b, long rr, long bb, long br, long rb) {
+        int pieceWorthValue = calculatePieceWorthValue(redsTurn, r, b, rr, bb, br, rb);
+        int opponentPieceWorthValue = calculatePieceWorthValue(!redsTurn, r, b, rr, bb, br, rb);
+        int distanceToEnd = calculateDistanceToEnd(redsTurn, r, b, rr, bb, br, rb);
+        int bonusForNearWin = calculateNearWinBonus(redsTurn, r, b, rr, bb, br, rb);
+
+        return 2 * (8 - distanceToEnd) + (pieceWorthValue - opponentPieceWorthValue) + bonusForNearWin;
     }
 
     //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
@@ -53,5 +58,31 @@ public class Evaluate {
     }
 
 
+    public static int calculateNearWinBonus(boolean redsTurn, long r, long b, long rr, long bb, long br, long rb) {
+        int bonus = 0;
+        long bluePieces = b | bb | rb;
+        long redPieces = r | rr | br;
 
+        final long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
+        final long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
+        final long penultimateTopRowMask = 0xFFL << 8;
+        final long penultimateBottomRowMask = 0xFFL << 48;
+
+        if((bluePieces & topRowMask) != 0 ){
+            //Tools.displayBitboard(bluePieces);
+        }
+
+        // Bonus for red pieces in the penultimate row
+        if (redsTurn) {
+            bonus += Long.bitCount(redPieces & penultimateBottomRowMask) * 100; // Add significant bonus for potential win moves
+            //bonus += Long.bitCount(redPieces & bottomRowMask) * 200; // Add higher bonus for pieces in the base row
+            if((redPieces & bottomRowMask) != 0) bonus = 20000000;
+        } else {
+            bonus += Long.bitCount(bluePieces & penultimateTopRowMask) * 100;
+            //bonus += Long.bitCount(bluePieces & topRowMask) * 200;
+            if((bluePieces & topRowMask) != 0 ) bonus = 20000000;
+        }
+
+        return bonus;
+    }
 }
