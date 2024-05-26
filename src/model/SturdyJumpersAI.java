@@ -1,5 +1,4 @@
 package model;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -144,11 +143,11 @@ public class SturdyJumpersAI {
     private static boolean timeUp;
     private static final long TIME_LIMIT = 2000000000L; // 2 seconds in nanoseconds
 
-    public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed, int depth){
-        return findBestMoveTestWrapper(searchType, board, isRed, depth).bestMove;
+    public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed){
+        return findBestMoveTestWrapper(searchType, board, isRed).bestMove;
     }
 
-    public static TestWrapper findBestMoveTestWrapper(SearchType searchType, BitBoard board, boolean isRed, int depth) {
+    public static TestWrapper findBestMoveTestWrapper(SearchType searchType, BitBoard board, boolean isRed) {
         switch (searchType){
             case MINIMAX -> {
                 return alphaBetaWrapper(board, isRed, false);
@@ -169,17 +168,17 @@ public class SturdyJumpersAI {
         long startTime = System.nanoTime();
         timeUp = false;
 
-        while (!timeUp) {
+        while (depth < 4) {
+
             for (String move : legalMoves) {
-                untersuchteZustaende++;
+               untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                List<String> moveList = new ArrayList<>();
-                moveList.add(move);
+
                 int moveValue = withCutoffs ?
-                        alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isRed, false, startTime,moveList ) :
+                        alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isRed, false, startTime) :
                         alphaBetaSearchWithoutCutoffs(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isRed, false, startTime);
                 if (moveValue > bestValue) {
                     bestValue = moveValue;
@@ -190,12 +189,17 @@ public class SturdyJumpersAI {
             depth++;
 
         }
-        System.out.println("Erreichte Tiefe ENDE: " + depth + " und bester Zug: " + bestMove + ". Value: " + bestValue);
+        System.out.println("Laufzeit: " + ((System.nanoTime() - startTime ) / 1e6) + " ms\n" +
+                           "Erreichte Tiefe: " + depth + "\n" +
+                           "Bester Zug: " + bestMove + ". Value: " + bestValue + "\n" +
+                           "Untersuchte Zustände: " + untersuchteZustaende
+                           );
+
         return new TestWrapper(untersuchteZustaende, bestValue, bestMove, isRed);
     }
 
     // AlphaBeta with time management
-    private static int alphaBetaSearch(BitBoard board, int depth, int alpha, int beta, boolean isRed, boolean maximizingPlayer, long startTime,List<String> previousMoves) {
+    private static int alphaBetaSearch(BitBoard board, int depth, int alpha, int beta, boolean isRed, boolean maximizingPlayer, long startTime) {
         if (System.nanoTime() - startTime > TIME_LIMIT) {
             timeUp = true;
             return maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
@@ -215,9 +219,7 @@ public class SturdyJumpersAI {
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                List<String> includingNew = new ArrayList<>(previousMoves);
-                includingNew.add(move);
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, false, startTime,includingNew);
+                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, false, startTime);
 
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
@@ -235,9 +237,7 @@ public class SturdyJumpersAI {
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                List<String> includingNew = new ArrayList<>(previousMoves);
-                includingNew.add(move);
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, true, startTime,includingNew);
+                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, true, startTime);
 
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
