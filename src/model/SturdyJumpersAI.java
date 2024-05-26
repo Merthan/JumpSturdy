@@ -168,7 +168,7 @@ public class SturdyJumpersAI {
         long startTime = System.nanoTime();
         timeUp = false;
 
-        while (depth < 4) {
+        while (!timeUp) {
 
             for (String move : legalMoves) {
                untersuchteZustaende++;
