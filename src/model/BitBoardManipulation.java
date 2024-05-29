@@ -1,6 +1,11 @@
 package model;
 
+import static model.BitBoard.*;
+import static model.Tools.shift;
+
 public class BitBoardManipulation {
+
+    public static final int LOWER_SIX_BIT_MASK = 0x3F;
 
     // No checks, move at this point must have been generated valid anyways. Returns long[] of modified bitboards.
     // No board passed for performance reasons again, only pass board when its called once, not when called in a tree etc
@@ -121,4 +126,107 @@ public class BitBoardManipulation {
     }
 
 
-}
+    public static long calculateAttackedPositions(boolean isRedTurn, long redSingles, long blueSingles,long redDoubles,long blueDoubles, long red_on_blue,long blue_on_red){
+        int direction = isRedTurn ? 8 : -8;
+        long singles = isRedTurn?redSingles:blueSingles;
+        long enemyPieces = isRedTurn ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
+
+        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces;
+        long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
+
+
+
+        //Double part
+        //Only jump on enemies, not empty, same etc
+        long jumpable = ((isRedTurn?blueSingles:redSingles) | (isRedTurn?blueDoubles:redDoubles) | (isRedTurn?blue_on_red:red_on_blue));
+
+        long doubles = isRedTurn? (redDoubles|red_on_blue):(blueDoubles|blue_on_red);
+        long doubleTwoForwardOneLeft = shift(doubles & (isRedTurn?NOT_A_FILE:NOT_H_FILE), isRedTurn ? 15 : -15);
+        long doubleOneForwardTwoLeft = shift(doubles & (isRedTurn?NOT_AB_FILE:NOT_GH_FILE), isRedTurn ? 6 : -6);
+
+        long doubleTwoForwardOneRight = shift(doubles & (isRedTurn?NOT_H_FILE:NOT_A_FILE), isRedTurn ? 17 : -17);
+        long doubleOneForwardTwoRight = shift(doubles & (isRedTurn?NOT_GH_FILE:NOT_AB_FILE), isRedTurn ? 10 : -10);
+
+        return leftCapture | rightCapture | (jumpable& (doubleTwoForwardOneLeft|doubleOneForwardTwoLeft|doubleTwoForwardOneRight|doubleOneForwardTwoRight) );
+    }
+
+    public static long calculateAttackedPositionsForBoth(long redSingles, long blueSingles,long redDoubles,long blueDoubles, long red_on_blue,long blue_on_red){
+        return calculateAttackedPositions(true,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red) | calculateAttackedPositions(false,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
+    }
+
+
+
+    public static byte possibleFromPositionForToIndex(byte toIndex,boolean isRed, long redSingles, long blueSingles,long redDoubles,long blueDoubles, long red_on_blue,long blue_on_red ){
+
+        long indexMask = 1L << toIndex; // Create the index mask with only the bit at indexEnd set
+
+        int direction = isRed ? 8 : -8;
+        long singles = isRed?redSingles:blueSingles;
+
+
+        long tempCompared;
+
+        //TODO: Maybe single capture should be at the start if thats supposed to be the most likely
+
+
+
+        long forwardMoves = shift(indexMask, -direction); //& jumpableBeforeMask;
+        tempCompared =(forwardMoves & singles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        //capture single
+        long leftCapture = shift(indexMask & NOT_A_FILE, -direction - 1) & singles;
+        tempCompared =(leftCapture& singles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        long rightCapture = shift(indexMask & NOT_H_FILE, -direction + 1) & singles;
+        tempCompared =(rightCapture& singles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+
+        long leftMoves = shift(indexMask & NOT_A_FILE, -1);
+        tempCompared =(leftMoves& singles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        long rightMoves = shift(indexMask & NOT_H_FILE, 1);
+        tempCompared =(rightMoves& singles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+
+
+        // End of singles part-----------------------
+
+
+        // Here there needs to be a double at the index before
+
+        long doubles = isRed?(redDoubles|red_on_blue):(blueDoubles|blue_on_red);
+
+        long twoForwardOneLeft = shift(indexMask & (isRed ? NOT_H_FILE : NOT_A_FILE), isRed ? -15 : 15);
+        tempCompared =(twoForwardOneLeft & doubles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        long oneForwardTwoLeft = shift(indexMask & (isRed ? NOT_GH_FILE : NOT_AB_FILE), isRed ? -6 : 6);
+        tempCompared =(oneForwardTwoLeft & doubles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        long twoForwardOneRight = shift(indexMask & (isRed ? NOT_A_FILE : NOT_H_FILE), isRed ? -17 : 17);
+        tempCompared =(twoForwardOneRight & doubles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        long oneForwardTwoRight = shift(indexMask & (isRed ? NOT_AB_FILE : NOT_GH_FILE), isRed ? -10 : 10);
+        tempCompared =(oneForwardTwoRight & doubles);
+        if(tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+        throw new IllegalStateException("No possible from index found"); // Not purpose of method to return -1 or something, throws
+        //Prob reversed but doesnt matter
+        //long leftMoves = shift(singles & NOT_A_FILE, -1) & jumpableBeforeMask;
+        //long rightMoves = shift(singles & NOT_H_FILE, 1) & jumpableBeforeMask;
+
+        //long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces; //+-7 9 so diagonal
+        //long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
+
+    }
+
+
+
+    }

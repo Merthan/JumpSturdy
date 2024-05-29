@@ -65,7 +65,7 @@ public class Tools {
         return (byte) ((7 - (number - '1')) * 8 + (letter - 'A')); // Convert to 0-based index for an 8x8 board
     }
 
-    public static String indexToPosition(byte index) {
+    public static String indexToStringPosition(byte index) {
         byte fileIndex = (byte) (index % 8); // Calculate file index (column)
         byte rankIndex = (byte) (index / 8); // Calculate rank index (row)
         char file = (char) ('A' + fileIndex); // Convert file index to letter (A-H)

@@ -13,6 +13,11 @@ public class BitBoard {
     public boolean redsTurn = true;
     private static final int BOARD_WIDTH = 8;
     private static final int BOARD_HEIGHT = 8;
+
+    public static final byte WINNER_ONGOING = 0;
+    public static final byte WINNER_RED = 1;
+    public static final byte WINNER_BLUE = 2;
+    public static final byte WINNER_DRAW = 3;
     public static final long CORNER_MASK = ~(1L | (1L << 7) | (1L << 56) | (1L << 63));
     // Bitboards for the game pieces
     public long redSingles;   // Bitboard for red single pieces
@@ -25,10 +30,10 @@ public class BitBoard {
 
 
     // Masks for edges to handle movements correctly
-    private static final long NOT_A_FILE = 0xfefefefefefefefeL; // 11111110...
-    private static final long NOT_H_FILE = 0x7f7f7f7f7f7f7f7fL; // 01111111...
-    private static final long NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCL; // Not columns A and B
-    private static final long NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FL; // Not columns G and H
+    public static final long NOT_A_FILE = 0xfefefefefefefefeL; // 11111110...
+    public static final long NOT_H_FILE = 0x7f7f7f7f7f7f7f7fL; // 01111111...
+    public static final long NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCL; // Not columns A and B
+    public static final long NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FL; // Not columns G and H
 
     // Directions for single figures based on team
     private static final int RED_DIRECTION = 8;   // Red moves down
@@ -204,7 +209,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
-            throw new RuntimeException("Invalid position, either empty or corner" + position +" "+ Tools.indexToPosition(position));
+            throw new RuntimeException("Invalid position, either empty or corner" + position +" "+ Tools.indexToStringPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
@@ -226,7 +231,7 @@ public class BitBoard {
 
             if (bitCount > 1) {
                 noOverlap = false;
-                Tools.printInColor("Overlap detected at position: " + position + " " + Tools.indexToPosition(position), true);
+                Tools.printInColor("Overlap detected at position: " + position + " " + Tools.indexToStringPosition(position), true);
             }
         }
 
@@ -236,42 +241,34 @@ public class BitBoard {
         }
     }
 
-    public char checkWinCondition() {
+    public byte checkWinCondition() {
         // Define masks for the top and bottom rows
         long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
         long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
         long bluePieces = blueSingles | blueDoubles | blue_on_red;
-        long redPieces = redSingles | redDoubles|red_on_blue;
+        long redPieces = redSingles | redDoubles| red_on_blue;
 
-        // Check if any blue piece is in the top row
-        if ((bluePieces & topRowMask) != 0) {
-            return 'b';
+        // Check if any blue piece is in the top row or no red pieces
+        if ((bluePieces & topRowMask) != 0 || redPieces == 0) {
+            return WINNER_BLUE;
         }
-        // Check if any red piece is in the bottom row
-        else if ((redPieces & bottomRowMask) != 0) {
-            return 'r';
-        }
-        // Check if there are any red pieces on the field, if no -> blue wins
-        else if (Long.bitCount(redPieces) == 0) {
-            return 'b';
-        }
-        // Chef if there are any blue pieces on the field, if no -> red wins
-        else if (Long.bitCount(bluePieces) == 0) {
-            return 'r';
+        // Check if any red piece is in the bottom row or no blue pieces
+        else if ((redPieces & bottomRowMask) != 0 || bluePieces == 0 ) {
+            return WINNER_RED;
         }
         // Check if there are any possible moves for blue
-        else if (Long.bitCount(getMovesForTeam(false)) == 0){
+        else if (getMovesForTeam(false) == 0){
             // Check if there are any possible moves for red, if no -> draw
-            if(Long.bitCount(getMovesForTeam(true)) == 0) return 'd';
-            else return 'r';
+            if(getMovesForTeam(true) == 0) return WINNER_DRAW;
+            else return WINNER_RED;
         }
         // Check if there are any possible moves for red
-        else if(Long.bitCount(getMovesForTeam(true)) == 0){
+        else if(getMovesForTeam(true) == 0){
             // Check if there are any possible moves for blue, if no -> draw
-            if(Long.bitCount(getMovesForTeam(false)) == 0) return 'd';
-            else return 'b';
+            if(getMovesForTeam(false) == 0) return WINNER_DRAW;
+            else return WINNER_BLUE;
         }
-        return 'f';
+        return WINNER_ONGOING;
     }
 
     public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
@@ -530,14 +527,21 @@ public class BitBoard {
         return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
     }*/
 
-    public long getPossibleMovesDoubles(long doubles, boolean isRed){//FIXED
+    public long getPossibleMovesDoubles(long doubles, boolean isRed) {//FIXED
         // All occupied spaces
         long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
         long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
 
         //long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
-        long jumpable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
+        long jumpable = (emptySpaces | (redSingles | blueSingles) | (isRed ? blueDoubles : redDoubles) | (isRed ? blue_on_red : red_on_blue));
 
+        long twoForwardOneLeft = shift(doubles & (isRed ? NOT_A_FILE : NOT_H_FILE), isRed ? 15 : -15);
+        long oneForwardTwoLeft = shift(doubles & (isRed ? NOT_AB_FILE : NOT_GH_FILE), isRed ? 6 : -6);
+
+        long twoForwardOneRight = shift(doubles & (isRed ? NOT_H_FILE : NOT_A_FILE), isRed ? 17 : -17);
+        long oneForwardTwoRight = shift(doubles & (isRed ? NOT_GH_FILE : NOT_AB_FILE), isRed ? 10 : -10);
+
+        return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
         //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
 
 /*        long twoLeftOneForwardMoves = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?15:-15) & jumpable;
@@ -556,18 +560,10 @@ public class BitBoard {
         long twoForwardOneRight = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?17:-17) & jumpable;
         long oneForwardTwoRight = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?10:-10) & jumpable;*/
 
-        long twoForwardOneLeft = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed ? 15 : -15);
-        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed ? 6 : -6);
-/*      System.out.println("HERE");
+        /*      System.out.println("HERE");
         Tools.displayBitboard(oneForwardTwoLeft);
         Tools.displayBitboard(doubles);
         Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));*/
-
-
-        long twoForwardOneRight = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed ? 17 : -17);
-        long oneForwardTwoRight = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed ? 10 : -10);
-
-        return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
     }
 
     /**
@@ -606,7 +602,7 @@ public class BitBoard {
                 long movesFromThisPiece = possibleMoves & getPossibleMovesForIndividualPiece(fromIndex, isRed);
                 for (byte toIndex = 0; toIndex < 64; toIndex++) {
                     if ((movesFromThisPiece & (1L << toIndex)) != 0) {  // Valid move to toIndex
-                        moveList.add(indexToPosition(fromIndex) + "-" + indexToPosition(toIndex));
+                        moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
                     }
                 }
             }

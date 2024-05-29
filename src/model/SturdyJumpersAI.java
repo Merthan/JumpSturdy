@@ -205,7 +205,7 @@ public class SturdyJumpersAI {
             return maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
 
-        if (depth <= 0 || board.checkWinCondition() != 'f' || board.checkWinCondition() == 'd') {
+        if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
             return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
@@ -256,7 +256,7 @@ public class SturdyJumpersAI {
             timeUp = true;
             return maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
-        if (depth <= 0 || board.checkWinCondition() != 'f' || board.checkWinCondition() == 'd') {
+        if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
             return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
