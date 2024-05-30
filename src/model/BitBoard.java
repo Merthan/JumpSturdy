@@ -41,7 +41,8 @@ public class BitBoard {
 
     // Constructor to initialize the game board
     public BitBoard() {
-        setupInitialBoard();
+        //removed, probably not necessary unless set in a weird way
+        //setupInitialBoard();
     }
 
     // Setup the initial board with pieces in their starting positions
@@ -632,7 +633,18 @@ public class BitBoard {
         return moves;
     }
 
-    public BitBoard longToBit (long[] bitBoards){
+/*    public BitBoard longToBit (long[] bitBoards){ removed, member method taking performance and readability
+        BitBoard newBoard = new BitBoard();
+        newBoard.redSingles = bitBoards[0];
+        newBoard.blueSingles = bitBoards[1];
+        newBoard.redDoubles = bitBoards[2];
+        newBoard.blueDoubles = bitBoards[3];
+        newBoard.red_on_blue = bitBoards[4];
+        newBoard.blue_on_red = bitBoards[5];
+        return newBoard;
+    }*/
+
+    public static BitBoard fromLongArray(long[] bitBoards){
         BitBoard newBoard = new BitBoard();
         newBoard.redSingles = bitBoards[0];
         newBoard.blueSingles = bitBoards[1];

@@ -1,6 +1,7 @@
 package model;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Scanner;
 
 import static model.BitBoard.CORNER_MASK;
@@ -24,6 +25,17 @@ public class Tools {
         System.out.println((color) + text + RESET);
     }
 
+    public static String moveMagician(String uncleanMove, List<String> moves){
+        uncleanMove = uncleanMove.toUpperCase();
+        if(uncleanMove.length()==2){ // Eg. just C5, then pick any/first move that matches
+            for (String str : moves) {
+                if (str.endsWith(uncleanMove)) {
+                    return str;
+                }
+            }
+        }
+        return cleanMove(uncleanMove);
+    }
 
     public static String cleanMove(String move) {
         // Remove any whitespace and convert to uppercase

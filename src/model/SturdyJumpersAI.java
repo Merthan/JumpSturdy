@@ -143,9 +143,13 @@ public class SturdyJumpersAI {
     private static boolean timeUp;
     private static final long TIME_LIMIT = 2000000000L; // 2 seconds in nanoseconds
 
+
+
     public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed){
         return findBestMoveTestWrapper(searchType, board, isRed).bestMove;
     }
+
+
 
     public static TestWrapper findBestMoveTestWrapper(SearchType searchType, BitBoard board, boolean isRed) {
         switch (searchType){
@@ -173,7 +177,7 @@ public class SturdyJumpersAI {
             for (String move : legalMoves) {
 
                 untersuchteZustaende++;
-                BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
@@ -209,7 +213,8 @@ public class SturdyJumpersAI {
         }
 
         if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)-
+                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
@@ -218,7 +223,7 @@ public class SturdyJumpersAI {
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
                 untersuchteZustaende++;
-                BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
@@ -235,7 +240,7 @@ public class SturdyJumpersAI {
             int minEval = Integer.MAX_VALUE;
             for (String move : legalMoves) {
                 untersuchteZustaende++;
-                BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
@@ -259,7 +264,8 @@ public class SturdyJumpersAI {
             return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
         if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)-
+                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
@@ -268,7 +274,7 @@ public class SturdyJumpersAI {
             for (String move : legalMoves) {
                 //System.out.println("Move: " + move + ". Depth: " + depth + ". Bereits untersucht: " + untersuchteZustaende + ". Move für Red: " + isRed);
                 untersuchteZustaende++;
-                BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
@@ -283,7 +289,7 @@ public class SturdyJumpersAI {
             for (String move : legalMoves) {
                 //System.out.println("Move: " + move + ". Depth: " + depth + ". Bereits untersucht: " + untersuchteZustaende + ". Move für Red: " + isRed);
                 untersuchteZustaende++;
-                BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
