@@ -165,32 +165,35 @@ public class SturdyJumpersAI {
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
         int depth = 1;
 
+        untersuchteZustaende = 0;
         long startTime = System.nanoTime();
         timeUp = false;
 
         while (!timeUp) {
-
             for (String move : legalMoves) {
-               untersuchteZustaende++;
+
+                untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
 
                 int moveValue = withCutoffs ?
-                        alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isRed, false, startTime) :
-                        alphaBetaSearchWithoutCutoffs(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, isRed, false, startTime);
+                        alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime) :
+                        alphaBetaSearchWithoutCutoffs(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime);
+                System.out.println("MOVE: " + move + ". Depth: " + depth + ". Move Value: " + moveValue + ". Move für Red: " + isRed);
                 if (moveValue > bestValue) {
                     bestValue = moveValue;
                     bestMove = move;
                 }
+                System.out.println("Best Move: " + bestMove + ". Best Value: " + bestValue + ". Move für Red: " + isRed);
                 if (timeUp) break;
             }
             depth++;
 
         }
         System.out.println("Laufzeit: " + ((System.nanoTime() - startTime ) / 1e6) + " ms\n" +
-                           "Erreichte Tiefe: " + depth + "\n" +
+                           "Erreichte Tiefe: " + (depth - 1)+ "\n" +
                            "Bester Zug: " + bestMove + ". Value: " + bestValue + "\n" +
                            "Untersuchte Zustände: " + untersuchteZustaende
                            );
@@ -199,10 +202,10 @@ public class SturdyJumpersAI {
     }
 
     // AlphaBeta with time management
-    private static int alphaBetaSearch(BitBoard board, int depth, int alpha, int beta, boolean isRed, boolean maximizingPlayer, long startTime) {
+    private static int alphaBetaSearch(BitBoard board, int depth, int alpha, int beta, boolean isRed, long startTime) {
         if (System.nanoTime() - startTime > TIME_LIMIT) {
             timeUp = true;
-            return maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
 
         if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
@@ -210,17 +213,16 @@ public class SturdyJumpersAI {
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
-        if (maximizingPlayer){
+
+        if (!isRed){
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
-
                 untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, false, startTime);
-
+                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, true, startTime);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
                 if (beta <= alpha) {
@@ -234,10 +236,10 @@ public class SturdyJumpersAI {
             for (String move : legalMoves) {
                 untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, isRed, true, startTime);
+                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, false, startTime);
 
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
@@ -251,40 +253,44 @@ public class SturdyJumpersAI {
     }
 
     // Minimax without cut-offs (not modified, can be used as is)
-    private static int alphaBetaSearchWithoutCutoffs(BitBoard board, int depth, int alpha, int beta, boolean isRed, boolean maximizingPlayer, long startTime) {
+    private static int alphaBetaSearchWithoutCutoffs(BitBoard board, int depth, int alpha, int beta, boolean isRed, long startTime) {
         if (System.nanoTime() - startTime > TIME_LIMIT) {
             timeUp = true;
-            return maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+            return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
         if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
             return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
-        if (maximizingPlayer) {
+        if (!isRed) {
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
+                //System.out.println("Move: " + move + ". Depth: " + depth + ". Bereits untersucht: " + untersuchteZustaende + ". Move für Red: " + isRed);
                 untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta, isRed, false, startTime);
+                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta, true, startTime);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
+                System.out.println("Move: " + move + ". Value: " + eval + ". Move für Red: " + isRed);
             }
             return maxEval;
         } else {
             int minEval = Integer.MAX_VALUE;
             for (String move : legalMoves) {
+                //System.out.println("Move: " + move + ". Depth: " + depth + ". Bereits untersucht: " + untersuchteZustaende + ". Move für Red: " + isRed);
                 untersuchteZustaende++;
                 BitBoard newBoard = board.longToBit(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta, isRed, true, startTime);
+                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta,false, startTime);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
+                System.out.println("Move: " + move + ". Value: " + eval + ". Move für Red: " + isRed);
             }
             return minEval;
         }

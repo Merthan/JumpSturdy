@@ -132,7 +132,7 @@ public class Game {
                 else {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     if(!possibleMoves.isEmpty()){
-                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board,false), isRedTurn,false);
+                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.MINIMAX, board,false), isRedTurn,false);
                     }else{
                         isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
                     }
@@ -218,17 +218,18 @@ public class Game {
     }
 
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/r01r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
+                                        "8/3b04/8/8/8/8/4r0/8"};
 
         String[] testsMstTwo = new String[]{/*Early Game*/"b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/2rr1r0r01r0/r0r0r0r0r0r0" /*Mein Zug: h7g7*/,
                                             /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
                                             /*End Game*/"b04b0/8/7r0/1b03b02/1rr5r0/4r0b02/b07/4r01" /*Mein Zug: f8e8*/};
 
-        String fen = testsMstTwo[0];
+        String fen = fens[4];
                 //fens[0];
 
 
-        BitBoard board = new BitBoard(fens[0]);
+        BitBoard board = new BitBoard(fen);
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
