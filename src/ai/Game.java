@@ -47,8 +47,21 @@ public class Game {
             String player = isRedTurn ? PLAYER_ONE : PLAYER_TWO;
 
             long start = System.nanoTime();
-            long result = BitBoardManipulation.ruhesuche(board, isRedTurn);
+            int result = BitBoardManipulation.ruhesuche(board, isRedTurn);
             System.out.println("Ruhesuche took nanos " + (System.nanoTime() - start) + " and result eval is:" + (result == RUHESUCHE_NOT_PERFORMED ? " NONE " : "" + result));
+
+            //EXAMPLE FOR INCLUDING MOVES; NOT MUCH SLOWER
+            long startNew = System.nanoTime();
+            int[] resultNew = BitBoardManipulation.ruhesucheWithPositions(board, isRedTurn);
+            long endNew = System.nanoTime()-startNew;
+            if(resultNew!=null){
+                for (int i = 0,j=1; i < resultNew.length;j++) {// Array has [0]-[1] [2]-[3] representing moves etc. Last pos eval
+                    Tools.printInColor("Ruhesuche move: "+j+" "+Tools.indexToStringPosition((byte)resultNew[i++])+"-"+Tools.indexToStringPosition((byte)resultNew[i++]),Tools.CYAN);
+                    if(resultNew[i]==0)break; // End reached, no indexes
+                }
+            }
+            System.out.println("RuhesucheWithPos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length-1]));
+
 
             Tools.printInColor("Enter your move ⬇\uFE0F " + player, "\u001B[5m");
             String playerMove = Tools.moveMagician(scanner.nextLine(), possibleMoves);
