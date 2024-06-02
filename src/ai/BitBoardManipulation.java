@@ -1,8 +1,7 @@
 package ai;
 
+import misc.Tools;
 import model.BitBoard;
-
-import java.util.List;
 
 import static model.BitBoard.*;
 
@@ -172,7 +171,9 @@ public class BitBoardManipulation {
         long tempCompared;
 
         //TODO: Maybe single capture should be at the start if thats supposed to be the most likely
-
+        if(toIndex==Tools.positionToIndex("E2")){
+            System.out.println();
+        }
 
         long forwardMoves = shift(indexMask, -direction); //& jumpableBeforeMask;
         tempCompared = (forwardMoves & singles);
@@ -187,12 +188,23 @@ public class BitBoardManipulation {
         tempCompared = (rightCapture & singles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
 
+        //For left and right moves make sure there is no enemy piece at the to position as we cant beat them with a sideways move (only own or empty)
+        long enemyPieces = isRed ? (blueSingles | blueDoubles | blue_on_red) : (redSingles | redDoubles | red_on_blue);
 
-        long leftMoves = shift(indexMask & NOT_A_FILE, -1);
+        long leftMoves = shift(indexMask & NOT_A_FILE & (~enemyPieces), -1);//Also dont move into enemy singles sideways, not possible
         tempCompared = (leftMoves & singles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+        /*System.out.println("teeetst");
 
-        long rightMoves = shift(indexMask & NOT_H_FILE, 1);
+        Tools.displayBitboard(leftMoves);
+        Tools.displayBitboard((~(isRed?blueSingles:redSingles)));
+        System.out.println("StartTT");
+        Tools.displayBitboard(blueSingles);
+        Tools.displayBitboard(~blueSingles);
+        Tools.displayBitboard(shift(indexMask & NOT_A_FILE, -1));*/
+
+
+        long rightMoves = shift(indexMask & NOT_H_FILE & (~enemyPieces), 1); //Also dont move into enemy singles sideways, not possible
         tempCompared = (rightMoves & singles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
 
@@ -296,5 +308,68 @@ public class BitBoardManipulation {
         return positionsAndAtTheEndScoreArray; // TODO: READ [0] [1] = one move 0 to 1, then [2] [3] until one of the values is 0 (illegal/corner anyways), then break loop. Eval is at last index.
     }
 
+
+    static final long secondLastRowCenter = 0x007E000000000000L;
+    static final long secondTopRowCenter = 0x0000000000007E00L;
+    static final long secondThirdRowTop = 0x0000000000FFFF00L;
+    static final long secondThirdRowBottom = 0x00FFFF0000000000L;
+
+    //For singles, only forward is checked as win captures/diagonal would just result in the enemy capturing them first
+    public static boolean doesNextMoveWin(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
+        long attackedPositions; // Not set here for performance reasons, only once needed
+
+        if (isRedTurn) {
+
+            long onLast = secondLastRowCenter & redSingles;
+            //is on secondlast and is there any blocking enemy right beneath, shifted 8 bits
+            if (onLast != 0 && ((onLast << 8) & blueSingles) == 0) {
+                //calculate the positions where we are attacked currently
+                attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+                if ((onLast & ~attackedPositions) != 0) { //Onlast minus attackedpositions isnt 0, meaning at least one thats not attacked
+                    //System.out.println("Next move wins single");
+                    return true;
+                }
+            }
+
+            long onPreRows = (redDoubles | red_on_blue) & secondThirdRowBottom; // Any jumping on the row end-1 or end-2?
+            if(onPreRows!=0){
+                attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+                if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
+                    System.out.println("Next move wins double");
+                    return true;
+                }
+            }
+
+
+        } else {
+
+            long onLast = secondTopRowCenter & blueSingles;
+            //is on secondlast and is there any blocking enemy right above, shifted 8 bits
+            if (onLast != 0 && ((onLast >>> 8) & redSingles) == 0) {
+                //calculate the positions where we are attacked currently
+                attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+                if ((onLast & ~attackedPositions) != 0) {
+                    System.out.println("Next move wins single b");
+                    return true;
+                }
+            }
+
+            long onPreRows = (blueDoubles | blue_on_red) & secondThirdRowTop; // Any jumping on the row end-1 or end-2?
+            if(onPreRows!=0){
+                attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+                if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
+                    System.out.println("Next move wins double b");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    public static void main(String[] args) {
+        long l = 0x000000000000003FL;
+        Tools.displayBitboard( l);
+        System.out.println(Long.toBinaryString(l));
+    }
 
 }

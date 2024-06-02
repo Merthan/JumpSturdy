@@ -63,6 +63,7 @@ public class Game {
             System.out.println("RuhesucheWithPos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length-1]));
 
 
+
             Tools.printInColor("Enter your move ⬇\uFE0F " + player, "\u001B[5m");
             String playerMove = Tools.moveMagician(scanner.nextLine(), possibleMoves);
 
@@ -72,6 +73,13 @@ public class Game {
                 System.out.println("ParseMove:" + Arrays.toString(Tools.parseMove(playerMove)));
                 //BitBoardManipulation.doMoveAndReturnModifiedBitBoards((byte)9,(byte)17,isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,board.red_on_blue,board.blue_on_red);
 
+                long startWin = System.nanoTime();
+                boolean canWin = BitBoardManipulation.doesNextMoveWin(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+                Tools.printInColor("CanWin took nanos: " +(System.nanoTime()-startWin)+ " canWin> "+canWin,Tools.CYAN);
+
+/*                for (byte i = 57; i <= 62; i++) {
+                    BitBoardManipulation.possibleFromPositionForToIndex(i,!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)
+                }*/
                 if (alwaysRed) isRedTurn = true;
                 Tools.printInColor("\t\t" + player + " Move:", !isRedTurn);
                 System.out.println(board);
@@ -166,7 +174,7 @@ public class Game {
                 else {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     if (!possibleMoves.isEmpty()) {
-                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.MINIMAX, board, false), isRedTurn, false);
+                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false), isRedTurn, false);
                     } else {
                         isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
                     }
@@ -259,7 +267,9 @@ public class Game {
                 /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
                 /*End Game*/"b04b0/8/7r0/1b03b02/1rr5r0/4r0b02/b07/4r01" /*Mein Zug: f8e8*/};
 
-        String fen = "b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/8/1r0r05/3r0r0r0r01/r0r0r0r0r0r0";//fens[0];
+        //String fen = "b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/8/1r0r05/3r0r0r0r01/r0r0r0r0r0r0";//fens[0];
+        //String fen = "b0bb2b0b0/3b0r03/6b01/5b0b01/3r04/8/2r01r0r0r01/r01r0r0r0r0"; canWin test middle
+        String fen = "b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r02b01/4b03/5r02/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r01b0b01/4r03/8/2r02r0r01/r01r0r0r0r0";
         //fens[0];
 
         String searchTest = "6/1b05b0/8/8/8/8/1r0r05/6";

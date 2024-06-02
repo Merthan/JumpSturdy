@@ -37,6 +37,9 @@ public class BitBoard {
     public static final long NOT_AB_FILE = 0xFCFCFCFCFCFCFCFCL; // Not columns A and B
     public static final long NOT_GH_FILE = 0x3F3F3F3F3F3F3F3FL; // Not columns G and H
 
+    public static final long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
+    public static final long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
+
     // Directions for single figures based on team
     private static final int RED_DIRECTION = 8;   // Red moves down
     private static final int BLUE_DIRECTION = -8;   // Blue moves up
@@ -246,8 +249,7 @@ public class BitBoard {
 
     public byte checkWinCondition() {
         // Define masks for the top and bottom rows
-        long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
-        long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
+
         long bluePieces = blueSingles | blueDoubles | blue_on_red;
         long redPieces = redSingles | redDoubles | red_on_blue;
 
