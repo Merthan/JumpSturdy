@@ -1,5 +1,8 @@
-package model;
-import java.util.ArrayList;
+package ai;
+
+import misc.Tools;
+import model.*;
+
 import java.util.List;
 
 public class SturdyJumpersAI {
@@ -144,15 +147,13 @@ public class SturdyJumpersAI {
     private static final long TIME_LIMIT = 2000000000L; // 2 seconds in nanoseconds
 
 
-
-    public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed){
+    public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed) {
         return findBestMoveTestWrapper(searchType, board, isRed).bestMove;
     }
 
 
-
     public static TestWrapper findBestMoveTestWrapper(SearchType searchType, BitBoard board, boolean isRed) {
-        switch (searchType){
+        switch (searchType) {
             case MINIMAX -> {
                 return alphaBetaWrapper(board, isRed, false);
             }
@@ -196,11 +197,11 @@ public class SturdyJumpersAI {
             depth++;
 
         }
-        System.out.println("Laufzeit: " + ((System.nanoTime() - startTime ) / 1e6) + " ms\n" +
-                           "Erreichte Tiefe: " + (depth - 1)+ "\n" +
-                           "Bester Zug: " + bestMove + ". Value: " + bestValue + "\n" +
-                           "Untersuchte Zustände: " + untersuchteZustaende
-                           );
+        System.out.println("Laufzeit: " + ((System.nanoTime() - startTime) / 1e6) + " ms\n" +
+                "Erreichte Tiefe: " + (depth - 1) + "\n" +
+                "Bester Zug: " + bestMove + ". Value: " + bestValue + "\n" +
+                "Untersuchte Zustände: " + untersuchteZustaende
+        );
 
         return new TestWrapper(untersuchteZustaende, bestValue, bestMove, isRed);
     }
@@ -212,14 +213,14 @@ public class SturdyJumpersAI {
             return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
 
-        if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)-
+        if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
+            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
                     Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
 
-        if (!isRed){
+        if (!isRed) {
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
                 untersuchteZustaende++;
@@ -227,7 +228,7 @@ public class SturdyJumpersAI {
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, true, startTime);
+                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, true, startTime);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
                 if (beta <= alpha) {
@@ -244,7 +245,7 @@ public class SturdyJumpersAI {
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth-1, alpha, beta, false, startTime);
+                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, false, startTime);
 
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
@@ -263,8 +264,8 @@ public class SturdyJumpersAI {
             timeUp = true;
             return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
-        if (depth <= 0 ||  board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)-
+        if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
+            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
                     Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
@@ -293,7 +294,7 @@ public class SturdyJumpersAI {
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta,false, startTime);
+                int eval = alphaBetaSearchWithoutCutoffs(newBoard, depth - 1, alpha, beta, false, startTime);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
                 System.out.println("Move: " + move + ". Value: " + eval + ". Move für Red: " + isRed);

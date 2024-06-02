@@ -1,5 +1,8 @@
+package misc;
+
+import ai.Game;
 import model.*;
-import deprecated.JumpSturdyBoard;
+import misc.deprecated.JumpSturdyBoard;
 
 import java.util.List;
 import java.util.Random;
@@ -7,12 +10,13 @@ import java.util.Random;
 public class Main {
 
     private static Random random = new Random();
+
     public static void main(String[] args) {
-        Game.main(args); //Only call Game Main, then skip rest of this method
+        Game.main(args); //Only call Game misc.Main, then skip rest of this method
 
-        if(true)return;
+        if (true) return;
 
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0","2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
 
         String fen = fens[0];
         System.out.println(fen);
@@ -25,7 +29,7 @@ public class Main {
 
 
         byte[] moves = Tools.parseMove("B8-B7");
-        b.moveSinglePiece(moves[0],moves[1],true);
+        b.moveSinglePiece(moves[0], moves[1], true);
         System.out.println(b);
 
         System.out.println("-------------------------------------------");
@@ -40,7 +44,7 @@ public class Main {
         //System.out.println(BitBoard.positionToIndex("B2"));
         //System.out.println("DISPLAYall");
         //b.displayBitboard(b.redSingles);
-       
+
         //System.out.println("DISPLAYall");
         //System.out.println(b.getPossibleMovesSinglesString(b.redSingles,true)) ;
     
@@ -66,20 +70,16 @@ public class Main {
         System.out.println("-------------\n\n\n");
 
 
-
-
-
-        System.out.println("FEN: "+fen);
+        System.out.println("FEN: " + fen);
         JumpSturdyBoard board = new JumpSturdyBoard(fen);
         //JumpSturdyBoard board = new JumpSturdyBoard("r0r0r0r0r0r0/1r0r0r0r0r0r0/8/8/8/8/1b0b0b0b0b0b0/b0b0b0b0b0b0");
         System.out.println(board);
         board.printBoard();
 
 
-
     }
 
-    public static List<String> mergeLists(List<String> a, List<String> b){
+    public static List<String> mergeLists(List<String> a, List<String> b) {
         a.addAll(b);
         return a;
     }

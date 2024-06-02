@@ -1,4 +1,4 @@
-package model;
+package ai;
 
 public enum SearchType {
     MINIMAX,

@@ -1,4 +1,4 @@
-package model;
+package misc;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,9 +25,9 @@ public class Tools {
         System.out.println((color) + text + RESET);
     }
 
-    public static String moveMagician(String uncleanMove, List<String> moves){
+    public static String moveMagician(String uncleanMove, List<String> moves) {
         uncleanMove = uncleanMove.toUpperCase();
-        if(uncleanMove.length()==2){ // Eg. just C5, then pick any/first move that matches
+        if (uncleanMove.length() == 2) { // Eg. just C5, then pick any/first move that matches
             for (String str : moves) {
                 if (str.endsWith(uncleanMove)) {
                     return str;
@@ -133,7 +133,7 @@ public class Tools {
     public static String fenToString(String fen) {
         // Replace numbers with corresponding number of empty squares
         for (int i = 1; i <= 8; i++) {
-            fen = fen.replace(i+"", "⬜ ".repeat(i));
+            fen = fen.replace(i + "", "⬜ ".repeat(i));
         }
         String[][] mappings = {
                 {"rb", "\u001B[41m\uD83D\uDD35\u001B[0m "}, // Blue on red
@@ -152,8 +152,8 @@ public class Tools {
         String[] rows = fen.split("/");
         // Append column labels (A-H)
         sb.append("   A  B  C  D   E  F  G  H\n");
-        for (int row = 7; row >=0; row--) { // Process rows in correct order
-            sb.append((row+1)).append(" ");
+        for (int row = 7; row >= 0; row--) { // Process rows in correct order
+            sb.append((row + 1)).append(" ");
             // Add left corner for the first and last row
             if (row == 0 || row == 7) {
                 sb.append("\uD83D\uDD33 ");

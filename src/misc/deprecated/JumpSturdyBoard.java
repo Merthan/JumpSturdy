@@ -1,4 +1,4 @@
-package deprecated;
+package misc.deprecated;
 
 import java.util.Arrays;
 

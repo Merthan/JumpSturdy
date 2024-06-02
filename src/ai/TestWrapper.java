@@ -1,4 +1,4 @@
-package model;
+package ai;
 
 public class TestWrapper {
     // wie viele Zustaende wurden untersucht
@@ -9,14 +9,14 @@ public class TestWrapper {
     public String bestMove;
     public boolean isRed;
 
-    public TestWrapper(int untersuchteZustaende, int value, String bestMove, boolean isRed){
+    public TestWrapper(int untersuchteZustaende, int value, String bestMove, boolean isRed) {
         this.untersuchteZustaende = untersuchteZustaende;
         this.bestValue = value;
         this.bestMove = bestMove;
         this.isRed = isRed;
     }
 
-    public TestWrapper(int untersuchteZustaende, int bestValue, boolean isRed){
+    public TestWrapper(int untersuchteZustaende, int bestValue, boolean isRed) {
         this.untersuchteZustaende = untersuchteZustaende;
         this.bestValue = bestValue;
         this.isRed = isRed;

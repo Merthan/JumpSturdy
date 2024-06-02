@@ -1,8 +1,12 @@
-package model;
+package ai;
+
+import model.BitBoard;
+
+import java.util.List;
 
 import static model.BitBoard.*;
 
-import static model.Tools.shift;
+import static misc.Tools.shift;
 
 public class BitBoardManipulation {
 
@@ -226,33 +230,71 @@ public class BitBoardManipulation {
 
     }
 
-    public static int ruhesuche(BitBoard board,boolean isRed){
-        long[] bitboardAsLongArray = new long[]{board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red};
-        long attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5]);
-        if(attackedPositions == 0) return RUHESUCHE_NOT_PERFORMED;
+    public static int ruhesuche(BitBoard board, boolean isRed) {
+        long[] bitboardAsLongArray = new long[]{board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red};
+        long attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+        if (attackedPositions == 0) return RUHESUCHE_NOT_PERFORMED;
         boolean originalIsRed = isRed;
-        while(attackedPositions !=0){
+        while (attackedPositions != 0) {
             //This gets a specific index thats attacked, IF there are multiple the first one is returned. This is basically the TO, the from we figure out
             byte mostForwardIndexOfAttacked = (byte) Long.numberOfTrailingZeros(attackedPositions);
             //Tools.displayBitboard(attackedPositions);
             //System.out.println("bluesingle:");
             //Tools.displayBitboard(bitboardAsLongArray[1]);
             //System.out.println("MostForward:"+mostForwardIndexOfAttacked+ " "+ Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ " "+ Tools.indexToStringPosition((byte) (63-mostForwardIndexOfAttacked)));
-            byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked,isRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5]);
+            byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
             //For test:
             //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
 
-            bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from,mostForwardIndexOfAttacked,isRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5]);
+            bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
 
             //After playing move, switch sides I guess to see what they'd play
             isRed = !isRed;
-            attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5]);
+            attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
         }
         //As soon as no attacks left anymore, calculate for starting party
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
-        return Evaluate.evaluateSimple(originalIsRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5])-
-                Evaluate.evaluateSimple(!originalIsRed,bitboardAsLongArray[0],bitboardAsLongArray[1],bitboardAsLongArray[2],bitboardAsLongArray[3],bitboardAsLongArray[4],bitboardAsLongArray[5]);
+        return Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+                Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
     }
+
+    public static int[] ruhesucheWithPositions(BitBoard board, boolean isRed) {
+        long[] bitboardAsLongArray = new long[]{board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red};
+        long attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+        if (attackedPositions == 0) return null;
+        int[] positionsAndAtTheEndScoreArray = new int[12 * 2 + 1]; //12 players each, estimate for max captures/possible MAXIMUM array size, better than List with boxing
+        int counter = 0;
+        boolean originalIsRed = isRed;
+        while (attackedPositions != 0) {
+            //This gets a specific index thats attacked, IF there are multiple the first one is returned. This is basically the TO, the from we figure out
+            byte mostForwardIndexOfAttacked = (byte) Long.numberOfTrailingZeros(attackedPositions);
+            //Tools.displayBitboard(attackedPositions);
+            //System.out.println("bluesingle:");
+            //Tools.displayBitboard(bitboardAsLongArray[1]);
+            //System.out.println("MostForward:"+mostForwardIndexOfAttacked+ " "+ Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ " "+ Tools.indexToStringPosition((byte) (63-mostForwardIndexOfAttacked)));
+            byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+            //For test:
+            //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
+
+            bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+
+            positionsAndAtTheEndScoreArray[counter++] = from;
+            positionsAndAtTheEndScoreArray[counter++] = mostForwardIndexOfAttacked;
+            //After playing move, switch sides I guess to see what they'd play
+            isRed = !isRed;
+            attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+        }
+        //As soon as no attacks left anymore, calculate for starting party
+        //TODO: remove the minus if evaluate is fixed to account for both teams
+        //TODO: change return to what you guys might need, e.g. more than just evaluation int.
+
+        int eval = Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+                Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+
+        positionsAndAtTheEndScoreArray[positionsAndAtTheEndScoreArray.length - 1] = eval;
+        return positionsAndAtTheEndScoreArray; // TODO: READ [0] [1] = one move 0 to 1, then [2] [3] until one of the values is 0 (illegal/corner anyways), then break loop. Eval is at last index.
+    }
+
 
 }

@@ -1,12 +1,14 @@
 package model;
 
+import misc.Tools;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static deprecated.JumpSturdyBoard.*;
-import static deprecated.JumpSturdyBoard.BLUE;
-import static deprecated.JumpSturdyBoard.RED;
-import static model.Tools.*;
+import static misc.deprecated.JumpSturdyBoard.*;
+import static misc.deprecated.JumpSturdyBoard.BLUE;
+import static misc.deprecated.JumpSturdyBoard.RED;
+import static misc.Tools.*;
 
 public class BitBoard {
 
@@ -61,7 +63,7 @@ public class BitBoard {
         blue_on_red = 0L;
     }
 
-    public BitBoard(String fen){
+    public BitBoard(String fen) {
         readFEN(fen);
     }
 
@@ -84,14 +86,14 @@ public class BitBoard {
         String[] rows = fen.split("/");
 
         for (int row = 0; row < rows.length; row++) {
-            int col = (row==0||row==7)?1:0;
+            int col = (row == 0 || row == 7) ? 1 : 0;
             for (int i = 0; i < rows[row].length(); i++) {
                 char c = rows[row].charAt(i);
                 if (Character.isDigit(c)) {
                     // Empty squares
                     col += c - '0';
                 } else {
-                    byte index = (byte)((7 - row) * 8 + col);
+                    byte index = (byte) ((7 - row) * 8 + col);
                     switch (c) {
                         case 'X' -> {
                             redSingles |= 1L << index;
@@ -201,8 +203,8 @@ public class BitBoard {
     }
 
     //Returns if the piece at position belongs to red
-    public boolean isItRedsTurnByPositionOfPieces(byte position){
-        detectOverlap(redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
+    public boolean isItRedsTurnByPositionOfPieces(byte position) {
+        detectOverlap(redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
         boolean redSingleBitSet = (redSingles & (1L << position)) != 0;
         boolean blueSingleBitSet = (blueSingles & (1L << position)) != 0;
         boolean redDoubleBitSet = (redDoubles & (1L << position)) != 0;
@@ -210,7 +212,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
-            throw new RuntimeException("Invalid position, either empty or corner" + position +" "+ Tools.indexToStringPosition(position));
+            throw new RuntimeException("Invalid position, either empty or corner" + position + " " + Tools.indexToStringPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
@@ -247,26 +249,26 @@ public class BitBoard {
         long topRowMask = 0xFFL;  // Mask for the top row (bits 0-7)
         long bottomRowMask = 0xFFL << 56;  // Mask for the bottom row (bits 56-63)
         long bluePieces = blueSingles | blueDoubles | blue_on_red;
-        long redPieces = redSingles | redDoubles| red_on_blue;
+        long redPieces = redSingles | redDoubles | red_on_blue;
 
         // Check if any blue piece is in the top row or no red pieces
         if ((bluePieces & topRowMask) != 0 || redPieces == 0) {
             return WINNER_BLUE;
         }
         // Check if any red piece is in the bottom row or no blue pieces
-        else if ((redPieces & bottomRowMask) != 0 || bluePieces == 0 ) {
+        else if ((redPieces & bottomRowMask) != 0 || bluePieces == 0) {
             return WINNER_RED;
         }
         // Check if there are any possible moves for blue
-        else if (getMovesForTeam(false) == 0){
+        else if (getMovesForTeam(false) == 0) {
             // Check if there are any possible moves for red, if no -> draw
-            if(getMovesForTeam(true) == 0) return WINNER_DRAW;
+            if (getMovesForTeam(true) == 0) return WINNER_DRAW;
             else return WINNER_RED;
         }
         // Check if there are any possible moves for red
-        else if(getMovesForTeam(true) == 0){
+        else if (getMovesForTeam(true) == 0) {
             // Check if there are any possible moves for blue, if no -> draw
-            if(getMovesForTeam(false) == 0) return WINNER_DRAW;
+            if (getMovesForTeam(false) == 0) return WINNER_DRAW;
             else return WINNER_BLUE;
         }
         return WINNER_ONGOING;
@@ -274,13 +276,13 @@ public class BitBoard {
 
     public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
         byte[] indices = parseMove(move);
-        if(isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn){
+        if (isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn) {
             throw new IllegalMoveException("Player can't move enemy piece");
         }
-        if(checkIfPossible){
+        if (checkIfPossible) {
             long possibleMoves = getPossibleMovesForIndividualPiece(indices[0], isRedTurn);
 
-            if((possibleMoves & (1L << indices[1])) == 0){ //Move not included, index conversion
+            if ((possibleMoves & (1L << indices[1])) == 0) { //Move not included, index conversion
                 throw new IllegalMoveException("Move is not possible:" + move);
             }
         }
@@ -428,10 +430,6 @@ public class BitBoard {
     }
 
 
-
-
-
-
     public long getMovesForTeam(boolean red) {
         if (red) {
             return getPossibleMovesSingles(redSingles, true) | getPossibleMovesDoubles(redDoubles | red_on_blue, true);
@@ -465,7 +463,7 @@ public class BitBoard {
         //System.out.println("Possible moves:");
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
     }
-    
+
     //Die Version von @Merthan
    /*public long getPossibleMovesDoubles(long doubles, boolean isRed) {
         int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
@@ -568,34 +566,34 @@ public class BitBoard {
     }
 
     /**
-    * Gathers all possible moves for the current player.
-    * This method decides the piece color based on whose turn it is,
-    * gathers all singles and doubles, and calculates possible moves for each.
-    *
-    * @return List of all possible moves in standard chess notation, like "A2-A3".
-    */
+     * Gathers all possible moves for the current player.
+     * This method decides the piece color based on whose turn it is,
+     * gathers all singles and doubles, and calculates possible moves for each.
+     *
+     * @return List of all possible moves in standard chess notation, like "A2-A3".
+     */
 
     public List<String> getAllPossibleMoves(boolean isRed) {
         List<String> moves = new ArrayList<>();
         long singles = isRed ? redSingles : blueSingles;
         long doubles = isRed ? redDoubles | red_on_blue : blueDoubles | blue_on_red;
-    
+
         moves.addAll(generateMovesForPieces(singles, getPossibleMovesSingles(singles, isRed), isRed));
         moves.addAll(generateMovesForPieces(doubles, getPossibleMovesDoubles(doubles, isRed), isRed));
-    
+
         return moves.stream().sorted().collect(Collectors.toList());
     }
-    
+
     /**
-    * Generates a list of moves from a given set of pieces and their possible moves.
-    * This method iterates through each bit of the pieces' bitboard, checks if a piece is present,
-    * and then calculates valid moves for it using another provided bitboard of possible moves.
-    *
-    * @param pieces A long representing the bitboard of pieces.
-    * @param possibleMoves A long representing the bitboard of all possible moves for these pieces.
-    * @param isRed A boolean indicating if the current moves are for Red pieces.
-    * @return A list of moves in the format "from-to" like "E2-E4".
-    */
+     * Generates a list of moves from a given set of pieces and their possible moves.
+     * This method iterates through each bit of the pieces' bitboard, checks if a piece is present,
+     * and then calculates valid moves for it using another provided bitboard of possible moves.
+     *
+     * @param pieces        A long representing the bitboard of pieces.
+     * @param possibleMoves A long representing the bitboard of all possible moves for these pieces.
+     * @param isRed         A boolean indicating if the current moves are for Red pieces.
+     * @return A list of moves in the format "from-to" like "E2-E4".
+     */
     private List<String> generateMovesForPieces(long pieces, long possibleMoves, boolean isRed) {
         List<String> moveList = new ArrayList<>();
         for (byte fromIndex = 0; fromIndex < 64; fromIndex++) {
@@ -610,18 +608,18 @@ public class BitBoard {
         }
         return moveList;
     }
-    
+
     public long getPossibleMovesForIndividualPiece(byte index, boolean isRed) {
         long singlePieceMask = 1L << index;
         long moves = 0L;
-    
+
         // Überprüfen, ob es sich um einen Einzelstein handelt
         if (((isRed ? redSingles : blueSingles) & singlePieceMask) != 0) {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Stein zu ermitteln
             moves |= getPossibleMovesSingles(singlePieceMask, isRed);
         }
-    
+
         // Überprüfen, ob es sich um einen Doppelstein handelt
         if (((isRed ? (redDoubles | red_on_blue) : (blueDoubles | blue_on_red)) & singlePieceMask) != 0) {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
@@ -629,7 +627,7 @@ public class BitBoard {
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Doppelstein zu ermitteln
             moves |= getPossibleMovesDoubles(singlePieceMask, isRed);
         }
-    
+
         return moves;
     }
 
@@ -644,7 +642,7 @@ public class BitBoard {
         return newBoard;
     }*/
 
-    public static BitBoard fromLongArray(long[] bitBoards){
+    public static BitBoard fromLongArray(long[] bitBoards) {
         BitBoard newBoard = new BitBoard();
         newBoard.redSingles = bitBoards[0];
         newBoard.blueSingles = bitBoards[1];
@@ -668,7 +666,7 @@ public class BitBoard {
      *
      * @return String representation with Emojis and multiple control characters for advanced visualisation
      * Credits: Merthan Erdem
-     * */
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -682,7 +680,7 @@ public class BitBoard {
             // 😎😎😎😎😎😎😎😎😎
             for (int col = 0; col < 8; col++) {
                 int index = row * 8 + col;
-                if(index==0||index==7||index==56||index==63){// all corners
+                if (index == 0 || index == 7 || index == 56 || index == 63) {// all corners
                     sb.append("\uD83D\uDD33 ");//🔳
                     continue;
                 }
@@ -707,7 +705,6 @@ public class BitBoard {
         sb.append("   A  B  C  D   E  F  G  H\n");
         return sb.toString();
     }
-
 
 
 }
