@@ -1,56 +1,61 @@
-package misc;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 import ai.SearchType;
 import ai.SturdyJumpersAI;
-import com.google.gson.Gson;
 import model.BitBoard;
-
 
 public class ServerConnection {
 
+    public static void main(String[] args) {
+        System.out.println("-------Starting Server Connection------\n\n\n");
+        String serverAddress = "localhost";
+        int port = 5050; // The port on which the Python server is listening
 
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server started on port " + port);
 
-    static Gson gson = new Gson();  // Create a Gson object for JSON parsing
+            while (true) {
+                Socket socket = serverSocket.accept();  // Correct method call
+                System.out.println("New client connected.");
 
-    static String processInput(String gameStateJson) {
-        GameState gameState = gson.fromJson(gameStateJson, GameState.class);  // Convert JSON string to GameState object
-        BitBoard board = new BitBoard(gameState.fen);  // Create a new BitBoard from the FEN string in GameState
+                try (BufferedReader input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                     PrintWriter output = new PrintWriter(socket.getOutputStream(), true)) {
 
-        boolean isRedTurn = gameState.currentPlayer.equals("r");
+                    System.out.println("Waiting to receive FEN...");
+                    String fen = input.readLine(); // Correctly reads from the client
+                    System.out.println("Received FEN: " + fen);
 
-        //best move by AI Bot
-        String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
+                    if (fen != null && !fen.isEmpty()) {
+                        // Process the FEN and decide on the move
+                        String move = processFEN(fen);
 
-        return bestMove;  // Return the best move
-    }
-
-    // Class to represent the game state received from Python
-    static class GameState {
-        String fen;
-        String currentPlayer;
-    }
-
-    public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(5000);
-        System.out.println("AI Server started. Waiting for connection...");
-        Socket clientSocket = serverSocket.accept();
-        System.out.println("Connected to Python client!");
-
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
-
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                // Process the game state and compute the move
-                String move = processInput(inputLine);
-                out.println(move);
+                        // Send the move back to the client
+                        output.println(move);
+                        System.out.println("Sent move: " + move);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error during communication: " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    socket.close();  // Ensure socket is closed after handling
+                }
             }
+        } catch (Exception e) {
+            System.out.println("Error starting server: " + e.getMessage());
+            e.printStackTrace();
         }
-        System.out.println("Connection closed.");
-        serverSocket.close();
+    }
+
+    private static String processFEN(String fen) {
+        // Assuming you have a method in SturdyJumpersAI to handle just FEN
+        // Simulating that we're still playing as 'red' for simplicity
+        boolean isRed = false;  // You would set this according to your game logic
+
+        BitBoard board = new BitBoard(fen); // Assuming constructor from FEN
+        String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
+        return bestMove;
     }
 }
