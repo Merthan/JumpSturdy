@@ -236,8 +236,6 @@ public class Game {
 
     public void botGame(BitBoard board) {
         byte winner = BitBoard.WINNER_ONGOING;
-
-
         while (winner == BitBoard.WINNER_ONGOING) {
             System.out.println(board); // Display the current board
             Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(), Tools.PURPLE);
@@ -261,7 +259,7 @@ public class Game {
 
     public static void main(String[] args) {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
-                "8/3b04/8/8/8/8/4r0/8"};
+                "2b03/8/8/8/3r04/8/8/6"};
 
         String[] testsMstTwo = new String[]{/*Early Game*/"b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/2rr1r0r01r0/r0r0r0r0r0r0" /*Mein Zug: h7g7*/,
                 /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
@@ -273,13 +271,14 @@ public class Game {
         //fens[0];
 
         String searchTest = "6/1b05b0/8/8/8/8/1r0r05/6";
+        String test = "b05/2b05/3b04/4b03/8/8/8/5r0";
 
         BitBoard board = new BitBoard(fen);
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        //game.play(board,true);
-        game.playAgainst(board, false);
+        game.play(board,true);
+        //game.playAgainst(board, false);
         //game.botGame(board);
     }
 }
