@@ -75,12 +75,12 @@ public class Evaluate {
         // Bonus for red pieces in the penultimate row
         if (redsTurn) {
             bonus += Long.bitCount(redPieces & penultimateBottomRowMask) * 100; // Add significant bonus for potential win moves
-            //bonus += Long.bitCount(redPieces & bottomRowMask) * 200; // Add higher bonus for pieces in the base row
-            if((redPieces & bottomRowMask) != 0) bonus = 20000000;
+            bonus += Long.bitCount(redPieces & bottomRowMask) * 200; // Add higher bonus for pieces in the base row
+
         } else {
             bonus += Long.bitCount(bluePieces & penultimateTopRowMask) * 100;
-            //bonus += Long.bitCount(bluePieces & topRowMask) * 200;
-            if((bluePieces & topRowMask) != 0 ) bonus = 20000000;
+            bonus += Long.bitCount(bluePieces & topRowMask) * 200;
+
         }
 
         return bonus;

@@ -31,7 +31,7 @@ public class Game {
         board = new BitBoard(fen);
     }
 
-    public void playAgainst(BitBoard board, boolean alwaysRed) {
+    public void playerVsPlayer(BitBoard board, boolean alwaysRed) {
         Scanner scanner = new Scanner(System.in);
         byte winner = BitBoard.WINNER_ONGOING;
         System.out.println(board); // Display the current board
@@ -102,7 +102,7 @@ public class Game {
         }
     }
 
-    public void play(BitBoard board, boolean smartBot) {
+    public void playVsBot(BitBoard board, boolean smartBot) {
 
 
         Scanner scanner = new Scanner(System.in);
@@ -110,7 +110,7 @@ public class Game {
         System.out.println(board); // Display the current board
         while (winner == BitBoard.WINNER_ONGOING) {
 
-            printPossibleAndTestPredicted(board);
+            //printPossibleAndTestPredicted(board);
 
 
 /*            System.out.println();
@@ -277,7 +277,7 @@ public class Game {
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        game.play(board,true);
+        game.playVsBot(board,true);
         //game.playAgainst(board, false);
         //game.botGame(board);
     }
