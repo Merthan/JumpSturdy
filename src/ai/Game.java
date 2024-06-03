@@ -110,7 +110,7 @@ public class Game {
         System.out.println(board); // Display the current board
         while (winner == BitBoard.WINNER_ONGOING) {
 
-            printPossibleAndTestPredicted(board);
+            //printPossibleAndTestPredicted(board);
 
 
 /*            System.out.println();
@@ -129,6 +129,9 @@ public class Game {
 
             List<String> possibleMovesForMatching = board.getAllPossibleMoves(isRedTurn);
             Tools.printInColor(possibleMovesForMatching.toString(), Tools.PURPLE);
+
+            //System.out.println(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn));
+
 
             Tools.printInColor("Enter your move ⬇\uFE0F", "\u001B[5m");
             String playerMove = Tools.moveMagician(scanner.nextLine(), possibleMovesForMatching);
@@ -278,8 +281,8 @@ public class Game {
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        //game.play(board,true);
-        game.playAgainst(board, false);
+        game.play(board,true);
+        //game.playAgainst(board, true);
         //game.botGame(board);
     }
 }

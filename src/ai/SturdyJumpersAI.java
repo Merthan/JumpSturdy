@@ -186,12 +186,12 @@ public class SturdyJumpersAI {
                 int moveValue = withCutoffs ?
                         alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime) :
                         alphaBetaSearchWithoutCutoffs(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime);
-                System.out.println("MOVE: " + move + ". Depth: " + depth + ". Move Value: " + moveValue + ". Move für Red: " + isRed);
+                //System.out.println("MOVE: " + move + ". Depth: " + depth + ". Move Value: " + moveValue + ". Move für Red: " + isRed);
                 if (moveValue > bestValue) {
                     bestValue = moveValue;
                     bestMove = move;
                 }
-                System.out.println("Best Move: " + bestMove + ". Best Value: " + bestValue + ". Move für Red: " + isRed);
+                //System.out.println("Best Move: " + bestMove + ". Best Value: " + bestValue + ". Move für Red: " + isRed);
                 if (timeUp) break;
             }
             depth++;
@@ -214,21 +214,24 @@ public class SturdyJumpersAI {
         }
 
         if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
-                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            //int ruhesuche = BitBoardManipulation.ruhesuche(board,isRed);
+            //if (ruhesuche!= BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) return ruhesuche;
+            //return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
+            //        Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            return BitBoardManipulation.ruhesuche(board,isRed);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
 
-        if (!isRed) {
+        if (isRed) {
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
                 untersuchteZustaende++;
                 BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], false,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, true, startTime);
+                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, !isRed, startTime);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
                 if (beta <= alpha) {
@@ -242,10 +245,10 @@ public class SturdyJumpersAI {
             for (String move : legalMoves) {
                 untersuchteZustaende++;
                 BitBoard newBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], true,
+                        Tools.parseMove(move)[0], Tools.parseMove(move)[1], !isRed,
                         board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                         board.red_on_blue, board.blue_on_red));
-                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, false, startTime);
+                int eval = alphaBetaSearch(newBoard, depth - 1, alpha, beta, isRed, startTime);
 
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);

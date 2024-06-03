@@ -1,6 +1,7 @@
 package benchmark;
 
 import model.BitBoard;
+import ai.Evaluate;
 
 public class Benchmark {
 
@@ -11,7 +12,8 @@ public class Benchmark {
         startTime = System.nanoTime();
         for (int i = 0; i < 1000; i++) {
             // Generate moves
-            b.getMovesForTeam(true);
+            //b.getAllPossibleMoves(true);
+            Evaluate.evaluateSimple(false, b.redSingles, b.blueSingles, b.redDoubles, b.blueDoubles, b.red_on_blue, b.blue_on_red);
         }
         endTime = System.nanoTime();
 
