@@ -2,6 +2,7 @@ package misc;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 
 import static model.BitBoard.CORNER_MASK;
@@ -96,6 +97,16 @@ public class Tools {
         return new byte[]{fromIndex, toIndex};
     }
 
+    public static String lastRowMove(List<String> possibleMoves, boolean isRed){
+        for(String move : possibleMoves){
+            if( (move.charAt(4) == '8' & isRed == false)
+                    || (move.charAt(4) == '1' & isRed == true)){
+            return move;
+            }
+        }
+        Random random = new Random();
+        return possibleMoves.get(random.nextInt(possibleMoves.size()));
+    }
 
     // Utility method to shift bitboards for movement
     // TODO: Performance, checked and seems to be VERY similar to inline, so no further opt necessary after 0 check

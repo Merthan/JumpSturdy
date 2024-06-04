@@ -337,7 +337,7 @@ public class BitBoardManipulation {
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
-                    System.out.println("Next move wins double");
+                   // System.out.println("Next move wins double");
                     return true;
                 }
             }
@@ -351,7 +351,7 @@ public class BitBoardManipulation {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if ((onLast & ~attackedPositions) != 0) {
-                    System.out.println("Next move wins single b");
+                    //System.out.println("Next move wins single b");
                     return true;
                 }
             }
@@ -360,7 +360,7 @@ public class BitBoardManipulation {
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
-                    System.out.println("Next move wins double b");
+                    //System.out.println("Next move wins double b");
                     return true;
                 }
             }
