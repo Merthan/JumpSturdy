@@ -3,9 +3,6 @@ package ai;
 import misc.Tools;
 import model.BitBoard;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static model.BitBoard.*;
 
 import static misc.Tools.shift;
@@ -251,6 +248,8 @@ public class BitBoardManipulation {
     public static long totalTimeRuheSucheExecuted = 0;
     public static int ruhesuche(BitBoard board, boolean isRed) {
         long startTime = System.nanoTime();
+        //if(true) return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
+         //       Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         long[] bitboardAsLongArray = new long[]{board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red};
         long attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
         if (attackedPositions == 0) return RUHESUCHE_NOT_PERFORMED;
@@ -319,7 +318,8 @@ public class BitBoardManipulation {
         }
 
         totalTimeRuheSucheExecuted += System.nanoTime()-startTime;
-        return 140;
+        return Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+                Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
         //As soon as no attacks left anymore, calculate for starting party
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
@@ -391,7 +391,7 @@ public class BitBoardManipulation {
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
-                    System.out.println("Next move wins double");
+                   // System.out.println("Next move wins double");
                     return true;
                 }
             }
@@ -405,7 +405,7 @@ public class BitBoardManipulation {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if ((onLast & ~attackedPositions) != 0) {
-                    System.out.println("Next move wins single b");
+                    //System.out.println("Next move wins single b");
                     return true;
                 }
             }
@@ -414,7 +414,7 @@ public class BitBoardManipulation {
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
-                    System.out.println("Next move wins double b");
+                    //System.out.println("Next move wins double b");
                     return true;
                 }
             }

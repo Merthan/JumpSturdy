@@ -31,7 +31,7 @@ public class Game {
         board = new BitBoard(fen);
     }
 
-    public void playAgainst(BitBoard board, boolean alwaysRed) {
+    public void playerVsPlayer(BitBoard board, boolean alwaysRed) {
         Scanner scanner = new Scanner(System.in);
         byte winner = BitBoard.WINNER_ONGOING;
         System.out.println(board); // Display the current board
@@ -47,35 +47,8 @@ public class Game {
             String player = isRedTurn ? PLAYER_ONE : PLAYER_TWO;
 
             long start = System.nanoTime();
-            int result = 0;
-
-/*            for (int i = 259; i <265; i++) {// 259 260 261 262 263 264
-                Tools.displayBitboard(i);
-            }*/
-
-/*
-            System.out.println("start");
-            result = BitBoardManipulation.ruhesuche(BitBoard.fromLongArray(new long[]{245, 246, 247, 248 ,249, 250}),true);
-            System.out.println("mite "+result);
-
-            BitBoard cursedBitboard = BitBoard.fromLongArray(new long[]{259, 260, 261, 262 ,263, 264});
-            BitBoard.detectOverlap(cursedBitboard.redSingles,cursedBitboard.blueSingles,cursedBitboard.redDoubles,cursedBitboard.blueDoubles,cursedBitboard.red_on_blue,cursedBitboard.blue_on_red);
-            System.out.println("Cursed:");
-            System.out.println(cursedBitboard);
-
-            result = BitBoardManipulation.ruhesuche(cursedBitboard,true);
-            System.out.println("ende "+result);
-
-            for (int i = 0; i < 100000; i++) {
-                System.out.println("Hier bei i "+i +"result: "+result);
-                result = BitBoardManipulation.ruhesuche(BitBoard.fromLongArray(new long[]{i++,i++,i++,i++,i++,i++}), i % 2 == 0);
-
-            }
-            System.out.println("Ruhesuche times 1000 took nanos " + (System.nanoTime() - start) + " and result eval is:" + (result == RUHESUCHE_NOT_PERFORMED ? " NONE " : "" + result));
-*/
-
-
-
+            int result = BitBoardManipulation.ruhesuche(board, isRedTurn);
+            System.out.println("Ruhesuche took nanos " + (System.nanoTime() - start) + " and result eval is:" + (result == RUHESUCHE_NOT_PERFORMED ? " NONE " : "" + result));
 
             //EXAMPLE FOR INCLUDING MOVES; NOT MUCH SLOWER
             long startNew = System.nanoTime();
@@ -129,7 +102,7 @@ public class Game {
         }
     }
 
-    public void play(BitBoard board, boolean smartBot) {
+    public void playVsBot(BitBoard board, boolean smartBot) {
 
 
         Scanner scanner = new Scanner(System.in);
@@ -137,7 +110,7 @@ public class Game {
         System.out.println(board); // Display the current board
         while (winner == BitBoard.WINNER_ONGOING) {
 
-            printPossibleAndTestPredicted(board);
+            //printPossibleAndTestPredicted(board);
 
 
 /*            System.out.println();
@@ -201,7 +174,7 @@ public class Game {
                 else {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     if (!possibleMoves.isEmpty()) {
-                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false), isRedTurn, false);
+                        isRedTurn = board.doMove(SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false), isRedTurn, true);
                     } else {
                         isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
                     }
@@ -265,14 +238,12 @@ public class Game {
 
     public void botGame(BitBoard board) {
         byte winner = BitBoard.WINNER_ONGOING;
-
-
-        while (winner == BitBoard.WINNER_ONGOING) {
+        while (true) {
             System.out.println(board); // Display the current board
             Tools.printInColor(board.getAllPossibleMoves(isRedTurn).toString(), Tools.PURPLE);
             System.out.println();
             String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
-            isRedTurn = board.doMove(botMove, isRedTurn, true);//Do and switch turn
+            isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
             winner = board.checkWinCondition(); // check if it's a winning move
             if (winner != BitBoard.WINNER_ONGOING) {
                 System.out.println("\u001B[41m\uD83C\uDFC5Game over " + (winner == BitBoard.WINNER_RED ? "Red" : "Blue") + " wins" + "\u001B[0m");
@@ -290,7 +261,7 @@ public class Game {
 
     public static void main(String[] args) {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
-                "8/3b04/8/8/8/8/4r0/8"};
+                "6/8/2b03/8/r07/8/8/6"};
 
         String[] testsMstTwo = new String[]{/*Early Game*/"b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/2rr1r0r01r0/r0r0r0r0r0r0" /*Mein Zug: h7g7*/,
                 /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
@@ -302,17 +273,16 @@ public class Game {
         //"b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r02b01/4b03/5r02/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r01b0b01/4r03/8/2r02r0r01/r01r0r0r0r0";
         //fens[0];
 
-        String searchTest = "6/1b05b0/8/8/8/8/1r0r05/6";
+        String searchTest = "6/1r0b04b0/8/8/8/8/1r0r0b04/6";
+        String test = "6/1bb1b02b01/8/2r05/3r01b02/5r0r01/2rr2r02/6";
 
         BitBoard board = new BitBoard(fens[0]);
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        game.play(board,true);
-        //game.playAgainst(board,false);
-
-        //game.play(board, true);
-        //game.botGame(board);
+        //game.playVsBot(board,true);
+        //game.playAgainst(board, false);
+        game.botGame(board);
     }
 }
 

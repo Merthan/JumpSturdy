@@ -43,7 +43,7 @@ public class Evaluate {
     //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
     // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
     public static int calculatePieceWorthValue(boolean redsTurn,long r, long b, long rr, long bb, long br, long rb){
-        return Long.bitCount(redsTurn?r:b) + 2*Long.bitCount(redsTurn?rr:bb) + 2*Long.bitCount(redsTurn?br:rb);//doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
+        return Long.bitCount(redsTurn?r:b) + 2 *Long.bitCount(redsTurn?rr:bb) + 2*Long.bitCount(redsTurn?br:rb);//doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
     }
 
 
@@ -75,12 +75,12 @@ public class Evaluate {
         // Bonus for red pieces in the penultimate row
         if (redsTurn) {
             bonus += Long.bitCount(redPieces & penultimateBottomRowMask) * 100; // Add significant bonus for potential win moves
-            //bonus += Long.bitCount(redPieces & bottomRowMask) * 200; // Add higher bonus for pieces in the base row
-            if((redPieces & bottomRowMask) != 0) bonus = 20000000;
+            bonus += Long.bitCount(redPieces & bottomRowMask) * 200; // Add higher bonus for pieces in the base row
+
         } else {
             bonus += Long.bitCount(bluePieces & penultimateTopRowMask) * 100;
-            //bonus += Long.bitCount(bluePieces & topRowMask) * 200;
-            if((bluePieces & topRowMask) != 0 ) bonus = 20000000;
+            bonus += Long.bitCount(bluePieces & topRowMask) * 200;
+
         }
 
         return bonus;
