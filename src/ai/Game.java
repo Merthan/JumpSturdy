@@ -47,8 +47,35 @@ public class Game {
             String player = isRedTurn ? PLAYER_ONE : PLAYER_TWO;
 
             long start = System.nanoTime();
-            int result = BitBoardManipulation.ruhesuche(board, isRedTurn);
-            System.out.println("Ruhesuche took nanos " + (System.nanoTime() - start) + " and result eval is:" + (result == RUHESUCHE_NOT_PERFORMED ? " NONE " : "" + result));
+            int result = 0;
+
+/*            for (int i = 259; i <265; i++) {// 259 260 261 262 263 264
+                Tools.displayBitboard(i);
+            }*/
+
+/*
+            System.out.println("start");
+            result = BitBoardManipulation.ruhesuche(BitBoard.fromLongArray(new long[]{245, 246, 247, 248 ,249, 250}),true);
+            System.out.println("mite "+result);
+
+            BitBoard cursedBitboard = BitBoard.fromLongArray(new long[]{259, 260, 261, 262 ,263, 264});
+            BitBoard.detectOverlap(cursedBitboard.redSingles,cursedBitboard.blueSingles,cursedBitboard.redDoubles,cursedBitboard.blueDoubles,cursedBitboard.red_on_blue,cursedBitboard.blue_on_red);
+            System.out.println("Cursed:");
+            System.out.println(cursedBitboard);
+
+            result = BitBoardManipulation.ruhesuche(cursedBitboard,true);
+            System.out.println("ende "+result);
+
+            for (int i = 0; i < 100000; i++) {
+                System.out.println("Hier bei i "+i +"result: "+result);
+                result = BitBoardManipulation.ruhesuche(BitBoard.fromLongArray(new long[]{i++,i++,i++,i++,i++,i++}), i % 2 == 0);
+
+            }
+            System.out.println("Ruhesuche times 1000 took nanos " + (System.nanoTime() - start) + " and result eval is:" + (result == RUHESUCHE_NOT_PERFORMED ? " NONE " : "" + result));
+*/
+
+
+
 
             //EXAMPLE FOR INCLUDING MOVES; NOT MUCH SLOWER
             long startNew = System.nanoTime();
@@ -269,7 +296,8 @@ public class Game {
 
         //String fen = "b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/8/1r0r05/3r0r0r0r01/r0r0r0r0r0r0";//fens[0];
         //String fen = "b0bb2b0b0/3b0r03/6b01/5b0b01/3r04/8/2r01r0r0r01/r01r0r0r0r0"; canWin test middle
-        String fen = "b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r02b01/4b03/5r02/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r01b0b01/4r03/8/2r02r0r01/r01r0r0r0r0";
+        String fen = "b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0";//"1bb3b0/4r03/1b01b02b0b0/4rr1b01/8/8/2r03r01/r01r0r0r0r0";
+        //"b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r02b01/4b03/5r02/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r01b0b01/4r03/8/2r02r0r01/r01r0r0r0r0";
         //fens[0];
 
         String searchTest = "6/1b05b0/8/8/8/8/1r0r05/6";
@@ -278,8 +306,10 @@ public class Game {
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        //game.play(board,true);
-        game.playAgainst(board, false);
+        game.play(board,true);
+        //game.playAgainst(board,false);
+
+        //game.play(board, true);
         //game.botGame(board);
     }
 }

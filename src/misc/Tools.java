@@ -25,6 +25,18 @@ public class Tools {
         System.out.println((color) + text + RESET);
     }
 
+    public static void printDivider(){
+        System.out.println("\u001B[45m"+"⎯".repeat(100)+"\u001B[0m");
+        System.out.println("\u001B[42m"+"⎯".repeat(100)+"\u001B[0m");
+        System.out.println("\u001B[44m"+"⎯".repeat(100)+"\u001B[0m");
+    }
+
+    public static void printDivider(int length){
+        System.out.println("\u001B[45m"+"⎯".repeat(length)+"\u001B[0m");
+        System.out.println("\u001B[42m"+"⎯".repeat(length)+"\u001B[0m");
+        System.out.println("\u001B[44m"+"⎯".repeat(length)+"\u001B[0m");
+    }
+
     public static String moveMagician(String uncleanMove, List<String> moves) {
         uncleanMove = uncleanMove.toUpperCase();
         if (uncleanMove.length() == 2) { // Eg. just C5, then pick any/first move that matches
@@ -96,6 +108,9 @@ public class Tools {
         return new byte[]{fromIndex, toIndex};
     }
 
+    public static String parseMoveToString(byte[] move){
+        return Tools.indexToStringPosition(move[0])+"-"+Tools.indexToStringPosition(move[1]);
+    }
 
     // Utility method to shift bitboards for movement
     // TODO: Performance, checked and seems to be VERY similar to inline, so no further opt necessary after 0 check
@@ -120,6 +135,26 @@ public class Tools {
             System.out.println();
         }
         System.out.println();
+    }
+
+    public static String bitboardAsString(long bitboard) {
+        StringBuilder s = new StringBuilder();
+        for (int row = 0; row < 8; row++) {
+
+            for (int col = 0; col < 8; col++) {
+                int position = row * 8 + col;  // Start from top left, no inversion
+                // IF Corner
+                if ((row == 0 || row == 7) && (col == 0 || col == 7)) {
+                    s.append("X ");
+                } else if ((bitboard & (1L << position)) != 0) {
+                    s.append("1 ");
+                } else {
+                    s.append("0 ");
+                }
+            }
+            s.append("\n");
+        }
+        return s.toString();
     }
 
     public static void commentedBits(String comment, long bits) {

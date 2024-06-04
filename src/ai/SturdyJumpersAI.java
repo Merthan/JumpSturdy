@@ -4,6 +4,7 @@ import misc.Tools;
 import model.*;
 
 import java.util.List;
+import java.util.Random;
 
 public class SturdyJumpersAI {
    /*// private static int depth = 0; // Example depth limit
@@ -186,12 +187,12 @@ public class SturdyJumpersAI {
                 int moveValue = withCutoffs ?
                         alphaBetaSearch(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime) :
                         alphaBetaSearchWithoutCutoffs(newBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, startTime);
-                System.out.println("MOVE: " + move + ". Depth: " + depth + ". Move Value: " + moveValue + ". Move für Red: " + isRed);
+                //System.out.println("MOVE: " + move + ". Depth: " + depth + ". Move Value: " + moveValue + ". Move für Red: " + isRed);
                 if (moveValue > bestValue) {
                     bestValue = moveValue;
                     bestMove = move;
                 }
-                System.out.println("Best Move: " + bestMove + ". Best Value: " + bestValue + ". Move für Red: " + isRed);
+                //System.out.println("Best Move: " + bestMove + ". Best Value: " + bestValue + ". Move für Red: " + isRed);
                 if (timeUp) break;
             }
             depth++;
@@ -214,8 +215,22 @@ public class SturdyJumpersAI {
         }
 
         if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
-                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+
+
+
+            //BitBoard.detectOverlap(board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+            return BitBoardManipulation.ruhesuche(board,isRed);
+/*            int result = BitBoardManipulation.ruhesuche(board,isRed);
+            if (result == BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) {
+                return 144;
+            } else {
+                //System.out.println("Ruhe: "+result);
+                return 144;
+                ///return result;
+            }*/
+
+            //return result;//(new Random()).nextInt();//Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
+                   // Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
         List<String> legalMoves = board.getAllPossibleMoves(isRed);

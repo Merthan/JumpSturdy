@@ -1,5 +1,6 @@
 package model;
 
+import ai.BitBoardManipulation;
 import ai.Evaluate;
 import misc.deprecated.JumpSturdyBoard;
 import misc.Tools;
@@ -67,6 +68,48 @@ public class BitBoardTest {
         assertEquals(fen, b.toFEN());
         setupBoardsWithFen(fen);
         displayBoard();
+
+    }
+    @Test
+    void doMoveOnLongArrayTest(){
+        String[] fens = new String[]{
+                "6/8/8/2r06/8/3br4/8/6",
+                "6/8/8/2b06/8/3br4/8/6",
+                "6/8/3rb4/8/2r06/8/8/6",
+                "6/8/8/2r06/8/3br4/8/6",
+
+        };
+        BitBoard[] boards = new BitBoard[fens.length];
+
+        for (int i = 0; i < fens.length; i++) {
+            String fen = fens[i];
+            boards[i] = (new BitBoard(fen));
+        }
+
+        for (int i = 0; i < fens.length; i++) {
+            boards[i].printCommented("FEN:"+fens[i]);
+        }
+    }
+
+    @Test
+    void ruhesucheErrorTest(){
+        String fen = "1bb3b0/4r03/1b01b02b0b0/4rr1b01/8/8/2r03r01/r01r0r0r0r0";
+        BitBoard bitBoard = new BitBoard(fen);
+        bitBoard.printCommented("Error causing bitboard");
+        long[] b = new long[]{bitBoard.redSingles, bitBoard.blueSingles, bitBoard.redDoubles, bitBoard.blueDoubles, bitBoard.red_on_blue, bitBoard.blue_on_red};
+
+        //Tools.displayBitboard(68719476736L);
+
+        long[] modified = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(Tools.positionToIndex("D3"),Tools.positionToIndex("E4"),false,b[0],b[1],b[2],b[3],b[4],b[5]);
+        BitBoard modifiedBitboard = BitBoard.fromLongArray(modified);
+        modifiedBitboard.detectOverlap();
+        modifiedBitboard.printCommented("Modified");
+
+        Tools.printDivider();
+
+        bitBoard.doMove("D3-E4",false,true);
+        bitBoard.printCommented("NormalBitboard after move");
+        modifiedBitboard.printCommented("After move done");
 
     }
 

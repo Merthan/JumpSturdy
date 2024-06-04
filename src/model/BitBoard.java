@@ -222,7 +222,7 @@ public class BitBoard {
 
     //Static as it might be used in other classes too
     //TODO: REMOVE LATER FOR PERFORMANCE REASONS WHEN NOT THROWING
-    public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {  //Should not be called after bug has been detected/only in tests for performance reasons
+/*    public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {  //Should not be called after bug has been detected/only in tests for performance reasons
         boolean noOverlap = true;
 
         for (byte position = 0; position < 64; position++) {
@@ -245,6 +245,53 @@ public class BitBoard {
             // Tools.printInColor("No overlap in bit positions.", false);
             throw new IllegalStateException("Overlaps in bitboards detected");
         }
+    }*/
+
+    public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
+        boolean noOverlap = true;
+
+        for (byte position = 0; position < 64; position++) {
+            int bitCount = 0;
+            StringBuilder overlapInfo = new StringBuilder("Overlap detected at position: " + position + " " + Tools.indexToStringPosition(position) + " in bitboards: ");
+
+            if ((redSingles & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("redSingles ");
+            }
+            if ((blueSingles & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("blueSingles ");
+            }
+            if ((redDoubles & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("redDoubles ");
+            }
+            if ((blueDoubles & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("blueDoubles ");
+            }
+            if ((red_on_blue & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("red_on_blue ");
+            }
+            if ((blue_on_red & (1L << position)) != 0) {
+                bitCount++;
+                overlapInfo.append("blue_on_red ");
+            }
+
+            if (bitCount > 1) {
+                noOverlap = false;
+                Tools.printInColor(overlapInfo.toString(), true);
+            }
+        }
+
+        if (!noOverlap) {
+            throw new IllegalStateException("Overlaps in bitboards detected");
+        }
+    }
+
+    public void detectOverlap(){//Member for easier call
+        detectOverlap(redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
     }
 
     public byte checkWinCondition() {
@@ -279,7 +326,7 @@ public class BitBoard {
     public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
         byte[] indices = parseMove(move);
         if (isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn) {
-            throw new IllegalMoveException("Player can't move enemy piece");
+            throw new IllegalMoveException("Player can't move enemy piece:"+indices[0]+"-"+indices[1]+" > "+Tools.parseMoveToString(indices));
         }
         if (checkIfPossible) {
             long possibleMoves = getPossibleMovesForIndividualPiece(indices[0], isRedTurn);
@@ -661,6 +708,29 @@ public class BitBoard {
         byte[] indices = parseMove(move);
         System.out.println("From Index: " + indices[0] + ", To Index: " + indices[1]);
 
+    }
+
+    public void print(){
+        System.out.println(this);
+    }
+
+    public void printCommented(String comment){//Also shifts on purpose to make it more obvious
+        System.out.println("\n"+"_".repeat(70)+"\n"+comment+"\n|\t\t\t"+this.toString().replace("\n","\n|\t\t\t")+"\n|"+"_".repeat(70));
+    }
+
+    public void printWithBitboard(String comment, long bitboard){//Also shifts on purpose to make it more obvious
+        ///System.out.println(comment+"\n|\t\t\t"+this.toString().replace("\n","\n|\t\t\t")+"\n|"+"_".repeat(50));
+        String toString = toString();
+        String[] toStringSplit = toString.split("\n");
+        String[] bitboardString = Tools.bitboardAsString(bitboard).split("\n");
+
+        StringBuilder b = new StringBuilder(toStringSplit[0]+"\n");
+        for (int i = 0; i < bitboardString.length; i++) {
+            b.append(toStringSplit[i + 1]).append("  ").append(bitboardString[i]).append("\n");
+        }
+        b.append(toStringSplit[toStringSplit.length-1]);
+        System.out.println("\n"+"_".repeat(70));
+        System.out.println(comment+"\n|\t\t\t"+b.toString().replace("\n","\n|\t\t\t")+"\n|"+"_".repeat(70));
     }
 
     /**

@@ -3,6 +3,9 @@ package ai;
 import misc.Tools;
 import model.BitBoard;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static model.BitBoard.*;
 
 import static misc.Tools.shift;
@@ -18,15 +21,15 @@ public class BitBoardManipulation {
     public static long[] doMoveAndReturnModifiedBitBoards(byte from, byte to, boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
         if (isRedTurn) {
             if ((redDoubles != 0 && (redDoubles & (1L << from)) != 0) || (red_on_blue != 0 && (red_on_blue & (1L << from)) != 0)) {
-                return moveDoublePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
+                return moveDoublePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
             } else {
-                return moveSinglePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
+                return moveSinglePieceOnBitBoards(from, to, true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
             }
         } else {
             if ((blueDoubles != 0 && (blueDoubles & (1L << from)) != 0) || (blue_on_red != 0 && (blue_on_red & (1L << from)) != 0)) {
-                return moveDoublePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
+                return moveDoublePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
             } else {
-                return moveSinglePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, blue_on_red, red_on_blue);
+                return moveSinglePieceOnBitBoards(from, to, false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
             }
         }
     }
@@ -71,8 +74,8 @@ public class BitBoardManipulation {
                 isRed ? enemySingles : ownSingles,
                 isRed ? ownDoubles : enemyDoubles,
                 isRed ? enemyDoubles : ownDoubles,
-                isRed ? enemyOnOwn : ownOnEnemy,
-                isRed ? ownOnEnemy : enemyOnOwn
+                isRed ? ownOnEnemy : enemyOnOwn,//isRed = red_on_blue else blue_on_red
+                isRed ? enemyOnOwn : ownOnEnemy//isRed= blue_onRed
         };
 
     }
@@ -126,8 +129,8 @@ public class BitBoardManipulation {
                 isRed ? enemySingles : ownSingles,
                 isRed ? ownDoubles : enemyDoubles,
                 isRed ? enemyDoubles : ownDoubles,
-                isRed ? enemyOnOwn : ownOnEnemy,
-                isRed ? ownOnEnemy : enemyOnOwn
+                isRed ? ownOnEnemy : enemyOnOwn,//isRed = red_on_blue else blue_on_red
+                isRed ? enemyOnOwn : ownOnEnemy//isRed= blue_onRed
         };
     }
 
@@ -241,12 +244,15 @@ public class BitBoardManipulation {
         //long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
 
     }
-
+    public static long counter = 0;
+    public static long[] previousArray = new long[]{};
     public static int ruhesuche(BitBoard board, boolean isRed) {
         long[] bitboardAsLongArray = new long[]{board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red};
         long attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
         if (attackedPositions == 0) return RUHESUCHE_NOT_PERFORMED;
         boolean originalIsRed = isRed;
+        counter = 0;
+        List<String> doneMoves = new ArrayList<>();
         while (attackedPositions != 0) {
             //This gets a specific index thats attacked, IF there are multiple the first one is returned. This is basically the TO, the from we figure out
             byte mostForwardIndexOfAttacked = (byte) Long.numberOfTrailingZeros(attackedPositions);
@@ -258,12 +264,82 @@ public class BitBoardManipulation {
             //For test:
             //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
 
+            if(from == 43 && mostForwardIndexOfAttacked == 36){
+                //36
+                Tools.printDivider(20);
+                System.out.println("badmove:");
+                System.out.println(board.toFEN());
+                BitBoard.fromLongArray(bitboardAsLongArray).printWithBitboard("CurrentAtE4Move",attackedPositions);
+                long[] next = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+                BitBoard.fromLongArray(next).printWithBitboard("Next",0);
+            }
+
+            if(from == 36 && mostForwardIndexOfAttacked == 46){
+                Tools.printDivider(40);
+                System.out.println("badmove2");
+                BitBoard.fromLongArray(bitboardAsLongArray).printWithBitboard("CurrentAtE4MoveNEXT",attackedPositions);
+                long[] next = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+                BitBoard.fromLongArray(next).printWithBitboard("NextNEXT",0);
+            }
+
             bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
 
+            doneMoves.add(Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
             //After playing move, switch sides I guess to see what they'd play
+            if(board.toFEN().equals("1bb3b0/4r03/1b01b02b0b0/4rr1b01/8/8/2r03r01/r01r0r0r0r0")){
+                System.out.println("Attacked: isred:"+isRed+ " counter "+counter);
+                Tools.displayBitboard(attackedPositions);
+            }
+
+
+            System.out.println("GeneralFEN:"+BitBoard.fromLongArray(bitboardAsLongArray).toFEN());
+            BitBoard.fromLongArray(bitboardAsLongArray).printCommented("B:Counter "+counter);
+
             isRed = !isRed;
             attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+            counter++;
+
+
+            try{
+                BitBoard.detectOverlap( bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+            }catch (IllegalStateException E){
+                Tools.printDivider();
+                System.out.println("Move causing overlap: "+Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ "as Red="+isRed);
+                System.out.println(board);
+                System.out.println(board.toFEN());
+                System.out.println(doneMoves);
+                System.out.println(BitBoard.fromLongArray(bitboardAsLongArray));
+                BitBoard.fromLongArray(bitboardAsLongArray).printWithBitboard("EndWithAttacked",attackedPositions);
+
+
+                System.out.println("Previous board:");
+                System.out.println(BitBoard.fromLongArray(previousArray));
+
+                System.out.println("Overlap2");
+
+                board.doMove("D3-E4",false,true);
+                System.out.println(board);
+                board.doMove("E4-G3",true,true);
+
+
+                System.exit(0);
+            }
+
+            if(counter>50){
+                System.out.println("Cursed board: "+Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
+                System.out.println(board);
+                System.out.println(BitBoard.fromLongArray(bitboardAsLongArray));
+                board.detectOverlap();
+                System.out.println("firstoverlap");
+                System.out.println(doneMoves);
+                BitBoard.detectOverlap( bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+                System.exit(0);
+            }
+
         }
+
+        previousArray = bitboardAsLongArray.clone();
+        System.out.println("Ruhesuche end"+"X".repeat(50));
         //As soon as no attacks left anymore, calculate for starting party
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
@@ -322,7 +398,7 @@ public class BitBoardManipulation {
 
             long onLast = secondLastRowCenter & redSingles;
             //is on secondlast and is there any blocking enemy right beneath, shifted 8 bits
-            if (onLast != 0 && ((onLast << 8) & blueSingles) == 0) {
+            if (onLast != 0 && ((onLast << 8) & (blueSingles|blueDoubles|blue_on_red)) == 0) {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if ((onLast & ~attackedPositions) != 0) { //Onlast minus attackedpositions isnt 0, meaning at least one thats not attacked
@@ -345,7 +421,7 @@ public class BitBoardManipulation {
 
             long onLast = secondTopRowCenter & blueSingles;
             //is on secondlast and is there any blocking enemy right above, shifted 8 bits
-            if (onLast != 0 && ((onLast >>> 8) & redSingles) == 0) {
+            if (onLast != 0 && ((onLast >>> 8) & (redSingles|redDoubles|red_on_blue)) == 0) {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
                 if ((onLast & ~attackedPositions) != 0) {
