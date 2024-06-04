@@ -5,7 +5,7 @@ import misc.Tools;
 
 import java.util.*;
 
-import static ai.BitBoardManipulation.RUHESUCHE_NOT_PERFORMED;
+import static ai.BitBoardManipulation.*;
 
 
 public class Game {
@@ -210,6 +210,8 @@ public class Game {
 
                     System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    System.out.println("Total times Ruhesuche executed"+totalRuheSucheExecuted + "max times looped:"+maxTimesRuheSucheLooped+" total millis:"+totalTimeRuheSucheExecuted);
+                    totalTimeRuheSucheExecuted=0;//Reset for next
                     // Check if there's a winner after the bot's move
                     winner = board.checkWinCondition();
 
@@ -302,7 +304,7 @@ public class Game {
 
         String searchTest = "6/1b05b0/8/8/8/8/1r0r05/6";
 
-        BitBoard board = new BitBoard(fen);
+        BitBoard board = new BitBoard(fens[0]);
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();

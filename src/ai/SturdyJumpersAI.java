@@ -219,7 +219,13 @@ public class SturdyJumpersAI {
 
 
             //BitBoard.detectOverlap(board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+            //return BitBoardManipulation.ruhesuche(board,isRed);
+
+/*            int[] ruhesucheResults = BitBoardManipulation.ruhesucheWithPositions(board,isRed);
+            return ruhesucheResults != null ? ruhesucheResults[ruhesucheResults.length - 1] : Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
+            Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);*/
             return BitBoardManipulation.ruhesuche(board,isRed);
+
 /*            int result = BitBoardManipulation.ruhesuche(board,isRed);
             if (result == BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) {
                 return 144;
