@@ -222,7 +222,8 @@ public class SturdyJumpersAI {
         }
 
         if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            //int ruhesuche = BitBoardManipulation.ruhesuche(board,isRed);
+            int ruhesuche = BitBoardManipulation.ruhesuche(board,isRed);
+
             //if (ruhesuche!= BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) return ruhesuche;
             //if (BitBoardManipulation.doesNextMoveWin(isRed,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) == true) return 500;
             int eval =  Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -

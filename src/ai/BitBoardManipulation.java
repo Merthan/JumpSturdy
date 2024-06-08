@@ -2,6 +2,9 @@ package ai;
 
 import misc.Tools;
 import model.BitBoard;
+import model.BoardException;
+
+import java.util.concurrent.TimeUnit;
 
 import static model.BitBoard.*;
 
@@ -170,10 +173,11 @@ public class BitBoardManipulation {
 
         long tempCompared;
 
-        //TODO: Maybe single capture should be at the start if thats supposed to be the most likely
+/*        //TODO: Maybe single capture should be at the start if thats supposed to be the most likely
         if(toIndex==Tools.positionToIndex("E2")){
+            System.out.println("lol");
             System.out.println();
-        }
+        }*/
 
         long forwardMoves = shift(indexMask, -direction); //& jumpableBeforeMask;
         tempCompared = (forwardMoves & singles);
@@ -245,7 +249,9 @@ public class BitBoardManipulation {
 
     public static long totalRuheSucheExecuted = 0;
     public static long maxTimesRuheSucheLooped = 0;
+    public static long maxTimeSingleRuheSucheExecuted = 0;
     public static long totalTimeRuheSucheExecuted = 0;
+    public static long[] maxLoopArray;
     public static int ruhesuche(BitBoard board, boolean isRed) {
         long startTime = System.nanoTime();
         //if(true) return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
@@ -256,67 +262,43 @@ public class BitBoardManipulation {
         boolean originalIsRed = isRed;
         counter = 0;
         while (attackedPositions != 0) {
+
             totalRuheSucheExecuted++;
             //This gets a specific index thats attacked, IF there are multiple the first one is returned. This is basically the TO, the from we figure out
             byte mostForwardIndexOfAttacked = (byte) Long.numberOfTrailingZeros(attackedPositions);
-            //Tools.displayBitboard(attackedPositions);
-            //System.out.println("bluesingle:");
-            //Tools.displayBitboard(bitboardAsLongArray[1]);
-            //System.out.println("MostForward:"+mostForwardIndexOfAttacked+ " "+ Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ " "+ Tools.indexToStringPosition((byte) (63-mostForwardIndexOfAttacked)));
+
 
             byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+            if(from == 0) throw new BoardException(board,"no valid from found in ruhesuche");
+
             //For test:
             //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
 
+/*            try {
+                TimeUnit.NANOSECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }*/
+            //System.out.print("'");
+
+/*
+            if(counter>maxTimesRuheSucheLooped){
+                maxTimesRuheSucheLooped = counter;
+                //maxLoopArray = bitboardAsLongArray.clone();
+                //System.out.println("Biggest Loop:");
+                //BitBoard.fromLongArray(bitboardAsLongArray)
+                        board.printWithBitboard("RuheMaxLooped: "+counter,attackedPositions);
+            }*/
             bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-
-            //doneMoves.add(Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
-
             //After playing move, switch sides I guess to see what they'd play
             isRed = !isRed;
+            counter++;
+
             attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
 
 
-/*            try{
-                BitBoard.detectOverlap( bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-            }catch (IllegalStateException E){
-                Tools.printDivider();
-                System.out.println("Move causing overlap: "+Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ "as Red="+isRed);
-                System.out.println(board);
-                System.out.println(board.toFEN());
-                System.out.println(doneMoves);
-                System.out.println(BitBoard.fromLongArray(bitboardAsLongArray));
-                BitBoard.fromLongArray(bitboardAsLongArray).printWithBitboard("EndWithAttacked",attackedPositions);
-
-
-                System.out.println("Previous board:");
-                System.out.println(BitBoard.fromLongArray(previousArray));
-
-                System.out.println("Overlap2");
-
-                board.doMove("D3-E4",false,true);
-                System.out.println(board);
-                board.doMove("E4-G3",true,true);
-
-
-                System.exit(0);
-            }*/
-            maxTimesRuheSucheLooped = Math.max(maxTimesRuheSucheLooped,counter);
-
-            if(counter++>50){
-                throw new RuntimeException("Error in Ruhesuche, didnt come to an end");
-/*                System.out.println("Cursed board: "+Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
-                System.out.println(board);
-                System.out.println(BitBoard.fromLongArray(bitboardAsLongArray));
-                board.detectOverlap();
-                System.out.println("firstoverlap");
-                System.out.println(doneMoves);
-                BitBoard.detectOverlap( bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-                System.exit(0);*/
-            }
-
         }
-
+        maxTimeSingleRuheSucheExecuted = Math.max(maxTimeSingleRuheSucheExecuted,System.nanoTime()-startTime);
         totalTimeRuheSucheExecuted += System.nanoTime()-startTime;
         return Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
                 Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
@@ -342,6 +324,7 @@ public class BitBoardManipulation {
             //Tools.displayBitboard(bitboardAsLongArray[1]);
             //System.out.println("MostForward:"+mostForwardIndexOfAttacked+ " "+ Tools.indexToStringPosition(mostForwardIndexOfAttacked)+ " "+ Tools.indexToStringPosition((byte) (63-mostForwardIndexOfAttacked)));
             byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+            if(from == 0) throw new BoardException(board,"no valid from found in ruhesuche");
             //For test:
             //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
 
@@ -369,6 +352,9 @@ public class BitBoardManipulation {
     static final long secondTopRowCenter = 0x0000000000007E00L;
     static final long secondThirdRowTop = 0x0000000000FFFF00L;
     static final long secondThirdRowBottom = 0x00FFFF0000000000L;
+
+    static final long thirdTopRow = 0x0000000000FF0000L;
+    static final long thirdBottomRow = 0x0000FF0000000000L;
 
     //For singles, only forward is checked as win captures/diagonal would just result in the enemy capturing them first
     public static boolean doesNextMoveWin(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
@@ -422,10 +408,38 @@ public class BitBoardManipulation {
         return false;
     }
 
+    //Do we have a
+    public static void canWinInTwoMovesPreparingJumperForEnd(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){
+        //if(redSingles)
+        long promotableSinglesThirdLastRow = isRedTurn? (redSingles & thirdBottomRow):(blueSingles&thirdTopRow);
+        if(promotableSinglesThirdLastRow == 0) return; // Faster, return before attacked calculated
+        long attacked = calculateAttackedPositions(!isRedTurn,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
+
+        long notAttackedPromotable = (promotableSinglesThirdLastRow & ~attacked);
+
+        //TODO: create method that gets all figures that can jump here, perhaps by using a bitmask (eg horses, left,right,below(isRed)) and then checking the fields (instead of using possiblemoves etc)
+        //eg -1 +1 (edgeDetect) -8, horses
+
+/*        if(isRedTurn){
+            if( != 0){ // If this gets transformed to double, we win
+
+            }
+        }else{
+            if((blueSingles&thirdTopRow) != 0){// If this gets transformed to double, we win
+
+            }
+        }*/
+
+
+    }
+
     public static void main(String[] args) {
         long l = 0x000000000000003FL;
         Tools.displayBitboard( l);
         System.out.println(Long.toBinaryString(l));
+
+        Tools.displayBitboard(thirdTopRow);
+        Tools.displayBitboard(thirdBottomRow);
     }
 
 }

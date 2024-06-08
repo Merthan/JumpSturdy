@@ -194,7 +194,7 @@ public class BitBoard {
                     case BLUE_ON_RED:
                         blue_on_red |= 1L << index;
                         break;
-                    case RED://TODO: For some reason red and blue are swapped here, not sure why it doesnt work without swapping
+                    case RED:
                         redSingles |= 1L << index;
                         break;
                     case BLUE:
@@ -730,7 +730,7 @@ public class BitBoard {
         }
         b.append(toStringSplit[toStringSplit.length-1]);
         System.out.println("\n"+"_".repeat(70));
-        System.out.println(comment+"\n|\t\t\t"+b.toString().replace("\n","\n|\t\t\t")+"\n|"+"_".repeat(70));
+        System.out.println(comment+"\n|\t\t\t"+b.toString().replace("\n","\n|\t\t\t")+"\n| "+toFEN()+"\n|"+"_".repeat(70));
     }
 
     /**

@@ -2,6 +2,7 @@ package ai;
 
 import model.BitBoard;
 import misc.Tools;
+import model.BoardException;
 
 import java.util.*;
 
@@ -183,7 +184,7 @@ public class Game {
 
                     System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Total times Ruhesuche executed"+totalRuheSucheExecuted + "max times looped:"+maxTimesRuheSucheLooped+" total millis:"+totalTimeRuheSucheExecuted);
+                    System.out.println("Total times Ruhesuche executed: "+totalRuheSucheExecuted + "max times looped:"+maxTimesRuheSucheLooped+" total millis:"+totalTimeRuheSucheExecuted+" max time single:"+maxTimeSingleRuheSucheExecuted);
                     totalTimeRuheSucheExecuted=0;//Reset for next
                     // Check if there's a winner after the bot's move
                     winner = board.checkWinCondition();
@@ -228,6 +229,7 @@ public class Game {
                     (byte) arr[i], isRedTurn, board.redSingles, board.blueSingles,
                     board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red
             );
+            if(startPredicted == 0) throw new BoardException(board,"invalid from");
             totalTime += (System.nanoTime() - startTime);
             String end = move.substring(3, 5);
             allPossiblePredicted.add(Tools.indexToStringPosition(startPredicted) + "_" + end);
@@ -282,7 +284,8 @@ public class Game {
         Game game = new Game();
         //game.playVsBot(board,true);
         //game.playAgainst(board, false);
-        game.botGame(board);
+        //game.botGame(board);
+        game.playVsBot(board,true);
     }
 }
 
