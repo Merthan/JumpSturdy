@@ -4,8 +4,6 @@ import misc.Tools;
 import model.BitBoard;
 import model.BoardException;
 
-import java.util.concurrent.TimeUnit;
-
 import static model.BitBoard.*;
 
 import static misc.Tools.shift;
@@ -236,7 +234,9 @@ public class BitBoardManipulation {
         tempCompared = (oneForwardTwoRight & doubles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
 
-        throw new IllegalStateException("No possible from index found"); // Not purpose of method to return -1 or something, throws
+        return 0; // IMPOSSIBLE POSITION (left corner), HANDLE AS SUCH
+
+        //throw new IllegalStateException("No possible from index found"); // Not purpose of method to return -1 or something, throws
         //Prob reversed but doesnt matter
         //long leftMoves = shift(singles & NOT_A_FILE, -1) & jumpableBeforeMask;
         //long rightMoves = shift(singles & NOT_H_FILE, 1) & jumpableBeforeMask;
@@ -281,13 +281,13 @@ public class BitBoardManipulation {
             }*/
             //System.out.print("'");
 
-/*
-            if(counter>maxTimesRuheSucheLooped){
+
+/*            if(counter>maxTimesRuheSucheLooped){
                 maxTimesRuheSucheLooped = counter;
                 //maxLoopArray = bitboardAsLongArray.clone();
                 //System.out.println("Biggest Loop:");
                 //BitBoard.fromLongArray(bitboardAsLongArray)
-                        board.printWithBitboard("RuheMaxLooped: "+counter,attackedPositions);
+                //board.printWithBitboard("RuheMaxLooped: "+counter,attackedPositions);
             }*/
             bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
             //After playing move, switch sides I guess to see what they'd play
@@ -356,8 +356,30 @@ public class BitBoardManipulation {
     static final long thirdTopRow = 0x0000000000FF0000L;
     static final long thirdBottomRow = 0x0000FF0000000000L;
 
+    //TODO: the only case thats ignored is a single on the 4.th capturing an enemy double on the 3.last row, being able to win next. However its always the others turn first and blue would jump the double away so this cant happen FIRST, so handled if properly called
+    public static byte[] canWinWithMovesFusioned(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){
+        if( (isRedTurn&&(secondThirdRowBottom&(redSingles|redDoubles|red_on_blue))==0)  || (!isRedTurn&&(secondThirdRowTop&(blueSingles|blueDoubles|blue_on_red))==0)){
+            return null; // If there are none in the last/secondlast row there is no way to win directly in 1-2 moves
+        }
+        byte[] nextMove = doesNextMoveWinWhenEnemyHasNextTurn(isRedTurn, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+        if(nextMove!=null) return nextMove;//If we can win with next (ONE) move, return without even checking the other one. RETURNS a single move B2-B1 length =2
+        //Else just return the results from win in 2 moves, RETURNS two moves with length 3 as index[1] is doubled G4-G3  G3-F1
+        return canWinInTwoMovesPreparingJumperForEnd(isRedTurn, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
+    }
+
+    //TODO: this method is different, when calling its OUR turn afterwards or it should be anyways because otherwise the others would have been called beforehand, possibleMoves should be available at the calling site anyways so using it to calculate
+    //Eg very simple, G2-G1 or G2-F1 (capture). Here F1 cant beat us too because its our turn in this method, so no check for attacking positions
+    public static byte[] canWinSimpleMoveWithoutEnemyTurn(boolean isRedTurn, long possibleMovesForTeam,long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){
+        long winningRowPieces = (isRedTurn?bottomRowMask:topRowMask) & possibleMovesForTeam;
+        if(winningRowPieces!= 0){
+            byte pos = (byte) Long.numberOfTrailingZeros(winningRowPieces);
+            return new byte[]{BitBoardManipulation.possibleFromPositionForToIndex(pos,isRedTurn,redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red),pos};
+        }
+        return null;
+    }
+
     //For singles, only forward is checked as win captures/diagonal would just result in the enemy capturing them first
-    public static boolean doesNextMoveWin(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
+    public static byte[] doesNextMoveWinWhenEnemyHasNextTurn(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
         long attackedPositions; // Not set here for performance reasons, only once needed
 
         if (isRedTurn) {
@@ -367,18 +389,25 @@ public class BitBoardManipulation {
             if (onLast != 0 && ((onLast << 8) & (blueSingles|blueDoubles|blue_on_red)) == 0) {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
-                if ((onLast & ~attackedPositions) != 0) { //Onlast minus attackedpositions isnt 0, meaning at least one thats not attacked
+                long notAttacked = (onLast & ~attackedPositions);
+                if (notAttacked != 0) { //Onlast minus attackedpositions isnt 0, meaning at least one thats not attacked
                     //System.out.println("Next move wins single");
-                    return true;
+                    byte indexEnd = (byte) Long.numberOfTrailingZeros(getPossibleMovesSingles(notAttacked,true,redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red) & bottomRowMask);
+                    //Find index of end, get first that matches and is at win row and then find the first from that matches that
+                    return new byte[]{possibleFromPositionForToIndex(indexEnd,true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red), indexEnd};
                 }
             }
 
             long onPreRows = (redDoubles | red_on_blue) & secondThirdRowBottom; // Any jumping on the row end-1 or end-2?
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
-                if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
+                long notAttacked = (onPreRows & ~attackedPositions);
+
+                if(notAttacked !=0){//If there is at least one onPre that is NOT attacked
                    // System.out.println("Next move wins double");
-                    return true;
+                    byte indexEnd = (byte) Long.numberOfTrailingZeros(getPossibleMovesDoubles(notAttacked,true,redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red)&bottomRowMask);
+                    //Find index of end, get first that matches and then find the first from that matches that
+                    return new byte[]{possibleFromPositionForToIndex(indexEnd,true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red), indexEnd};
                 }
             }
 
@@ -390,47 +419,93 @@ public class BitBoardManipulation {
             if (onLast != 0 && ((onLast >>> 8) & (redSingles|redDoubles|red_on_blue)) == 0) {
                 //calculate the positions where we are attacked currently
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
-                if ((onLast & ~attackedPositions) != 0) {
-                    //System.out.println("Next move wins single b");
-                    return true;
+                long notAttacked = (onLast & ~attackedPositions);
+                if (notAttacked != 0) {
+                    byte indexEnd = (byte) Long.numberOfTrailingZeros(getPossibleMovesSingles(notAttacked,false,redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red)&topRowMask);
+                    //Find index of end, get first that matches and then find the first from that matches that
+                    return new byte[]{possibleFromPositionForToIndex(indexEnd,false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red), indexEnd};
                 }
             }
 
             long onPreRows = (blueDoubles | blue_on_red) & secondThirdRowTop; // Any jumping on the row end-1 or end-2?
             if(onPreRows!=0){
                 attackedPositions = calculateAttackedPositions(true, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red);
-                if((onPreRows & ~attackedPositions) !=0){//If there is at least one onPre that is NOT attacked
+                long notAttacked = (onPreRows & ~attackedPositions);
+                if(notAttacked !=0){//If there is at least one onPre that is NOT attacked
                     //System.out.println("Next move wins double b");
-                    return true;
+                    byte indexEnd = (byte) Long.numberOfTrailingZeros(getPossibleMovesDoubles(notAttacked,false,redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red)&topRowMask);
+                    //Find index of end, get first that matches and then find the first from that matches that
+                    return new byte[]{possibleFromPositionForToIndex(indexEnd,false, redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red), indexEnd};
                 }
             }
         }
-        return false;
+        return null;
     }
 
-    //Do we have a
-    public static void canWinInTwoMovesPreparingJumperForEnd(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){
-        //if(redSingles)
-        long promotableSinglesThirdLastRow = isRedTurn? (redSingles & thirdBottomRow):(blueSingles&thirdTopRow);
-        if(promotableSinglesThirdLastRow == 0) return; // Faster, return before attacked calculated
+    /**
+     * Can we promote a jumper in the last rows so that it can jump to the goal without being interrupted by enemy eg
+     * RED: G4-G3 BLUE:[random,C2-C3,cant attack] RED: G3-F1 (win)
+     *
+     */
+    public static byte[] canWinInTwoMovesPreparingJumperForEnd(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){
+
+        long promotableSinglesThirdLastRow = isRedTurn? (redSingles & secondThirdRowBottom):(blueSingles&secondThirdRowTop);
+        if(promotableSinglesThirdLastRow == 0) return null; // Faster, return before attacked calculated
         long attacked = calculateAttackedPositions(!isRedTurn,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
 
         long notAttackedPromotable = (promotableSinglesThirdLastRow & ~attacked);
+        if(notAttackedPromotable==0)return null;//If in danger (can be attacked), cancel
 
-        //TODO: create method that gets all figures that can jump here, perhaps by using a bitmask (eg horses, left,right,below(isRed)) and then checking the fields (instead of using possiblemoves etc)
-        //eg -1 +1 (edgeDetect) -8, horses
+        byte indexOfPromotable = (byte) Long.numberOfTrailingZeros(notAttackedPromotable);
 
-/*        if(isRedTurn){
-            if( != 0){ // If this gets transformed to double, we win
+        byte possibleFigureThatJumpsOnTop = possibleFromPositionForToIndex(indexOfPromotable,isRedTurn,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
 
-            }
-        }else{
-            if((blueSingles&thirdTopRow) != 0){// If this gets transformed to double, we win
+        if(possibleFigureThatJumpsOnTop==0)return null; // No figure that can jump on top leading to a double that can win in the next turn, skip
 
-            }
-        }*/
+        if(((1L << possibleFigureThatJumpsOnTop)& ~attacked)==0)return null;
+        //If that figure isnt attacked
 
+        //Get the possible moves to the winningRow, afterwards get the first one (if multiple, trailing)
+        long winningPosition = getPossibleMovesDoubles((1L << indexOfPromotable),isRedTurn,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red) & (isRedTurn?bottomRowMask:topRowMask);
 
+        return new byte[]{possibleFigureThatJumpsOnTop,indexOfPromotable,(byte)Long.numberOfTrailingZeros(winningPosition)};// Read as e.g. B5-B6, B6-C8 so the second index is used twice, no need to pass twice
+
+    }
+
+    public static long getPossibleMovesSingles(long singles, boolean isRed,long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
+        int direction = isRed ? 8 : -8;
+        long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
+        long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
+
+        long jumpable = (emptySpaces | (isRed ? redSingles : blueSingles));
+        // Forward moves (no capture)
+        long forwardMoves = shift(singles, direction) & jumpable;
+
+        // Side moves (left and right)
+        long leftMoves = shift(singles & NOT_A_FILE, -1) & jumpable;
+        long rightMoves = shift(singles & NOT_H_FILE, 1) & jumpable;
+
+        // Capture moves (diagonal)
+        long leftCapture = shift(singles & NOT_A_FILE, direction - 1) & enemyPieces; //+-7 9 so diagonal
+        long rightCapture = shift(singles & NOT_H_FILE, direction + 1) & enemyPieces;
+        //System.out.println("Possible moves:");
+        return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
+    }
+
+    public static long getPossibleMovesDoubles(long doubles, boolean isRed,long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {//FIXED
+        // All occupied spaces
+        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
+        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
+
+        long jumpable = (emptySpaces | (redSingles | blueSingles) | (isRed ? blueDoubles : redDoubles) | (isRed ? blue_on_red : red_on_blue));
+
+        long twoForwardOneLeft = shift(doubles & (isRed ? NOT_A_FILE : NOT_H_FILE), isRed ? 15 : -15);
+        long oneForwardTwoLeft = shift(doubles & (isRed ? NOT_AB_FILE : NOT_GH_FILE), isRed ? 6 : -6);
+
+        long twoForwardOneRight = shift(doubles & (isRed ? NOT_H_FILE : NOT_A_FILE), isRed ? 17 : -17);
+        long oneForwardTwoRight = shift(doubles & (isRed ? NOT_GH_FILE : NOT_AB_FILE), isRed ? 10 : -10);
+
+        return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
     }
 
     public static void main(String[] args) {

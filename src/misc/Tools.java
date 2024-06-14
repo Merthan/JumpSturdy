@@ -39,6 +39,7 @@ public class Tools {
     }
 
     public static String moveMagician(String uncleanMove, List<String> moves) {
+        if(uncleanMove.toUpperCase().startsWith("REMOVE")||uncleanMove.toUpperCase().startsWith("ADD")) return uncleanMove.toUpperCase();//Dont handle in this case
         uncleanMove = uncleanMove.toUpperCase();
         if (uncleanMove.length() == 2) { // Eg. just C5, then pick any/first move that matches
             for (String str : moves) {
@@ -288,5 +289,50 @@ class DynamicConsoleOutput {
         System.out.println("You entered: " + userInput);
 
         scanner.close();
+    }
+}
+
+class BitPackingComparison {
+
+    static long total=0;
+    public static void main(String[] args) {
+        Random random = new Random();
+        int iterations = 10000;
+
+        long totalTimeShort = 0;
+        long totalTimeByteArray = 0;
+
+        for (int i = 0; i < iterations; i++) {
+
+
+            // Measure time for packing into short
+            long startTimeShort = System.nanoTime();
+            short packedShort = packIntoShort((byte) random.nextInt(64),(byte) random.nextInt(64));
+            total+=packedShort;
+            long endTimeShort = System.nanoTime();
+            totalTimeShort += (endTimeShort - startTimeShort);
+
+            long startTimeByteArray = System.nanoTime();
+            byte[] packedByteArray = packIntoByteArray((byte) random.nextInt(64), (byte) random.nextInt(64));
+            total+=packedByteArray[0]+packedByteArray[1];
+            long endTimeByteArray = System.nanoTime();
+            totalTimeByteArray += (endTimeByteArray - startTimeByteArray);
+
+        }
+
+        // Output results
+        System.out.println("Time taken short : " + totalTimeShort + " ns");
+        System.out.println("Time taken byte array : " + totalTimeByteArray + " ns"+ total);
+    }
+
+    public static short packIntoShort(byte byte1, byte byte2) {
+        return (short) ((byte1 << 6) | (byte2 & 0x3F)); // Ensure byte2 is within 6 bits
+    }
+
+    public static byte[] packIntoByteArray(byte byte1, byte byte2) {
+        byte[] byteArray = new byte[2];
+        byteArray[0] = byte1;
+        byteArray[1] = byte2;
+        return byteArray;
     }
 }

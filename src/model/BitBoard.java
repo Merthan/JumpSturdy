@@ -309,15 +309,15 @@ public class BitBoard {
             return WINNER_RED;
         }
         // Check if there are any possible moves for blue
-        else if (getMovesForTeam(false) == 0) {
+        else if (getPossibleMovesForTeam(false) == 0) {
             // Check if there are any possible moves for red, if no -> draw
-            if (getMovesForTeam(true) == 0) return WINNER_DRAW;
+            if (getPossibleMovesForTeam(true) == 0) return WINNER_DRAW;
             else return WINNER_RED;
         }
         // Check if there are any possible moves for red
-        else if (getMovesForTeam(true) == 0) {
+        else if (getPossibleMovesForTeam(true) == 0) {
             // Check if there are any possible moves for blue, if no -> draw
-            if (getMovesForTeam(false) == 0) return WINNER_DRAW;
+            if (getPossibleMovesForTeam(false) == 0) return WINNER_DRAW;
             else return WINNER_BLUE;
         }
         return WINNER_ONGOING;
@@ -479,7 +479,7 @@ public class BitBoard {
     }
 
 
-    public long getMovesForTeam(boolean red) {
+    public long getPossibleMovesForTeam(boolean red) {
         if (red) {
             return getPossibleMovesSingles(redSingles, true) | getPossibleMovesDoubles(redDoubles | red_on_blue, true);
         } else {
@@ -656,6 +656,26 @@ public class BitBoard {
             }
         }
         return moveList;
+    }
+
+    public void removePositionDebug(byte pos){
+        redSingles &= ~(1L << pos);
+        blueSingles&= ~(1L << pos);
+        redDoubles&= ~(1L << pos);
+        blueDoubles &= ~(1L << pos);
+        red_on_blue&= ~(1L << pos);
+        blue_on_red&= ~(1L << pos);
+    }
+
+    public void addPositionDebug(byte pos, String pieceType){
+        switch (pieceType){
+            case "R" -> redSingles |= (1L << pos);
+            case "B" -> blueSingles |= (1L << pos);
+            case "RR" -> redDoubles |= (1L << pos);
+            case "BB" -> blueDoubles |= (1L << pos);
+            case "BR" -> red_on_blue |= (1L << pos);
+            case "RB" -> blue_on_red |= (1L << pos);
+        }
     }
 
     public long getPossibleMovesForIndividualPiece(byte index, boolean isRed) {

@@ -171,9 +171,12 @@ public class SturdyJumpersAI {
         List<String> legalMoves = board.getAllPossibleMoves(isRed);
         int depth = 1;
 
+        System.out.println("TODO: Replace nextMoveWin, dont use lastRowMove");
+/*TODO: REPLACE THIS
         if(BitBoardManipulation.doesNextMoveWin(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red))
             return new TestWrapper(untersuchteZustaende, bestValue, Tools.lastRowMove(legalMoves, isRed), isRed);
+*/
 
 
         untersuchteZustaende = 0;
@@ -222,10 +225,11 @@ public class SturdyJumpersAI {
         }
 
         if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
-            int ruhesuche = BitBoardManipulation.ruhesuche(board,isRed);
+            int[] ruhesucheWithPosLastIndexIsEval = BitBoardManipulation.ruhesucheWithPositions(board,isRed);//TODO: Use this
 
             //if (ruhesuche!= BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) return ruhesuche;
             //if (BitBoardManipulation.doesNextMoveWin(isRed,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) == true) return 500;
+
             int eval =  Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
                     Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             //return BitBoardManipulation.ruhesuche(board,isRed);
