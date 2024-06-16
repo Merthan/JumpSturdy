@@ -348,13 +348,12 @@ public class BitBoardManipulation {
     }
 
 
-    static final long secondLastRowCenter = 0x007E000000000000L;
-    static final long secondTopRowCenter = 0x0000000000007E00L;
-    static final long secondThirdRowTop = 0x0000000000FFFF00L;
-    static final long secondThirdRowBottom = 0x00FFFF0000000000L;
-
-    static final long thirdTopRow = 0x0000000000FF0000L;
-    static final long thirdBottomRow = 0x0000FF0000000000L;
+    public static final long secondLastRowCenter = 0x007E000000000000L;
+    public static final long secondTopRowCenter = 0x0000000000007E00L;
+    public static final long secondThirdRowTop = 0x0000000000FFFF00L;
+    public static final long secondThirdRowBottom = 0x00FFFF0000000000L;
+    public static final long thirdTopRow = 0x0000000000FF0000L;
+    public static final long thirdBottomRow = 0x0000FF0000000000L;
 
     //TODO: the only case thats ignored is a single on the 4.th capturing an enemy double on the 3.last row, being able to win next. However its always the others turn first and blue would jump the double away so this cant happen FIRST, so handled if properly called
     public static byte[] canWinWithMovesFusioned(boolean isRedTurn, long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red){

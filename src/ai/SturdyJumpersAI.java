@@ -145,7 +145,7 @@ public class SturdyJumpersAI {
 
     private static int untersuchteZustaende = 0;
     private static boolean timeUp;
-    private static final long TIME_LIMIT = 200000000L; // 2 seconds in nanoseconds
+    private static final long TIME_LIMIT = 2000000000L; // 2 seconds in nanoseconds
 
 
     public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed) {
@@ -230,8 +230,8 @@ public class SturdyJumpersAI {
             //if (ruhesuche!= BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) return ruhesuche;
             //if (BitBoardManipulation.doesNextMoveWin(isRed,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) == true) return 500;
 
-            int eval =  Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
-                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            int eval = Evaluate.evaluateComplex(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red); /*Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
+                    Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);*/
             //return BitBoardManipulation.ruhesuche(board,isRed);
             return eval;
         }

@@ -319,8 +319,7 @@ class BitPackingComparison {
             totalTimeByteArray += (endTimeByteArray - startTimeByteArray);
 
         }
-
-        // Output results
+        //Results were pretty much similar, so not optimizing for now
         System.out.println("Time taken short : " + totalTimeShort + " ns");
         System.out.println("Time taken byte array : " + totalTimeByteArray + " ns"+ total);
     }

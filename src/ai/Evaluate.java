@@ -1,5 +1,9 @@
 package ai;
 
+import static ai.BitBoardManipulation.*;
+import static model.BitBoard.bottomRowMask;
+import static model.BitBoard.topRowMask;
+
 public class Evaluate {
     /**
      * Shortened names cause they might be passed lots of times br= red_on_blue as in the board
@@ -40,24 +44,74 @@ public class Evaluate {
 
         return 2 * (8 - distanceToEnd) + (pieceWorthValue - opponentPieceWorthValue) + bonusForNearWin;
     }
-
-
     public static int evaluateComplex(boolean isRed, long r, long b, long rr, long bb, long br, long rb) {
-        long ownSingles = isRed ? r : b;
+/*        long ownSingles = isRed ? r : b;
         long enemySingles = isRed ? b : r;
         long ownDoubles = isRed ? rr : bb;
         long enemyDoubles = isRed ? bb : rr;
         long ownOnEnemy = isRed ? br : rb;
-        long enemyOnOwn = isRed ? rb : br;
+        long enemyOnOwn = isRed ? rb : br;*/
 
+        long redFigures = (r|rr|br);
+        long blueFigures = (b|bb|rb);
+
+        //IF won
+        if((redFigures&bottomRowMask) != 0){
+            return isRed? Integer.MAX_VALUE : Integer.MIN_VALUE; // MAX if won as red, else MIN as other side has won
+        } else if ((blueFigures & topRowMask) != 0) {
+            return !isRed? Integer.MAX_VALUE : Integer.MIN_VALUE;
+        }
+
+        //Needs to be calculated to make canWin faster
+        long ownFiguresThatCanWinIfPromotedAndCloseFigures = isRed? (redFigures&secondThirdRowBottom) : (blueFigures&secondThirdRowTop);//Closer(goal) figures are handled before, so no need to include
+        long enemyFiguresThatCanWinIfPromotedAndCloseFigures = !isRed? (redFigures&secondThirdRowBottom) : (blueFigures&secondThirdRowTop);
+
+
+        //If winning imminent (no way to prevent by enemy side) TODO: not checking if enemy win imminent, but probably doesnt matter as... we cant prevent it anyways without going steps before
+        if(ownFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(isRed, r, b, rr, bb, br, rb);
+            // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+            if(canWin!=null){
+                return Integer.MAX_VALUE- (canWin.length-1);//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+            }
+        }
+
+
+        //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
+        // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
         //doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
         int pieceWorthValue = Long.bitCount(isRed ? r : b) + (2 * Long.bitCount(isRed ? rr : bb)) + 2 * Long.bitCount(isRed ? br : rb);
-        long attackedFrom = BitBoardManipulation.calculateAttackedPositions(!isRed, r, b, rr, bb, br, rb);
+        int enemyPieceWorthValue = Long.bitCount(!isRed ? r : b) + (2 * Long.bitCount(!isRed ? rr : bb)) + 2 * Long.bitCount(!isRed ? br : rb);
+
+        long attackedFrom = BitBoardManipulation.calculateAttackedPositions(!isRed, r, b, rr, bb, br, rb); // Checks if attacking more than being attacked
         long attacking = BitBoardManipulation.calculateAttackedPositions(isRed, r, b, rr, bb, br, rb);
 
         int attackedMoreThanEnemy = Long.bitCount(attacking)-Long.bitCount(attackedFrom);
 
-        return pieceWorthValue;
+        int distanceToEnd =  (isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
+        int enemyDistanceToEnd = (!isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
+
+
+
+        int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(ownFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(enemyFiguresThatCanWinIfPromotedAndCloseFigures);
+
+        //DEBUG: COMMENT OUT WHEN NOT NEEDED/ALPHABETA
+        //System.out.println("pieceWorthValue: " + pieceWorthValue);
+        //System.out.println("enemyPieceWorthValue: " + enemyPieceWorthValue);
+
+        //System.out.println("8 - distanceToEnd: " + (8 - distanceToEnd));
+
+/*        System.out.println("pieceWorthValue - enemyPieceWorthValue: " + (pieceWorthValue - enemyPieceWorthValue));
+        System.out.println("attackedMoreThanEnemy: " + attackedMoreThanEnemy);
+        System.out.println("distanceToEndMoreThanEnemy:"+(enemyDistanceToEnd-distanceToEnd));
+        System.out.println("thirdLastRowMoreFiguresThanEnemy: " + thirdLastRowMoreFiguresThanEnemy);*/
+        //if(true) return 0;
+
+        return (pieceWorthValue - enemyPieceWorthValue) +
+                (attackedMoreThanEnemy) +
+                //(8-distanceToEnd) +
+                (enemyDistanceToEnd-distanceToEnd)+
+                (thirdLastRowMoreFiguresThanEnemy);
     }
 
     //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.

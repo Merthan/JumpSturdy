@@ -234,7 +234,10 @@ public class Game {
                     List<String> possibleMoves = board.getAllPossibleMoves(false);
                     String botMove = "";
                     if (!possibleMoves.isEmpty()) {
-                        botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
+                        //TODO: Experiment, change back perhaps
+                        ArrayList<String> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,2000);
+                        Tools.printInColor("MoveSequence: "+moveSequence,Tools.YELLOW);
+                        botMove = moveSequence.get(0);//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
                         isRedTurn = board.doMove(botMove, isRedTurn, true);
                     } else {
                         isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
@@ -244,8 +247,8 @@ public class Game {
                     System.out.println(board.toFEN());
                     testPreWinMoveDetection(board,false);
 
-                    System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    System.out.println("Game evaluated red:" + Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    System.out.println("Game evaluated blue:" + Evaluate.evaluateComplex(false, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     System.out.println("Total times Ruhesuche executed: "+totalRuheSucheExecuted + "max times looped:"+maxTimesRuheSucheLooped+" total millis:"+totalTimeRuheSucheExecuted+" max time single:"+maxTimeSingleRuheSucheExecuted);
                     totalTimeRuheSucheExecuted=0;//Reset for next
                     // Check if there's a winner after the bot's move
@@ -270,6 +273,51 @@ public class Game {
         } else {
             System.out.println("The winner is: " + (winner == 'r' ? "Red" : "Blue"));
         } */
+    }
+
+    public void manipulateAndTestBoard(BitBoard board,boolean alwaysSamePlayer){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println(board); // Display the current board
+
+        while(true){
+            Tools.printInColor("Enter your move ⬇\uFE0F \t\t\t\t\t\tOr Modify, Examples: (add f5 rr) (remove f4)", "\u001B[5m");
+
+            List<String> possibleMovesForMatching = board.getAllPossibleMoves(isRedTurn);
+            //Tools.printInColor(possibleMovesForMatching.toString(), Tools.PURPLE);
+
+            String playerMove = Tools.moveMagician(scanner.nextLine(), possibleMovesForMatching);
+
+            while(playerMove.startsWith("REMOVE")||playerMove.startsWith("ADD")){//Cheat for removing position eg "remove e3"
+                if(playerMove.startsWith("REMOVE")){
+                    board.removePositionDebug(Tools.positionToIndex(playerMove.split(" ")[1].toUpperCase()));
+                }else{
+                    String figure = (playerMove.split(" ").length > 2)? playerMove.split(" ")[2]: "r"; // If just add f5 written, interpret as add f5 r
+                    board.addPositionDebug(Tools.positionToIndex(playerMove.split(" ")[1].toUpperCase()),figure);
+                }
+                possibleMovesForMatching = board.getAllPossibleMoves(isRedTurn);
+                //board.printCommented();
+                //ALso test after modified instead of move done
+                doTestsWithManipulatedBitBoard(board,isRedTurn,"Modified at pos: "+Tools.positionToIndex(playerMove.split(" ")[1]));
+                playerMove = Tools.moveMagician(scanner.nextLine(), possibleMovesForMatching);
+            }
+
+            //System.out.println("playermove"+playerMove);
+            if(isValidMove(board,playerMove)){
+                isRedTurn = board.doMove(playerMove,isRedTurn,true);
+                doTestsWithManipulatedBitBoard(board,!isRedTurn,playerMove);
+                if(alwaysSamePlayer) isRedTurn = !isRedTurn; //Keep from turning blue
+            }else{
+                Tools.printInColor("Invalid move. Please enter a valid move.\uD83E\uDD22", true);
+            }
+        }
+    }
+
+    private void doTestsWithManipulatedBitBoard(BitBoard board, boolean isRedTurn,String playerMoveOrComment) {
+        long start = System.nanoTime();
+        int evaluated = Evaluate.evaluateComplex(isRedTurn,board.redSingles,board.blueSingles,board.redDoubles,board.blueDoubles,board.red_on_blue,board.blue_on_red);
+        long end = System.nanoTime() -start;
+
+        board.printCommented((isRedTurn?"Red: ":"Blue: ")+playerMoveOrComment+"\nEvaluated score:"+evaluated+ " in nanos: "+end);
     }
 
     private void printPossibleAndTestPredicted(BitBoard board) {
@@ -324,6 +372,11 @@ public class Game {
         return possibleMoves.contains(move);
     }
 
+    //Helper, creates instant board from fen
+    public static BitBoard b(String fen){
+        return new BitBoard(fen);
+    }
+
     public static void main(String[] args) {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
                 "6/8/2b03/8/r07/8/8/6"};
@@ -337,6 +390,7 @@ public class Game {
         String fen = "b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0";//"1bb3b0/4r03/1b01b02b0b0/4rr1b01/8/8/2r03r01/r01r0r0r0r0";
         //"b0b03b0/3b04/1b02r01b0b0/3r02b01/4r03/8/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r02b01/4b03/5r02/2r03r01/r01r0r0r0r0"; //"b0b03bb/3b0r03/1b04b01/3r01b0b01/4r03/8/2r02r0r01/r01r0r0r0r0";
         //fens[0];
+        final String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
 
         String searchTest = "6/1r0b04b0/8/8/8/8/1r0r0b04/6";
         String test = "6/1bb1b02b01/8/2r05/3r01b02/5r0r01/2rr2r02/6";
@@ -348,7 +402,11 @@ public class Game {
         //game.playVsBot(board,true);
         //game.playAgainst(board, false);
         //game.botGame(board);
-        game.playVsBot(board,true);
+        game.playVsBot(b(DEFAULT_BOARD),true);
+        //game.isRedTurn = true;//Start blue
+        //game.manipulateAndTestBoard(b("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0"),false);
+
+
         //game.playerVsPlayer(new BitBoard("b0b0b0b0b0b0/2b0b0b01b01/6r01/5b02/1b03r02/8/1r0r0r0r03/r0r0r0r0r0r0"),false);
     }
 }

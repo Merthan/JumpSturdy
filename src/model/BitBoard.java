@@ -668,6 +668,7 @@ public class BitBoard {
     }
 
     public void addPositionDebug(byte pos, String pieceType){
+        pieceType = pieceType.toUpperCase();
         switch (pieceType){
             case "R" -> redSingles |= (1L << pos);
             case "B" -> blueSingles |= (1L << pos);
@@ -675,6 +676,7 @@ public class BitBoard {
             case "BB" -> blueDoubles |= (1L << pos);
             case "BR" -> red_on_blue |= (1L << pos);
             case "RB" -> blue_on_red |= (1L << pos);
+            default -> throw new RuntimeException("Illegal pieceType");
         }
     }
 
