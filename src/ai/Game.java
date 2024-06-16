@@ -235,7 +235,7 @@ public class Game {
                     String botMove = "";
                     if (!possibleMoves.isEmpty()) {
                         //TODO: Experiment, change back perhaps
-                        ArrayList<String> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,2000);
+                        ArrayList<String> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,false,2000);
                         Tools.printInColor("MoveSequence: "+moveSequence,Tools.YELLOW);
                         botMove = moveSequence.get(0);//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
                         isRedTurn = board.doMove(botMove, isRedTurn, true);
