@@ -1,5 +1,6 @@
 package model;
 
+import ai.BitBoardManipulation;
 import misc.Tools;
 
 import java.util.*;
@@ -622,7 +623,8 @@ public class BitBoard {
      * @return List of all possible moves in standard chess notation, like "A2-A3".
      */
 
-    public List<String> getAllPossibleMoves(boolean isRed) {
+    @Deprecated
+    public List<String> getAllPossibleMoveStringsDeprecated(boolean isRed) {
         List<String> moves = new ArrayList<>();
         long singles = isRed ? redSingles : blueSingles;
         long doubles = isRed ? redDoubles | red_on_blue : blueDoubles | blue_on_red;
@@ -631,6 +633,23 @@ public class BitBoard {
         moves.addAll(generateMovesForPieces(doubles, getPossibleMovesDoubles(doubles, isRed), isRed));
 
         return moves.stream().sorted().collect(Collectors.toList());
+    }
+
+    public List<String> getAllPossibleMoveStrings(boolean isRed){
+        byte[][] moves = generateByteMovesForPiecesWithList(isRed);
+        List<String> asText = new ArrayList<>(moves.length);
+        for (byte[] move : moves) {
+            asText.add(Tools.parseMoveToString(move));
+        }
+        return asText;
+    }
+
+    public List<String> getAllPossibleMoveStringsSorted(boolean isRed){
+        return getAllPossibleMoveStrings(isRed).stream().sorted().collect(Collectors.toList());
+    }
+
+    public byte[][] getAllPossibleMovesByte(boolean isRed) {
+        return generateByteMovesForPiecesWithList(isRed);
     }
 
     /**
@@ -658,6 +677,53 @@ public class BitBoard {
         return moveList;
     }
 
+
+/*    public byte[][] generateByteMovesForPieces(boolean isRed) {
+        //TODO: only used for correct byte[] sizing, performance impact might or might not be worth it. Testing
+        long allMoves = getPossibleMovesForTeam(isRed);
+        byte[][] moveArray = new byte[Long.bitCount(allMoves)][2];
+        long ourPieces = (isRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red));
+        int counter = 0;
+        for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
+            if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
+                long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
+                for (byte toIndex = 0; toIndex < 64; toIndex++) {
+                    if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
+                        //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
+                        moveArray[counter++] = new byte[]{fromIndex,toIndex};
+                    }
+                }
+            }
+
+        }
+        return moveArray;
+    }*/
+
+    /**
+     *
+     * More efficient version, no Text parsing. tested Performance difference seems to be 5x as fast
+     *
+     * **/
+    private byte[][] generateByteMovesForPiecesWithList(boolean isRed) {
+
+        List<byte[]> moveList = new ArrayList<>();
+        long ourPieces = (isRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red));
+        for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
+            if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
+                long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
+                for (byte toIndex = 0; toIndex < 63; toIndex++) {
+                    if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
+                        //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
+                        //moveArray[counter++] = ;
+                        moveList.add(new byte[]{fromIndex,toIndex});
+                    }
+                }
+            }
+
+        }
+        return moveList.toArray(new byte[moveList.size()][]);
+    }
+
     public void removePositionDebug(byte pos){
         redSingles &= ~(1L << pos);
         blueSingles&= ~(1L << pos);
@@ -682,13 +748,13 @@ public class BitBoard {
 
     public long getPossibleMovesForIndividualPiece(byte index, boolean isRed) {
         long singlePieceMask = 1L << index;
-        long moves = 0L;
+        //long moves = 0L;
 
         // Überprüfen, ob es sich um einen Einzelstein handelt
         if (((isRed ? redSingles : blueSingles) & singlePieceMask) != 0) {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Stein zu ermitteln
-            moves |= getPossibleMovesSingles(singlePieceMask, isRed);
+            return getPossibleMovesSingles(singlePieceMask, isRed);
         }
 
         // Überprüfen, ob es sich um einen Doppelstein handelt
@@ -696,10 +762,10 @@ public class BitBoard {
             // Erzeuge ein Bitboard, das nur diesen Stein enthält
 
             // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Doppelstein zu ermitteln
-            moves |= getPossibleMovesDoubles(singlePieceMask, isRed);
+            return getPossibleMovesDoubles(singlePieceMask, isRed);
         }
-
-        return moves;
+        throw new IllegalStateException("index"+index +" doesnt fit any figure type");
+        //Removed move variable, returning directly as cant be both single and double
     }
 
 /*    public BitBoard longToBit (long[] bitBoards){ removed, member method taking performance and readability
@@ -722,6 +788,19 @@ public class BitBoard {
         newBoard.red_on_blue = bitBoards[4];
         newBoard.blue_on_red = bitBoards[5];
         return newBoard;
+    }
+
+    public BitBoard doMoveAndReturnBitboard(byte from, byte to,boolean isRed){
+        return BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                from, to, isRed,
+                redSingles, blueSingles, redDoubles, blueDoubles,
+                red_on_blue, blue_on_red));
+    }
+    public BitBoard doMoveAndReturnBitboard(byte[] move,boolean isRed){
+        return BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                move[0], move[1], isRed,
+                redSingles, blueSingles, redDoubles, blueDoubles,
+                red_on_blue, blue_on_red));
     }
 
     public static void main(String[] args) {

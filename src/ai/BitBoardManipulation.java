@@ -181,17 +181,22 @@ public class BitBoardManipulation {
         tempCompared = (forwardMoves & singles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
 
-        //capture single
-        long leftCapture = shift(indexMask & NOT_A_FILE, -direction - 1) & singles;
-        tempCompared = (leftCapture & singles);
-        if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+        //CAPTURE needs extra check if there is an enemy figure at the to index, only then can -1 and +1 be performed
 
-        long rightCapture = shift(indexMask & NOT_H_FILE, -direction + 1) & singles;
-        tempCompared = (rightCapture & singles);
-        if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+        long enemyPieces = isRed?(blueSingles|blueDoubles|blue_on_red):(redSingles|redDoubles|red_on_blue);
 
+        if((indexMask&enemyPieces)!=0){ // If there is an enemy at the to index, we can apply reverse capture moves as otherwise we couldnt go diagonal
+            //capture single
+            long leftCapture = shift(indexMask& NOT_A_FILE, -direction - 1) & singles;
+            tempCompared = (leftCapture & singles);
+            if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+
+            long rightCapture = shift(indexMask & NOT_H_FILE, -direction + 1) & singles;
+            tempCompared = (rightCapture & singles);
+            if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
+        }
         //For left and right moves make sure there is no enemy piece at the to position as we cant beat them with a sideways move (only own or empty)
-        long enemyPieces = isRed ? (blueSingles | blueDoubles | blue_on_red) : (redSingles | redDoubles | red_on_blue);
+
 
         long leftMoves = shift(indexMask & NOT_A_FILE & (~enemyPieces), -1);//Also dont move into enemy singles sideways, not possible
         tempCompared = (leftMoves & singles);
@@ -340,8 +345,8 @@ public class BitBoardManipulation {
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
 
-        int eval = Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
-                Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
+        int eval = Evaluate.evaluateComplex(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]); /*Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+                Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);*/
 
         positionsAndAtTheEndScoreArray[positionsAndAtTheEndScoreArray.length - 1] = eval;
         return positionsAndAtTheEndScoreArray; // TODO: READ [0] [1] = one move 0 to 1, then [2] [3] until one of the values is 0 (illegal/corner anyways), then break loop. Eval is at last index.

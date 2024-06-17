@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import static model.BitBoard.CORNER_MASK;
 
@@ -41,7 +42,7 @@ public class Tools {
     public static String moveMagician(String uncleanMove, List<String> moves) {
         if(uncleanMove.toUpperCase().startsWith("REMOVE")||uncleanMove.toUpperCase().startsWith("ADD")) return uncleanMove.toUpperCase();//Dont handle in this case
         uncleanMove = uncleanMove.toUpperCase();
-        if (uncleanMove.length() == 2) { // Eg. just C5, then pick any/first move that matches
+        if (uncleanMove.length() == 2 && moves !=null) { // Eg. just C5, then pick any/first move that matches
             for (String str : moves) {
                 if (str.endsWith(uncleanMove)) {
                     return str;
@@ -108,6 +109,10 @@ public class Tools {
         byte toIndex = positionToIndex(parts[1]);
         // Return the indices as an array
         return new byte[]{fromIndex, toIndex};
+    }
+
+    public static String byteListToMoveSequence(List<byte[]> moves){
+        return moves.stream().map(Tools::parseMoveToString).collect(Collectors.joining(","));
     }
 
     public static String parseMoveToString(byte[] move){

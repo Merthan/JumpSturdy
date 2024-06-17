@@ -82,7 +82,7 @@ public class WikiTests extends BitBoardTest{
         List<String> moveList = Arrays.stream(moves.split(",")).map(Tools::cleanMove).sorted().toList();
         //moves.stream().sorted().collect(Collectors.toList())
         long startTime = System.nanoTime();
-        List<String> ownMoveList = board.getAllPossibleMoves(redStarts);
+        List<String> ownMoveList = board.getAllPossibleMoveStringsDeprecated(redStarts);
         totalTime+= (System.nanoTime()-startTime);
         System.out.println("OTR:"+moveList);
         System.out.println("OWN:"+ownMoveList);

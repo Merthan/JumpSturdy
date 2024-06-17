@@ -153,7 +153,7 @@ public class BitBoardTest {
         displayBoard();
         doMoves(true, true, "B7-B6", "B2-B3", "B6-B5", "B3-B4", "B5-C5", "B4-B5", "C5-C4", "B5-B6", "C4-C3", "B6-C7");//,"C3-B2","G2-G3","B2-C1"
         //board.displayBitboard(board.getPossibleMovesSingles(board.redSingles,true));
-        System.out.println(board.getAllPossibleMoves(true));
+        System.out.println(board.getAllPossibleMoveStringsDeprecated(true));
         //System.out.println("\u001B[32m" + "This is green text" + "\u001B[0m");
         assertEquals(board.checkWinCondition(), BitBoard.WINNER_ONGOING);
         assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
@@ -176,7 +176,7 @@ public class BitBoardTest {
         assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
             doMoves(true, false, "A3-C2");
         });
-        System.out.println(board.getAllPossibleMoves(false));
+        System.out.println(board.getAllPossibleMoveStringsDeprecated(false));
         doMoves(true, false, "A3-C4");
         //TODO: FIX KNIGHT MOVE HERE
     }
@@ -192,7 +192,7 @@ public class BitBoardTest {
         /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
             doMoves(true,false,"A3-C2");
         });*/
-        System.out.println(board.getAllPossibleMoves(true));
+        System.out.println(board.getAllPossibleMoveStringsDeprecated(true));
         //doMoves(true,false,"A3-C4");
         //TODO: FIX KNIGHT MOVE HERE
     }
@@ -202,7 +202,7 @@ public class BitBoardTest {
         setupBoardsWithFen("6/8/4rb3/3br4/8/8/8/6");
         displayBoard();
 
-        System.out.println(board.getAllPossibleMoves(true));
+        System.out.println(board.getAllPossibleMoveStringsDeprecated(true));
         //doMoves(true,false,"A3-C4");
         //TODO: FIX KNIGHT MOVE HERE
     }
@@ -217,11 +217,11 @@ public class BitBoardTest {
         /*assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
             doMoves(true,false,"A3-C2");
         });*/
-        List<String> redMoves = board.getAllPossibleMoves(true);
+        List<String> redMoves = board.getAllPossibleMoveStringsDeprecated(true);
         assertArrayEquals(redMoves.toArray(), new String[]{"A3-C2", "H6-F5", "H6-G4"});
         System.out.println(redMoves);
 
-        List<String> blueMoves = board.getAllPossibleMoves(false);
+        List<String> blueMoves = board.getAllPossibleMoveStringsDeprecated(false);
         assertArrayEquals(blueMoves.toArray(), new String[]{"A4-B6", "A4-C5", "H5-F6", "H5-G7"});
         System.out.println(blueMoves);
         doMoves(true, false, "H5-G7");

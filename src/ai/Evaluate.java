@@ -63,16 +63,27 @@ public class Evaluate {
         }
 
         //Needs to be calculated to make canWin faster
-        long ownFiguresThatCanWinIfPromotedAndCloseFigures = isRed? (redFigures&secondThirdRowBottom) : (blueFigures&secondThirdRowTop);//Closer(goal) figures are handled before, so no need to include
-        long enemyFiguresThatCanWinIfPromotedAndCloseFigures = !isRed? (redFigures&secondThirdRowBottom) : (blueFigures&secondThirdRowTop);
+        //CHANGED to fixed colors as there was an error with handling the return value, now is super negative if blue is in lead and positive if red
+        long redFiguresThatCanWinIfPromotedAndCloseFigures = redFigures&secondThirdRowBottom;//Closer(goal) figures are handled before, so no need to include
+        long blueFiguresThatCanWinIfPromotedAndCloseFigures = blueFigures&secondThirdRowTop;
 
 
         //If winning imminent (no way to prevent by enemy side) TODO: not checking if enemy win imminent, but probably doesnt matter as... we cant prevent it anyways without going steps before
-        if(ownFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
+        if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
             byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(isRed, r, b, rr, bb, br, rb);
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
             if(canWin!=null){
-                return Integer.MAX_VALUE- (canWin.length-1);//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+                //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+                return (Integer.MAX_VALUE- (canWin.length-1));
+            }
+        }
+
+        if(blueFiguresThatCanWinIfPromotedAndCloseFigures!=0){
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(isRed, r, b, rr, bb, br, rb);
+            // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+            if(canWin!=null){
+                //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+                return (Integer.MIN_VALUE+ (canWin.length-1));
             }
         }
 
@@ -93,7 +104,7 @@ public class Evaluate {
 
 
 
-        int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(ownFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(enemyFiguresThatCanWinIfPromotedAndCloseFigures);
+        int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(redFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(blueFiguresThatCanWinIfPromotedAndCloseFigures);
 
         //DEBUG: COMMENT OUT WHEN NOT NEEDED/ALPHABETA
         //System.out.println("pieceWorthValue: " + pieceWorthValue);

@@ -4,7 +4,6 @@ import misc.Tools;
 import model.*;
 
 import java.util.List;
-import java.util.Random;
 
 public class SturdyJumpersAI {
    /*// private static int depth = 0; // Example depth limit
@@ -168,7 +167,7 @@ public class SturdyJumpersAI {
     public static TestWrapper alphaBetaWrapper(BitBoard board, boolean isRed, boolean withCutoffs) {
         int bestValue = Integer.MIN_VALUE;
         String bestMove = null;
-        List<String> legalMoves = board.getAllPossibleMoves(isRed);
+        List<String> legalMoves = board.getAllPossibleMoveStringsDeprecated(isRed);
         int depth = 1;
 
         System.out.println("TODO: Replace nextMoveWin, dont use lastRowMove");
@@ -236,7 +235,7 @@ public class SturdyJumpersAI {
             return eval;
         }
 
-        List<String> legalMoves = board.getAllPossibleMoves(isRed);
+        List<String> legalMoves = board.getAllPossibleMoveStringsDeprecated(isRed);
 
         if (!isRed) {
             int maxEval = Integer.MIN_VALUE;
@@ -292,7 +291,7 @@ public class SturdyJumpersAI {
                     Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }
 
-        List<String> legalMoves = board.getAllPossibleMoves(isRed);
+        List<String> legalMoves = board.getAllPossibleMoveStringsDeprecated(isRed);
         if (!isRed) {
             int maxEval = Integer.MIN_VALUE;
             for (String move : legalMoves) {
