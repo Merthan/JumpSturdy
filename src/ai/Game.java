@@ -54,15 +54,14 @@ public class Game {
             //EXAMPLE FOR INCLUDING MOVES; NOT MUCH SLOWER
             long startNew = System.nanoTime();
             int[] resultNew = BitBoardManipulation.ruhesucheWithPositions(board, isRedTurn);
-            long endNew = System.nanoTime()-startNew;
-            if(resultNew!=null){
-                for (int i = 0,j=1; i < resultNew.length;j++) {// Array has [0]-[1] [2]-[3] representing moves etc. Last pos eval
-                    Tools.printInColor("Ruhesuche move: "+j+" "+Tools.indexToStringPosition((byte)resultNew[i++])+"-"+Tools.indexToStringPosition((byte)resultNew[i++]),Tools.CYAN);
-                    if(resultNew[i]==0)break; // End reached, no indexes
+            long endNew = System.nanoTime() - startNew;
+            if (resultNew != null) {
+                for (int i = 0, j = 1; i < resultNew.length; j++) {// Array has [0]-[1] [2]-[3] representing moves etc. Last pos eval
+                    Tools.printInColor("Ruhesuche move: " + j + " " + Tools.indexToStringPosition((byte) resultNew[i++]) + "-" + Tools.indexToStringPosition((byte) resultNew[i++]), Tools.CYAN);
+                    if (resultNew[i] == 0) break; // End reached, no indexes
                 }
             }
-            System.out.println("RuhesucheWithPos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length-1]));
-
+            System.out.println("RuhesucheWithPos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length - 1]));
 
 
             Tools.printInColor("Enter your move ⬇\uFE0F " + player, "\u001B[5m");
@@ -76,7 +75,7 @@ public class Game {
 
                 long startWin = System.nanoTime();
                 boolean canWin = BitBoardManipulation.doesNextMoveWin(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
-                Tools.printInColor("CanWin took nanos: " +(System.nanoTime()-startWin)+ " canWin> "+canWin,Tools.CYAN);
+                Tools.printInColor("CanWin took nanos: " + (System.nanoTime() - startWin) + " canWin> " + canWin, Tools.CYAN);
 
 /*                for (byte i = 57; i <= 62; i++) {
                     BitBoardManipulation.possibleFromPositionForToIndex(i,!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)
@@ -184,8 +183,8 @@ public class Game {
 
                     System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Total times Ruhesuche executed: "+totalRuheSucheExecuted + "max times looped:"+maxTimesRuheSucheLooped+" total millis:"+totalTimeRuheSucheExecuted+" max time single:"+maxTimeSingleRuheSucheExecuted);
-                    totalTimeRuheSucheExecuted=0;//Reset for next
+                    System.out.println("Total times Ruhesuche executed: " + totalRuheSucheExecuted + "max times looped:" + maxTimesRuheSucheLooped + " total millis:" + totalTimeRuheSucheExecuted + " max time single:" + maxTimeSingleRuheSucheExecuted);
+                    totalTimeRuheSucheExecuted = 0;//Reset for next
                     // Check if there's a winner after the bot's move
                     winner = board.checkWinCondition();
 
@@ -229,7 +228,7 @@ public class Game {
                     (byte) arr[i], isRedTurn, board.redSingles, board.blueSingles,
                     board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red
             );
-            if(startPredicted == 0) throw new BoardException(board,"invalid from");
+            if (startPredicted == 0) throw new BoardException(board, "invalid from");
             totalTime += (System.nanoTime() - startTime);
             String end = move.substring(3, 5);
             allPossiblePredicted.add(Tools.indexToStringPosition(startPredicted) + "_" + end);
@@ -262,8 +261,8 @@ public class Game {
     }
 
     public static void main(String[] args) {
-        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
-                "6/8/2b03/8/r07/8/8/6"};
+        String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2b05/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
+                "5b0/8/2b03/8/8/r07/8/r05"};
 
         String[] testsMstTwo = new String[]{/*Early Game*/"b0b0b0b0b0b0/2bbb02bb1/4b03/8/3r04/8/2rr1r0r01r0/r0r0r0r0r0r0" /*Mein Zug: h7g7*/,
                 /*Mid Game*/"b0b01bb2/6b01/3bb4/4b0b02/3r04/3r04/r01r05/1r0rrrr2" /*Mein Zug: a7b7*/,
@@ -278,15 +277,12 @@ public class Game {
         String searchTest = "6/1r0b04b0/8/8/8/8/1r0r0b04/6";
         String test = "6/1bb1b02b01/8/2r05/3r01b02/5r0r01/2rr2r02/6";
 
-        BitBoard board = new BitBoard(fens[0]);
+        BitBoard board = new BitBoard(testsMstTwo[1]);
 
         //System.out.println(board.getAllPossibleMoves(false));
         Game game = new Game();
-        //game.playVsBot(board,true);
         //game.playAgainst(board, false);
         //game.botGame(board);
         game.playVsBot(board,true);
     }
 }
-
-
