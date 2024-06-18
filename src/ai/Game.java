@@ -5,6 +5,7 @@ import misc.Tools;
 import model.BoardException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ai.BitBoardManipulation.*;
 
@@ -236,9 +237,10 @@ public class Game {
                     String botMove = "";
                     if (!possibleMoves.isEmpty()) {
                         //TODO: Experiment, change back perhaps
-                        ArrayList<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,2000);
+                        List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,2000);
                         Tools.printInColor("MoveSequence: "+Tools.byteListToMoveSequence(moveSequence),Tools.YELLOW);
                         botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
+                        analyzeMoveSequence(b(board.toFEN()),isRedTurn,moveSequence.stream().map(Tools::parseMoveToString).toArray(String[]::new));
                         isRedTurn = board.doMove(botMove, isRedTurn, true);
                     } else {
                         //isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
@@ -315,6 +317,7 @@ public class Game {
     }
 
     public void analyzeMoveSequence(BitBoard board,boolean isRedTurn,String... sequence){
+        Tools.printDivider();
         int previousEval = Evaluate.evaluateComplex(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red);
         board.printCommented("Original eval:"+previousEval);
@@ -325,6 +328,7 @@ public class Game {
             board.printCommented("Move: "+move+" new eval:"+newEval+" change:"+(newEval-previousEval));
             isRedTurn = !isRedTurn;
         }
+        Tools.printDivider();
     }
 
     public void manipulateAndTestBoard(BitBoard board,boolean alwaysSamePlayer){
@@ -482,11 +486,12 @@ public class Game {
         //canWinWithMovesFusioned(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
 
 
+        //TODO: STATE: TOO POSITIVE/NEGATIVE AT THE START; DONT KNOW WHY. Changed String to byte and unified maximizingplayer. Perhaps isRed/maximizing combo is wrong (typo, perhaps brute force combi). Maybe reference String/byte[] error too
 
 
         //game.playVsBot(b("3b01b0/1b02b01b01/1r06/1r01b02b01/6r01/8/2r01r0r02/3r0r0r0"),true);//"3bb1b0/1b02b01b01/1r06/3r02b01/6r01/8/2r01r0r02/3r0r0r0"),true);
-
-        game.playVsBot(b(DEFAULT_BOARD),true);
+        game.isRedTurn = false;
+        game.playVsBot(board,true);
         //game.buildBoardFromEmpty();
         //game.analyzeMoveSequence(b("6/8/2b0b04/8/2r01r03/8/8/6"),false,"D3-C3, E5-E4, C3-E4, C5-B5, E4-E5, B5-A5, E5-E6, A5-A4, E6-E7, A4-B4, E7-E8".split(", "));
         //game.isRedTurn = true;//Start blue

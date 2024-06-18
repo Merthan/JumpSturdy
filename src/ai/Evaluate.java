@@ -44,6 +44,9 @@ public class Evaluate {
 
         return 2 * (8 - distanceToEnd) + (pieceWorthValue - opponentPieceWorthValue) + bonusForNearWin;
     }
+
+    static final int MAXIMUM_WITH_BUFFER_POSITIVE = 2100000000;//High integer for showing close to win
+
     public static int evaluateComplex(boolean isRed, long r, long b, long rr, long bb, long br, long rb) {
 /*        long ownSingles = isRed ? r : b;
         long enemySingles = isRed ? b : r;
@@ -74,7 +77,7 @@ public class Evaluate {
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
-                return (Integer.MAX_VALUE- (canWin.length-1));
+                return (MAXIMUM_WITH_BUFFER_POSITIVE - (canWin.length-1));//2100000000
             }
         }
 
@@ -83,7 +86,7 @@ public class Evaluate {
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
-                return (Integer.MIN_VALUE+ (canWin.length-1));
+                return (-MAXIMUM_WITH_BUFFER_POSITIVE + (canWin.length-1));
             }
         }
 
