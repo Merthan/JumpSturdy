@@ -40,7 +40,7 @@ public class Tools {
     }
 
     public static String moveMagician(String uncleanMove, List<String> moves) {
-        if(uncleanMove.toUpperCase().startsWith("REMOVE")||uncleanMove.toUpperCase().startsWith("ADD")) return uncleanMove.toUpperCase();//Dont handle in this case
+        if(uncleanMove.toUpperCase().startsWith("REMOVE")||uncleanMove.toUpperCase().startsWith("ADD")||uncleanMove.toUpperCase().startsWith("START")) return uncleanMove.toUpperCase();//Dont handle in this case
         uncleanMove = uncleanMove.toUpperCase();
         if (uncleanMove.length() == 2 && moves !=null) { // Eg. just C5, then pick any/first move that matches
             for (String str : moves) {

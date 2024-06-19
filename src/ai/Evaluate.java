@@ -45,7 +45,7 @@ public class Evaluate {
         return 2 * (8 - distanceToEnd) + (pieceWorthValue - opponentPieceWorthValue) + bonusForNearWin;
     }
 
-    static final int MAXIMUM_WITH_BUFFER_POSITIVE = 2100000000;//High integer for showing close to win
+    public static final int MAXIMUM_WITH_BUFFER_POSITIVE = 2100000000;//High integer for showing close to win, this symbols close to winning for red and blue(negative)
 
     public static int evaluateComplex(boolean isRed, long r, long b, long rr, long bb, long br, long rb) {
 /*        long ownSingles = isRed ? r : b;
@@ -60,9 +60,9 @@ public class Evaluate {
 
         //IF won
         if((redFigures&bottomRowMask) != 0){
-            return isRed? Integer.MAX_VALUE : Integer.MIN_VALUE; // MAX if won as red, else MIN as other side has won
+            return isRed? MAXIMUM_WITH_BUFFER_POSITIVE : -MAXIMUM_WITH_BUFFER_POSITIVE; // MAX if won as red, else MIN as other side has won
         } else if ((blueFigures & topRowMask) != 0) {
-            return !isRed? Integer.MAX_VALUE : Integer.MIN_VALUE;
+            return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE : -MAXIMUM_WITH_BUFFER_POSITIVE;
         }
 
         //Needs to be calculated to make canWin faster

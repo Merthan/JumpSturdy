@@ -5,7 +5,6 @@ import misc.Tools;
 import model.BoardException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static ai.BitBoardManipulation.*;
 
@@ -288,6 +287,7 @@ public class Game {
     public void buildBoard(BitBoard board){
         Scanner scanner = new Scanner(System.in);
         System.out.println(board); // Display the current board
+        System.out.println("Remove, add, default is r e.g. |add f5| ");
         String playerMove = Tools.moveMagician(scanner.nextLine(),null );
 
         int counter=1;
@@ -297,15 +297,18 @@ public class Game {
             }else if(playerMove.startsWith("ADD")){
                 String figure = (playerMove.split(" ").length > 2)? playerMove.split(" ")[2]: "r"; // If just add f5 written, interpret as add f5 r
                 board.addPositionDebug(Tools.positionToIndex(playerMove.split(" ")[1].toUpperCase()),figure);
-            }else{
+            } else if (playerMove.startsWith("START")) { //starts alphabeta with that board
+                List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,false,2000);
+                Tools.printInColor("MoveSequence: "+Tools.byteListToMoveSequence(moveSequence),Tools.YELLOW);
+            } else{
                 String figure = (playerMove.split(" ").length > 1)? playerMove.split(" ")[1]: "r"; // If just add f5 written, interpret as add f5 r
                 board.addPositionDebug(Tools.positionToIndex(playerMove.split(" ")[0].toUpperCase()),figure);
             }
+
             board.printCommented("Buildboard:"+board.toFEN());
-            if(counter++>2){ //TODO: seems to not do anything when losing in the future is guaranteed? 1 player against two doesnt do anything
-                List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board,false,2000);
-                Tools.printInColor("MoveSequence: "+Tools.byteListToMoveSequence(moveSequence),Tools.YELLOW);
-            }
+/*            if(counter++>2){ //TODO: seems to not do anything when losing in the future is guaranteed? 1 player against two doesnt do anything
+
+            }*/
 
 
             playerMove = Tools.moveMagician(scanner.nextLine(),null );
@@ -316,7 +319,7 @@ public class Game {
         }
     }
 
-    public void analyzeMoveSequence(BitBoard board,boolean isRedTurn,String... sequence){
+    public void analyzeMoveSequence(BitBoard board,boolean isRedTurn,String... sequence){ //Analyze how much sense alphabeta sequence makes or in general a play
         Tools.printDivider();
         int previousEval = Evaluate.evaluateComplex(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red);
@@ -331,7 +334,7 @@ public class Game {
         Tools.printDivider();
     }
 
-    public void manipulateAndTestBoard(BitBoard board,boolean alwaysSamePlayer){
+    public void manipulateAndTestBoard(BitBoard board,boolean alwaysSamePlayer){ //tests are defined in the other method, can be generalized. mainly used for testing evaluation when adding/removing etc
         Scanner scanner = new Scanner(System.in);
         System.out.println(board); // Display the current board
 
@@ -376,7 +379,7 @@ public class Game {
         board.printCommented((isRedTurn?"Red: ":"Blue: ")+playerMoveOrComment+"\nEvaluated score:"+evaluated+ " in nanos: "+end);
     }
 
-    private void getAllPossibleMovesAndRateThem(BitBoard board,boolean isRedTurn){
+    private void getAllPossibleMovesAndRateThem(BitBoard board,boolean isRedTurn){ //Debug method for testing alphabeta correctness, best move at low depth etc
 
 
         int originalEval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
@@ -431,7 +434,9 @@ public class Game {
             System.out.println(board); // Display the current board
             Tools.printInColor(board.getAllPossibleMoveStringsDeprecated(isRedTurn).toString(), Tools.PURPLE);
             System.out.println();
-            String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
+            //String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
+            String botMove = isRedTurn?SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn):Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,500)).get(0));
+
             isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
             winner = board.checkWinCondition(); // check if it's a winning move
             if (winner != BitBoard.WINNER_ONGOING) {
@@ -439,6 +444,35 @@ public class Game {
                 //System.out.println("\u001B[41mRed background\u001B[0m"); red background
                 break;
             }
+        }
+    }
+
+    public void advancedBotGame(BitBoard board, int millis, boolean onlyNewAlphaBeta) {
+        byte winner = BitBoard.WINNER_ONGOING;
+        int oldEval = Evaluate.evaluateComplex(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+                board.red_on_blue, board.blue_on_red);
+        board.printCommented("timedBotGameStart");
+        while (true) {
+            //String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
+            SturdyJumpersAI.TIME_LIMIT = millis* 1000000L;
+            String botMove = isRedTurn?(onlyNewAlphaBeta?Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,millis)).get(0)):SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn))  :Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board,isRedTurn,millis)).get(0));
+
+            isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
+
+            board.printCommented((isRedTurn?"Red" : "Blue") +" move: "+botMove);
+            int newEval = Evaluate.evaluateComplex(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+                    board.red_on_blue, board.blue_on_red);
+
+            Tools.printInColor("Move: "+botMove+" new eval:"+newEval+" change: "+(newEval-oldEval),!isRedTurn);
+            oldEval=newEval;
+
+            winner = board.checkWinCondition(); // check if it's a winning move
+            if (winner != BitBoard.WINNER_ONGOING) {
+                System.out.println("\u001B[41m\uD83C\uDFC5Game over " + (winner == BitBoard.WINNER_RED ? "Red" : "Blue") + " wins" + "\u001B[0m");
+                //System.out.println("\u001B[41mRed background\u001B[0m"); red background
+                break;
+            }
+            System.out.println();
         }
     }
 
@@ -490,8 +524,10 @@ public class Game {
 
 
         //game.playVsBot(b("3b01b0/1b02b01b01/1r06/1r01b02b01/6r01/8/2r01r0r02/3r0r0r0"),true);//"3bb1b0/1b02b01b01/1r06/3r02b01/6r01/8/2r01r0r02/3r0r0r0"),true);
-        game.isRedTurn = false;
-        game.playVsBot(board,true);
+        //game.isRedTurn = false;
+        game.advancedBotGame(b(DEFAULT_BOARD),1000,false);
+        //game.buildBoardFromEmpty();
+        //game.playVsBot(board,true);
         //game.buildBoardFromEmpty();
         //game.analyzeMoveSequence(b("6/8/2b0b04/8/2r01r03/8/8/6"),false,"D3-C3, E5-E4, C3-E4, C5-B5, E4-E5, B5-A5, E5-E6, A5-A4, E6-E7, A4-B4, E7-E8".split(", "));
         //game.isRedTurn = true;//Start blue

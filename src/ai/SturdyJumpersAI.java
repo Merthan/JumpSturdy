@@ -144,7 +144,7 @@ public class SturdyJumpersAI {
 
     private static int untersuchteZustaende = 0;
     private static boolean timeUp;
-    private static final long TIME_LIMIT = 2000000000L; // 2 seconds in nanoseconds
+    public static long TIME_LIMIT = 500000000L;//TODO: changed to 0.5 seconds 2000000000L; original // 2 seconds in nanoseconds
 
 
     public static String findBestMove(SearchType searchType, BitBoard board, boolean isRed) {

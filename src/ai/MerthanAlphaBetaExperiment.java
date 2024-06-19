@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static ai.Evaluate.MAXIMUM_WITH_BUFFER_POSITIVE;
+
 public class MerthanAlphaBetaExperiment {
 
     public long endTime;
@@ -203,7 +205,7 @@ public class MerthanAlphaBetaExperiment {
         List<String> currentBestMoves = new ArrayList<>();
 
         if (maximizingPlayer) {
-            int maxEval = Integer.MIN_VALUE;
+            int maxEval = Integer.MIN_VALUE;//These dont need the buffer variable
             for (String move : legalMoves) {
                 BitBoard executedMoveBoard = BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                         Tools.parseMove(move)[0], Tools.parseMove(move)[1], maximizingPlayer,
@@ -320,34 +322,101 @@ public class MerthanAlphaBetaExperiment {
             return minEval;
         }
     }*/
-    static int counter =0;
+/* best performance currently
+    public int counter =0;
     public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer,List<byte[]> bestMoves) {
-        if (System.currentTimeMillis() > endTime && false) {//TODO: Deactivated for debugging
-            return 0; // Return a neutral value if time limit is reached
+        if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
+            //return 0; // Return a neutral value if time limit is reached
+            return maximizingPlayer? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
         }
         counter++;
         boolean canWin = null != BitBoardManipulation.canWinWithMovesFusioned(maximizingPlayer, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
-        if (depth == 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING||canWin) {
+        boolean depthZero = depth == 0;
+        boolean gameEnded = board.checkWinCondition() != BitBoard.WINNER_ONGOING;
+
+        if (depthZero|| gameEnded ||canWin) {
             //TODO: isRed worked, now replaced by true
             int eval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             //Depth 0, to account for attacked pieces afterwards
 
-            if(depth == 0){//If ruhesuche gets a value, return ruhesuche (doesnt take long)
+            if(depthZero){//If ruhesuche gets a value, return ruhesuche (doesnt take long)
                 //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
                 int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositions(board,maximizingPlayer):null;
                 return (ruhesucheArray == null)? eval : ruhesucheArray[ruhesucheArray.length-1];
-            }
-            if(canWin){
+            }else{//Aka canWin || gameEnded
+                //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
                 return maximizingPlayer?(eval+depth):(eval-depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
-            return eval;
+            //return eval;
         }
 
         byte[][] moves = board.getAllPossibleMovesByte(maximizingPlayer);
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves = new ArrayList<>();
 
-        int evalBound = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+        int evalBound = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;//These dont need the buffer variable
+        for (byte[] move : moves) {
+            BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
+
+            List<byte[]> childBestMoves = new ArrayList<>();
+            int eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, childBestMoves);
+            boolean condition = maximizingPlayer ? (eval > evalBound) : (eval < evalBound);
+
+            if (condition) {
+                evalBound = eval;
+                currentBestMoves.clear();
+                currentBestMoves.add(move);
+                currentBestMoves.addAll(childBestMoves);
+            }
+            if (maximizingPlayer) {
+                alpha = Math.max(alpha, eval);
+            } else {
+                beta = Math.min(beta, eval);
+            }
+            if (beta <= alpha) {
+                break; // Alpha-Beta cutoff
+            }
+        }
+        bestMoves.clear();
+        bestMoves.addAll(currentBestMoves);
+        //System.out.println((maximizingPlayer ? "Maximizing" : "Minimizing") + " Player Best Moves: " + bestMoves);
+        return evalBound;
+    }
+    */
+    public static int counter =0;
+    public static int endReachedCounter = 0;
+    public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer,List<byte[]> bestMoves) {
+        if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
+            //return 0; // Return a neutral value if time limit is reached
+            return maximizingPlayer? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
+        }
+        counter++;
+        boolean canWin = null != BitBoardManipulation.canWinWithMovesFusioned(maximizingPlayer, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+        boolean depthZero = depth == 0;
+        boolean gameEnded = board.checkWinCondition() != BitBoard.WINNER_ONGOING;
+
+        if (depthZero|| gameEnded ||canWin) {
+            //TODO: isRed worked, now replaced by true
+            int eval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            endReachedCounter++;
+            //Depth 0, to account for attacked pieces afterwards
+
+            if(depthZero){//If ruhesuche gets a value, return ruhesuche (doesnt take long)
+                //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
+                int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositions(board,maximizingPlayer):null;
+                return (ruhesucheArray == null)? eval : ruhesucheArray[ruhesucheArray.length-1];
+            }else{//Aka canWin || gameEnded
+                //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
+                return maximizingPlayer?(eval+depth):(eval-depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
+            }
+            //return eval;
+        }
+
+        byte[][] moves = board.getAllPossibleMovesByte(maximizingPlayer);
+        //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
+        List<byte[]> currentBestMoves = new ArrayList<>();
+
+        int evalBound = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;//These dont need the buffer variable
         for (byte[] move : moves) {
             BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
 
@@ -544,6 +613,8 @@ public class MerthanAlphaBetaExperiment {
         return bestMoveSequence;
     }*/
 
+    final static boolean log = false; //CHANGE WHEN NEEDED
+
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
         endTime = System.currentTimeMillis() + timeLimitMillis;
         bestDepthReached = 0;
@@ -561,9 +632,9 @@ public class MerthanAlphaBetaExperiment {
         }
         for (int depth = 1; ; depth++) {
 
-            Tools.printInColor("New Depth reached: "+depth,true);
+            if(log)Tools.printInColor("New Depth reached: "+depth,true);
 
-            currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player
+            currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
             ArrayList<byte[]> currentBestMoveSequence = new ArrayList<>();
             byte[][] moves = board.getAllPossibleMovesByte(isRed);
             //System.out.println("Moves here:" + legalMoves);
@@ -590,21 +661,26 @@ public class MerthanAlphaBetaExperiment {
                     break; // Time limit reached
                 }
             }
-            System.out.println("AlphaBetaStart for DEPTH: "+depth +" bestmoveValue " +currentBestValue+ " sequence:"+Tools.byteListToMoveSequence(bestMoveSequence));
+            bestMoveSequence = currentBestMoveSequence;
+            bestDepthReached = depth;
+
+            if(log)System.out.println("AlphaBetaStart for DEPTH: "+depth +" bestmoveValue " +currentBestValue+ " sequence:"+Tools.byteListToMoveSequence(bestMoveSequence));
 
 
             if (System.currentTimeMillis() > endTime) {
                 break; // Time limit reached
             }
 
-            bestMoveSequence = currentBestMoveSequence;
-            bestDepthReached = depth;
+
         }
 
-        // Print final search information
+
         System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
         System.out.println("Depth Reached: " + bestDepthReached);
         System.out.println("Current best valuee: " + currentBestValue);
+        System.out.println("AlphaBeta method was called: " + counter+" and end point reached/Evaluated: "+endReachedCounter);
+        counter=0;
+        endReachedCounter =0;
 
         System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms");
 
