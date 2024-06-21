@@ -1,6 +1,7 @@
 package model;
 
 import ai.BitBoardManipulation;
+import ai.Evaluate;
 import misc.Tools;
 
 import java.util.*;
@@ -30,6 +31,8 @@ public class BitBoard {
 
     public long red_on_blue;   // Bitboard for red double pieces (top knights)
     public long blue_on_red;  // Bitboard for blue double pieces (top knights)
+
+    public byte[] previousMove = new byte[]{};
 
 
     // Masks for edges to handle movements correctly
@@ -216,6 +219,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
+            printCommented("ERROR");
             throw new RuntimeException("Invalid position, either empty or corner" + position + " " + Tools.indexToStringPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
@@ -295,7 +299,12 @@ public class BitBoard {
         detectOverlap(redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
     }
 
-    public byte checkWinCondition() {
+    @Deprecated //DONT USE IN PERFORMANCE INTENSIVE LOCATIONS
+    public int eval(){
+        return Evaluate.evaluateComplex(true,redSingles,blueSingles,redDoubles,blueDoubles,red_on_blue,blue_on_red);
+    }
+
+    public byte currentWinningState() {
         // Define masks for the top and bottom rows
 
         long bluePieces = blueSingles | blueDoubles | blue_on_red;
@@ -326,6 +335,18 @@ public class BitBoard {
 
     public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
         byte[] indices = parseMove(move);
+        if(preserveAllMoves){
+            byte[] addedMoves = new byte[previousMove.length+2];
+            System.arraycopy(previousMove, 0, addedMoves, 0, previousMove.length);
+            //Append
+            addedMoves[previousMove.length] = indices[0];
+            addedMoves[previousMove.length + 1] = indices[1];
+            previousMove = addedMoves;
+        }else{
+            previousMove = indices;
+
+        }
+
         if (isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn) {
             throw new IllegalMoveException("Player can't move enemy piece:"+indices[0]+"-"+indices[1]+" > "+Tools.parseMoveToString(indices));
         }
@@ -434,11 +455,13 @@ public class BitBoard {
         long enemyOnOwn = isRed ? blue_on_red : red_on_blue;
         long ownOnEnemy = isRed ? red_on_blue : blue_on_red;
 
+
+        boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
         // Remove the double piece from the original position
         ownDoubles &= ~(1L << fromIndex);
         ownOnEnemy &= ~(1L << fromIndex);
         // Determine the bottom type of the double
-        boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
+
         //System.out.println("bt" + bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
@@ -790,17 +813,58 @@ public class BitBoard {
         return newBoard;
     }
 
+    public static BitBoard fromLongArrayWithPreviousMove(long[] bitBoards,byte[] move){
+        BitBoard newBoard = new BitBoard();
+        newBoard.previousMove = move;
+        newBoard.redSingles = bitBoards[0];
+        newBoard.blueSingles = bitBoards[1];
+        newBoard.redDoubles = bitBoards[2];
+        newBoard.blueDoubles = bitBoards[3];
+        newBoard.red_on_blue = bitBoards[4];
+        newBoard.blue_on_red = bitBoards[5];
+        return newBoard;
+    }
+
+    @Deprecated
     public BitBoard doMoveAndReturnBitboard(byte from, byte to,boolean isRed){
-        return BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+        return BitBoard.fromLongArrayWithPreviousMove(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
                 from, to, isRed,
                 redSingles, blueSingles, redDoubles, blueDoubles,
-                red_on_blue, blue_on_red));
+                red_on_blue, blue_on_red),new byte[]{from,to});
     }
+
+    public String previousMoves(){
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < previousMove.length; i+=2) {
+            b.append("["+Tools.indexToStringPosition(previousMove[i])+"-"+Tools.indexToStringPosition(previousMove[i+1])+"] ");
+        }
+        return b.toString()+" length: "+previousMove.length;
+    }
+
+    public static final boolean preserveAllMoves = true; //TODO: Probably quite a performance impact, remove when not debugging; false means only has last move, true means every move
+
+
+
     public BitBoard doMoveAndReturnBitboard(byte[] move,boolean isRed){
-        return BitBoard.fromLongArray(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
-                move[0], move[1], isRed,
-                redSingles, blueSingles, redDoubles, blueDoubles,
-                red_on_blue, blue_on_red));
+        if(preserveAllMoves){
+            byte[] addedMoves = new byte[previousMove.length+2];
+            System.arraycopy(previousMove, 0, addedMoves, 0, previousMove.length);
+            //Append
+            addedMoves[previousMove.length] = move[0];
+            addedMoves[previousMove.length + 1] = move[1];
+            return BitBoard.fromLongArrayWithPreviousMove(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                    move[0], move[1], isRed,
+                    redSingles, blueSingles, redDoubles, blueDoubles,
+                    red_on_blue, blue_on_red),addedMoves); //Added if else due to reference error
+        }else{
+            return BitBoard.fromLongArrayWithPreviousMove(BitBoardManipulation.doMoveAndReturnModifiedBitBoards(
+                    move[0], move[1], isRed,
+                    redSingles, blueSingles, redDoubles, blueDoubles,
+                    red_on_blue, blue_on_red),move);
+        }
+
+
+
     }
 
     public static void main(String[] args) {
@@ -816,7 +880,7 @@ public class BitBoard {
     }
 
     public void printCommented(String comment){//Also shifts on purpose to make it more obvious
-        System.out.println("\n"+"_".repeat(70)+"\n"+comment+"\n|\t\t\t"+this.toString().replace("\n","\n|\t\t\t")+"\n|"+"_".repeat(70));
+        System.out.println("\n"+"_".repeat(70)+"\n"+comment+"\n|\t\t\t"+this.toString().replace("\n","\n|\t\t\t")+"\n| "+toFEN()+"\n|"+"_".repeat(70));
     }
 
     public void printWithBitboard(String comment, long bitboard){//Also shifts on purpose to make it more obvious

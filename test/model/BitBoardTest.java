@@ -155,13 +155,13 @@ public class BitBoardTest {
         //board.displayBitboard(board.getPossibleMovesSingles(board.redSingles,true));
         System.out.println(board.getAllPossibleMoveStringsDeprecated(true));
         //System.out.println("\u001B[32m" + "This is green text" + "\u001B[0m");
-        assertEquals(board.checkWinCondition(), BitBoard.WINNER_ONGOING);
+        assertEquals(board.currentWinningState(), BitBoard.WINNER_ONGOING);
         assertThrows(IllegalMoveException.class, () -> { //Has to cause an exception, illegal move
             doMoves(true, true, "C3-B2");
         });
         doMoves(true, true, "C3-D2", "G2-G3", "D2-C1");
 
-        assertEquals(board.checkWinCondition(), BitBoard.WINNER_RED);
+        assertEquals(board.currentWinningState(), BitBoard.WINNER_RED);
     }
 
 

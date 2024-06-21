@@ -5,6 +5,8 @@ import model.*;
 
 import java.util.List;
 
+import static ai.MerthanAlphaBetaExperiment.log;
+
 public class SturdyJumpersAI {
    /*// private static int depth = 0; // Example depth limit
     private static int untersuchteZustaende = 0;
@@ -170,7 +172,7 @@ public class SturdyJumpersAI {
         List<String> legalMoves = board.getAllPossibleMoveStringsDeprecated(isRed);
         int depth = 1;
 
-        System.out.println("TODO: Replace nextMoveWin, dont use lastRowMove");
+        if(log)System.out.println("TODO: Replace nextMoveWin, dont use lastRowMove");
 /*TODO: REPLACE THIS
         if(BitBoardManipulation.doesNextMoveWin(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red))
@@ -205,7 +207,7 @@ public class SturdyJumpersAI {
             depth++;
 
         }
-        System.out.println("Laufzeit: " + ((System.nanoTime() - startTime) / 1e6) + " ms\n" +
+        if(log)System.out.println("Laufzeit: " + ((System.nanoTime() - startTime) / 1e6) + " ms\n" +
                 "Erreichte Tiefe: " + (depth - 1) + "\n" +
                 "Bester Zug: " + bestMove + ". Value: " + bestValue + "\n" +
                 "Untersuchte Zustände: " + untersuchteZustaende
@@ -223,7 +225,7 @@ public class SturdyJumpersAI {
             return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
 
-        if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
+        if (depth <= 0 || board.currentWinningState() != BitBoard.WINNER_ONGOING) {
             int[] ruhesucheWithPosLastIndexIsEval = BitBoardManipulation.ruhesucheWithPositions(board,isRed);//TODO: Use this
 
             //if (ruhesuche!= BitBoardManipulation.RUHESUCHE_NOT_PERFORMED) return ruhesuche;
@@ -286,7 +288,7 @@ public class SturdyJumpersAI {
             timeUp = true;
             return isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE;
         }
-        if (depth <= 0 || board.checkWinCondition() != BitBoard.WINNER_ONGOING) {
+        if (depth <= 0 || board.currentWinningState() != BitBoard.WINNER_ONGOING) {
             return Evaluate.evaluateSimple(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) -
                     Evaluate.evaluateSimple(!isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         }

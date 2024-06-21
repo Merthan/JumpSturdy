@@ -60,9 +60,9 @@ public class Evaluate {
 
         //IF won
         if((redFigures&bottomRowMask) != 0){
-            return isRed? MAXIMUM_WITH_BUFFER_POSITIVE : -MAXIMUM_WITH_BUFFER_POSITIVE; // MAX if won as red, else MIN as other side has won
+            return isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000; // MAX if won as red, else MIN as other side has won
         } else if ((blueFigures & topRowMask) != 0) {
-            return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE : -MAXIMUM_WITH_BUFFER_POSITIVE;
+            return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
         }
 
         //Needs to be calculated to make canWin faster

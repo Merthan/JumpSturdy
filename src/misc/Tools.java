@@ -22,6 +22,13 @@ public class Tools {
     public static void printInColor(String text, boolean isRed) {
         System.out.println((isRed ? RED : BLUE) + text + RESET);
     }
+    public static void printRed(String text){//easier to call often
+        printInColor(text,true);
+    }
+
+    public static void printBlue(String text){
+        printInColor(text,false);
+    }
 
     public static void printInColor(String text, String color) {
         System.out.println((color) + text + RESET);

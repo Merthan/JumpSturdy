@@ -87,11 +87,13 @@ public class BitBoardManipulation {
         long enemyOnOwn = isRed ? blue_on_red : red_on_blue;
         long ownOnEnemy = isRed ? red_on_blue : blue_on_red;
 
+        // Determine the bottom type of the double
+        boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
+
         // Remove the double piece from the original position
         ownDoubles &= ~(1L << fromIndex);
         ownOnEnemy &= ~(1L << fromIndex);
-        // Determine the bottom type of the double
-        boolean bottomIsEnemy = (ownOnEnemy & (1L << fromIndex)) != 0;
+
         //System.out.println("bt" + bottomIsEnemy);
         // Handle the landing cases
         if ((ownSingles & (1L << toIndex)) != 0) {
