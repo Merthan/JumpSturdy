@@ -22,6 +22,11 @@ public class Evaluate {
         }
     }
 
+    public static int evaluateMoveComplex(boolean redsTurn, byte fromIndex,byte toIndex, long r, long b, long rr, long bb, long br, long rb ){
+        long[] bitboards = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(fromIndex, toIndex, redsTurn, r, b, rr, bb, br, rb);
+        return evaluateComplex(true, bitboards[0], bitboards[1], bitboards[2], bitboards[3], bitboards[5], bitboards[4]);
+    }
+
     public static int evaluateMultipleMoves(boolean redsTurn, byte[] fromIndex, byte[] toIndex, long r, long b, long rr, long bb, long br, long rb) {
         long[] bitboards = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(fromIndex[0], toIndex[0], redsTurn, r, b, rr, bb, br, rb);
         for (int i = 1; i < fromIndex.length; i++) {
@@ -60,9 +65,12 @@ public class Evaluate {
 
         //IF won
         if((redFigures&bottomRowMask) != 0){
-            return isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000; // MAX if won as red, else MIN as other side has won
+            //return isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000; // MAX if won as red, else MIN as other side has won
+            return MAXIMUM_WITH_BUFFER_POSITIVE+10000; // MAX if won as red, else MIN as other side has won
+
         } else if ((blueFigures & topRowMask) != 0) {
-            return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
+            //return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
+            return -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
         }
 
         //Needs to be calculated to make canWin faster

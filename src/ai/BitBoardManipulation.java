@@ -347,15 +347,40 @@ public class BitBoardManipulation {
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
 
-        int eval = Evaluate.evaluateComplex(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]); /*Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+        int eval = Evaluate.evaluateComplex(true, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]); /*Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
                 Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);*/
 
         positionsAndAtTheEndScoreArray[positionsAndAtTheEndScoreArray.length - 1] = eval;
         return positionsAndAtTheEndScoreArray; // TODO: READ [0] [1] = one move 0 to 1, then [2] [3] until one of the values is 0 (illegal/corner anyways), then break loop. Eval is at last index.
     }
 
+    public static long[] undoMoveOnBitboards(boolean isRedTurn, byte from, byte to,long[] asArray){
+        int indexFromType =-1;//Empty, stays empty if singlepiece moved
+        int indexToType;//to has to be set afterwards
+/*        for (int i = 1; i < 63; i++) {
+            if(fro)
+        }*/
+        long fromLong = (1L<<from);
+        long toLong = (1L<<to);
 
-    public static final long secondLastRowCenter = 0x007E000000000000L;
+        for (int i = 0; i < 6; i++) {
+            long atIndex = asArray[i];
+            if((atIndex & fromLong)!=0){
+                indexFromType = i;
+            }else if((atIndex & toLong)!=0){
+                indexToType = i;
+            }
+        }
+        //TODO: Bitboard missing information, if captured with double we cant determine if there was a piece there or not. Double needs to set a e.g. boolean movePerformedCapture
+        //cant be determined otherwise, single capture is determined by a diagonal move otherwise
+        if(indexFromType==-1){//From is empty (no bitboard), then it must have been a single move leaving empty space
+
+        }
+        return null;
+    }
+
+
+        public static final long secondLastRowCenter = 0x007E000000000000L;
     public static final long secondTopRowCenter = 0x0000000000007E00L;
     public static final long secondThirdRowTop = 0x0000000000FFFF00L;
     public static final long secondThirdRowBottom = 0x00FFFF0000000000L;

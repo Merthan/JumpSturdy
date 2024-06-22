@@ -1,9 +1,7 @@
 package misc;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Random;
-import java.util.Scanner;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static model.BitBoard.CORNER_MASK;
@@ -186,6 +184,33 @@ public class Tools {
         displayBitboard(bits);
     }
 
+    public static void sortList(List<?> objectsToOrder, List<?> orderedObjects) {
+
+        HashMap<Object, Integer> indexMap = new HashMap<>();
+        int index = 0;
+        for (Object object : orderedObjects) {
+            indexMap.put(object, index);
+            index++;
+        }
+
+        Collections.sort(objectsToOrder, new Comparator<Object>() {
+
+            public int compare(Object left, Object right) {
+
+                Integer leftIndex = indexMap.get(left);
+                Integer rightIndex = indexMap.get(right);
+                if (leftIndex == null) {
+                    return -1;
+                }
+                if (rightIndex == null) {
+                    return 1;
+                }
+
+                return Integer.compare(leftIndex, rightIndex);
+            }
+        });
+    }
+
     /*    public String cleanMove(String move){
 
         }*/
@@ -302,7 +327,10 @@ class DynamicConsoleOutput {
 
         scanner.close();
     }
+
+
 }
+
 
 class BitPackingComparison {
 

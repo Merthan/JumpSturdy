@@ -907,6 +907,14 @@ public class BitBoard {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
+        int start = -1;
+        int end =-1;
+        String specialCharacter = null;
+        if(previousMove.length!=0){
+            start = previousMove[previousMove.length-2];
+            end=previousMove[previousMove.length-1];
+            specialCharacter ="\u001B[47m"+ determineMoveEmoji(start,end)+RESET;
+        }
 
         // Append column labels (A-H)
         sb.append("   A  B  C  D   E  F  G  H\n");
@@ -921,27 +929,71 @@ public class BitBoard {
                     sb.append("\uD83D\uDD33 ");//🔳
                     continue;
                 }
-                if ((redSingles & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDD34 ");//🔴   😎
-                } else if ((blueSingles & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDD35 ");//🔵
-                } else if ((redDoubles & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDFE5 ");//🟥
-                } else if ((blueDoubles & (1L << index)) != 0) {
-                    sb.append("\uD83D\uDFE6 ");//🟦
-                } else if ((blue_on_red & (1L << index)) != 0) {
-                    sb.append("\u001B[41m\uD83D\uDD35\u001B[0m ");// NO FITTING EMOJI, uses Red Background Control Characters - blue on red
-                } else if ((red_on_blue & (1L << index)) != 0) {
-                    sb.append("\u001B[44m\uD83D\uDD34\u001B[0m ");// NO FITTING EMOJI, uses Blue Background Control Characters - blue on red
-                } else {
-                    sb.append("⬜ ");
+                if((index == start || index == end) ){ // Only add grey background when not single move (for doubles)
+                    //sb.append("\u001B[7m");
+                    //sb.append("\u001B[35m");
+                    sb.append("\u001B[47m");
                 }
+                if((specialCharacter!=null&&index == start)){ // ↘️ etc
+                    sb.append(specialCharacter);
+                    sb.append("\u001B[0m ");
+                    continue;
+                }
+                if ((redSingles & (1L << index)) != 0) {
+                    sb.append("\uD83D\uDD34");//🔴   😎
+                } else if ((blueSingles & (1L << index)) != 0) {
+                    sb.append("\uD83D\uDD35");//🔵
+                } else if ((redDoubles & (1L << index)) != 0) {
+                    sb.append("\uD83D\uDFE5");//🟥
+                } else if ((blueDoubles & (1L << index)) != 0) {
+                    sb.append("\uD83D\uDFE6");//🟦
+                } else if ((blue_on_red & (1L << index)) != 0) {
+                    sb.append("\u001B[41m\uD83D\uDD35\u001B[0m");// NO FITTING EMOJI, uses Red Background Control Characters - blue on red
+                } else if ((red_on_blue & (1L << index)) != 0) {
+                    sb.append("\u001B[44m\uD83D\uDD34\u001B[0m");// NO FITTING EMOJI, uses Blue Background Control Characters - blue on red
+                } else {
+                    sb.append("⬜");
+                }
+                if((index == start || index == end) ){
+                    sb.append("\u001B[0m");
+                }
+                sb.append(" ");//now moved here after reset so it doesnt include the s
             }
             sb.append(" ").append(8 - row).append("\n"); // Append row number
         }
         sb.append("   A  B  C  D   E  F  G  H\n");
         return sb.toString();
     }
+
+
+    private String determineMoveEmoji(int start, int end) {
+        if(end-start==8) return "⬇️";
+        if(end-start==-8) return "⬆️";
+        if(end-start==1)return "➡️";
+        if(end-start==-1)return "⬅️";
+
+        if(end-start==9)return "↘\uFE0F";
+        if(end-start==-9)return "↖\uFE0F";
+        if(end-start==7)return "↙\uFE0F";
+        if(end-start==-7)return "↗\uFE0F";
+
+        return null;
+    }
+
+
+/*    private String determineMoveEmoji(int start, int end) {
+        if(end-start==8) return "\uD83E\uDC83";
+        if(end-start==-8) return "\uD83E\uDC81";
+        if(end-start==1)return "\uD83E\uDC82";
+        if(end-start==-1)return "\uD83E\uDC80";
+
+        if(end-start==9)return "\uD83E\uDC86";
+        if(end-start==-9)return "\uD83E\uDC84";
+        if(end-start==7)return "\uD83E\uDC87";
+        if(end-start==-7)return "\uD83E\uDC85";
+
+        return null;
+    }*/
 
 
 }

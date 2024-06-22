@@ -139,7 +139,7 @@ public class Game {
             Tools.printDivider();
         }
         byte[] simpleWinMove = BitBoardManipulation.canWinSimpleMoveWithoutEnemyTurn(isRedTurn, board.getPossibleMovesForTeam(isRedTurn), board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
-        Tools.printInColor("CanWin for " + (isRedTurn ? "Red" : "Blue") + " took nanos: " + endWin + " canWin> " + winningMovesParsed + Arrays.toString(winningMoves) + " canWinSimple :" + (simpleWinMove != null), Tools.CYAN);
+        //Tools.printInColor("CanWin for " + (isRedTurn ? "Red" : "Blue") + " took nanos: " + endWin + " canWin> " + winningMovesParsed + Arrays.toString(winningMoves) + " canWinSimple :" + (simpleWinMove != null), Tools.CYAN);
     }
 
     public void playVsBot(BitBoard board, boolean smartBot) {
@@ -222,8 +222,8 @@ public class Game {
                     System.out.println(board);
 
 
-                    System.out.println("Game evaluated red:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    System.out.println("Game evaluated:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    //System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     // Check if there's a winner after the bot's move
                     winner = board.currentWinningState();
                 }
@@ -247,9 +247,9 @@ public class Game {
                     System.out.println(board.toFEN());
                     testPreWinMoveDetection(board, isRedTurn);
 
-                    System.out.println("Game evaluated red:" + Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Game evaluated blue:" + Evaluate.evaluateComplex(false, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    System.out.println("Total times Ruhesuche executed: " + totalRuheSucheExecuted + "max times looped:" + maxTimesRuheSucheLooped + " total millis:" + totalTimeRuheSucheExecuted + " max time single:" + maxTimeSingleRuheSucheExecuted);
+                    System.out.println("Game evaluated:" + Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    //System.out.println("Game evaluated blue:" + Evaluate.evaluateComplex(false, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    //System.out.println("Total times Ruhesuche executed: " + totalRuheSucheExecuted + "max times looped:" + maxTimesRuheSucheLooped + " total millis:" + totalTimeRuheSucheExecuted + " max time single:" + maxTimeSingleRuheSucheExecuted);
                     totalTimeRuheSucheExecuted = 0;//Reset for next
                     // Check if there's a winner after the bot's move
                     winner = board.currentWinningState();
@@ -560,7 +560,7 @@ public class Game {
 
         //game.isRedTurn = false;
         BitBoard isolated3 = b("b05/r07/2b05/8/8/8/2r05/6");
-        board = isolated3;
+        //board = isolated3;
 /*        board =b("b0b0b0b0b0b0/1r0b0b0b0b0b01/8/8/3b04/3r04/1r0r01r0rr2/1r0r0r0r0r0");
         System.out.println(board.previousMoves());
         board.doMove("B7-B6",true,true);//C7-C6
@@ -583,11 +583,35 @@ public class Game {
         System.out.println("Eval start: "+board.eval());
         game.playVsBot(board, true);*/
 
+        /**almost win board:
+         * AlphaBeta method was called: 84576067 and end point reached/Evaluated: 79242920 cutoffs: 4262165 misc0
+         * when playing E7-E6
+         * AFTER Move ordering
+         * AlphaBeta method was called: 84576062 and end point reached/Evaluated: 79242915 cutoffs: 4262165
+         *
+         * DEFAULT: D6
+         * AlphaBeta method was called: 12475053 and end point reached/Evaluated: 11245274 cutoffs: 1042258 misc0
+         * AlphaBeta method was called: 3728600 and end point reached/Evaluated: 3278190 cutoffs: 361651 misc0
+         *
+         * NOT CALLING Evaluate within (sorting all by fixed 2 value)
+         * AlphaBeta method was called: 12371999 and end point reached/Evaluated: 11170598 cutoffs: 1015274 misc0
+         * CAlLING EVAL within
+         * AlphaBeta method was called: 3722356 and end point reached/Evaluated: 3273071 cutoffs: 360660 misc0
+         *
+         * New Move sorting: D6
+         * AlphaBeta method was called: 3262393 and end point reached/Evaluated: 2919508 cutoffs: 262841 misc0
+         *
+         * Old
+         * AlphaBeta method was called: 3757505 and end point reached/Evaluated: 3303276 cutoffs: 364744 misc0
+         * */
 
+        //game.playVsBot(b(DEFAULT_BOARD), true);
+        //game.playVsBot(b("2b0b0b0b0/1b04b01/2b04r0/5b02/3r01rr2/8/b02r01r0r01/1r02r01"),true);
+        game.playVsBot(b("6/3b0b03/8/3r04/8/6b01/1r04r01/6"),true);
 
         //CURRENT STATE: isolated 3 for some reason doesnt have the problem anymore, board does. Maybe hardcode enemyNextMoveWin (eg possiblemoves last row, only if enemy is in last 3 rows ) and then attack whichever figure can win from the enemy
 
-        game.botWorldChampionship(b(DEFAULT_BOARD),10,100,false);
+        //game.botWorldChampionship(b(DEFAULT_BOARD),10,100,false);
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4
