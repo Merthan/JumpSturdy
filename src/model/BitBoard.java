@@ -789,6 +789,26 @@ public class BitBoard {
         return moveList.toArray(new byte[moveList.size()][]);
     }
 
+    private byte[][] generateSortedByteMovesForPiecesWithList(boolean isRed) {
+
+        List<byte[]> moveList = new ArrayList<>();
+        long ourPieces = (isRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red));
+        for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
+            if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
+                long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
+                for (byte toIndex = 0; toIndex < 63; toIndex++) {
+                    if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
+                        //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
+                        //moveArray[counter++] = ;
+                        moveList.add(new byte[]{fromIndex,toIndex});
+                    }
+                }
+            }
+
+        }
+        return moveList.toArray(new byte[moveList.size()][]);
+    }
+
     public void removePositionDebug(byte pos){
         redSingles &= ~(1L << pos);
         blueSingles&= ~(1L << pos);
