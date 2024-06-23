@@ -333,6 +333,48 @@ public class BitBoard {
         return WINNER_ONGOING;
     }
 
+    public void doMoveNoParse(byte[] move,boolean isRedTurn, boolean checkIfPossible){
+        if(preserveAllMoves){
+            byte[] addedMoves = new byte[previousMove.length+2];
+            System.arraycopy(previousMove, 0, addedMoves, 0, previousMove.length);
+            //Append
+            addedMoves[previousMove.length] = move[0];
+            addedMoves[previousMove.length + 1] = move[1];
+            previousMove = addedMoves;
+        }else{
+            previousMove = move;
+        }
+
+
+        if (checkIfPossible) {
+
+            if (isItRedsTurnByPositionOfPieces(move[0]) != isRedTurn) {
+                throw new IllegalMoveException("Player can't move enemy piece:"+move[0]+"-"+move[1]+" > "+Tools.parseMoveToString(move));
+            }
+            long possibleMoves = getPossibleMovesForIndividualPiece(move[0], isRedTurn);
+
+            if ((possibleMoves & (1L << move[1])) == 0) { //Move not included, index conversion
+                throw new IllegalMoveException("Move is not possible:" + move);
+            }
+        }
+        if (isRedTurn) {
+            if ((redDoubles != 0 && (redDoubles & (1L << move[0])) != 0)
+                    || (red_on_blue != 0 && (red_on_blue & (1L << move[0])) != 0)) {
+                moveDoublePiece(move[0], move[1], true);
+            } else {
+                moveSinglePiece(move[0], move[1], true);
+            }
+        } else {
+            if ((blueDoubles != 0 && (blueDoubles & (1L << move[0])) != 0)
+                    || (blue_on_red != 0 && (blue_on_red & (1L << move[0])) != 0)) {
+                moveDoublePiece(move[0], move[1], false);
+            } else {
+                moveSinglePiece(move[0], move[1], false);
+            }
+        }
+    }
+
+    @Deprecated
     public boolean doMove(String move, boolean isRedTurn, boolean checkIfPossible) {
         byte[] indices = parseMove(move);
         if(preserveAllMoves){
@@ -348,13 +390,13 @@ public class BitBoard {
         }
 
         if (isItRedsTurnByPositionOfPieces(indices[0]) != isRedTurn) {
-            throw new IllegalMoveException("Player can't move enemy piece:"+indices[0]+"-"+indices[1]+" > "+Tools.parseMoveToString(indices));
+            throw new BoardException(this,"Player can't move enemy piece:"+indices[0]+"-"+indices[1]+" > "+Tools.parseMoveToString(indices));
         }
         if (checkIfPossible) {
             long possibleMoves = getPossibleMovesForIndividualPiece(indices[0], isRedTurn);
 
             if ((possibleMoves & (1L << indices[1])) == 0) { //Move not included, index conversion
-                throw new IllegalMoveException("Move is not possible:" + move);
+                throw new BoardException(this,"Move is not possible:" + move);
             }
         }
         if (isRedTurn) {
@@ -909,15 +951,24 @@ public class BitBoard {
         StringBuilder sb = new StringBuilder();
         int start = -1;
         int end =-1;
-        String specialCharacter = null;
+        int previousStart =-1;
+        int previousEnd = -1;
+        String specialCharacter = "";
         if(previousMove.length!=0){
             start = previousMove[previousMove.length-2];
             end=previousMove[previousMove.length-1];
-            specialCharacter ="\u001B[47m"+ determineMoveEmoji(start,end)+RESET;
+            String moveEmoji = determineMoveEmoji(start,end);
+            specialCharacter =moveEmoji.isEmpty()?"":"\u001B[47m"+moveEmoji+ RESET;
+
+            if(previousMove.length>3){
+                previousStart = previousMove[previousMove.length-4];
+                previousEnd=previousMove[previousMove.length-3];
+            }
         }
 
+        int eval = eval();
         // Append column labels (A-H)
-        sb.append("   A  B  C  D   E  F  G  H\n");
+        sb.append("   A  B  C  D   E  F  G  H       History:").append(Tools.stringInColor("    Eval:"+eval,eval>=0)).append("   \t\t\t").append(toFEN()).append("\n");
 
         for (int row = 0; row < 8; row++) {
             // Append row number
@@ -934,8 +985,12 @@ public class BitBoard {
                     //sb.append("\u001B[35m");
                     sb.append("\u001B[47m");
                 }
-                if((specialCharacter!=null&&index == start)){ // ↘️ etc
-                    sb.append(specialCharacter);
+                if(index == previousStart||index==previousEnd){
+                    sb.append(Tools.getAnsiBackgroundColor(238));
+                }
+                if((!specialCharacter.isBlank()) &&index == start){ // ↘️ etc
+                    //System.out.println("Special:"+specialCharacter);
+                    sb.append(specialCharacter);//If not empty, append
                     sb.append("\u001B[0m ");
                     continue;
                 }
@@ -954,12 +1009,18 @@ public class BitBoard {
                 } else {
                     sb.append("⬜");
                 }
-                if((index == start || index == end) ){
+                if((index == start || index == end||index==previousStart||index==previousEnd) ){
                     sb.append("\u001B[0m");
                 }
                 sb.append(" ");//now moved here after reset so it doesnt include the s
             }
-            sb.append(" ").append(8 - row).append("\n"); // Append row number
+            boolean redDidLastMove = previousMove.length > 0 && isItRedsTurnByPositionOfPieces(previousMove[previousMove.length - 1]); //All complex code to show the previous moves in rows in colors
+            String rowMove = (previousMove.length>= ((8-row)*2))? Tools.parseMoveToString(new byte[]{previousMove[ previousMove.length-1- ((7-row)*2+1)  ],previousMove[ previousMove.length-1- (7-row)*2 ]}) : "";
+
+            //rowMove = (row % (redDidLastMove?2:1) == 0)? "\u001B[31m"+rowMove+ RESET : Tools.BLUE + rowMove+RESET;
+            rowMove = (row % 2 == (redDidLastMove?1:0))? "\u001B[31m"+rowMove+ RESET : Tools.BLUE + rowMove+RESET;
+
+            sb.append(" ").append(8 - row).append("   ").append(rowMove).append("\n"); // Append row number
         }
         sb.append("   A  B  C  D   E  F  G  H\n");
         return sb.toString();
@@ -977,7 +1038,7 @@ public class BitBoard {
         if(end-start==7)return "↙\uFE0F";
         if(end-start==-7)return "↗\uFE0F";
 
-        return null;
+        return "";
     }
 
 

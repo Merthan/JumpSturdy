@@ -142,6 +142,16 @@ public class Game {
         //Tools.printInColor("CanWin for " + (isRedTurn ? "Red" : "Blue") + " took nanos: " + endWin + " canWin> " + winningMovesParsed + Arrays.toString(winningMoves) + " canWinSimple :" + (simpleWinMove != null), Tools.CYAN);
     }
 
+    public void playVsBot(){ //Helpers
+        playVsBot(DEFAULT_BOARD);
+    }
+    public void playVsBot(String fen){
+        playVsBot(b(fen));
+    }
+    public void playVsBot(BitBoard board){
+        playVsBot(board,true);
+    }
+
     public void playVsBot(BitBoard board, boolean smartBot) {
 
 
@@ -188,11 +198,11 @@ public class Game {
 
             if (isValidMove(board, playerMove)) {
 
-                System.out.println("Before Move CanWin:");
+                //System.out.println("Before Move CanWin:");
                 testPreWinMoveDetection(board, isRedTurn);
                 // My Turn
                 isRedTurn = board.doMove(playerMove, isRedTurn, true);//Do and switch turn
-                System.out.println("After Move CanWin:");
+                //System.out.println("After Move CanWin:");
                 //testPreWinMoveDetection(board,isRedTurn);
                 //System.out.println("My move:");
                 Tools.printInColor("\t\t\uD83D\uDC68\u200D\uD83D\uDCBBMy move: " + playerMove, isRedTurn);
@@ -206,27 +216,6 @@ public class Game {
                     break;
                 }
 
-
-                // Bot Turn (Random Move)
-                if (!smartBot) {
-                    List<String> possibleMoves = board.getAllPossibleMoveStringsDeprecated(false);
-                    String botMove = "NONE";
-                    if (!possibleMoves.isEmpty()) {
-                        botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
-                        isRedTurn = board.doMove(botMove, isRedTurn, true);
-                    } else {
-                        isRedTurn = !isRedTurn;//Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
-                    }
-                    //System.out.println("Bot's move:");
-                    Tools.printInColor("\t\t\uD83E\uDD16Bot's move: " + botMove, false);
-                    System.out.println(board);
-
-
-                    System.out.println("Game evaluated:" + Evaluate.evaluateSimple(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    //System.out.println("Game evaluated blue:" + Evaluate.evaluateSimple(!isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
-                    // Check if there's a winner after the bot's move
-                    winner = board.currentWinningState();
-                }
                 // Bot's Turn (Smart Move)
                 else {
 
@@ -234,13 +223,18 @@ public class Game {
                     String botMove = "";
                     if (!possibleMoves.isEmpty()) {
                         //TODO: Experiment, change back perhaps
-                        List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
-                        Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
-                        botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
+                        if(!smartBot){
+                            botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
+                        }else{
+                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
+                            Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
+                            botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
+                        }
+
                         //analyzeMoveSequence(b(board.toFEN()), isRedTurn, moveSequence.stream().map(Tools::parseMoveToString).toArray(String[]::new));
                         isRedTurn = board.doMove(botMove, isRedTurn, true);
                     } else {
-                        //isRedTurn = !isRedTurn; //Change turn, dont move, keep rest the same. TODO: Maybe should immediately cancel game
+                        Tools.printRed("Game ended, no possible moves left");
                     }
                     Tools.printInColor("\t\t\uD83E\uDD16Bot's move: " + botMove, isRedTurn);
                     System.out.println(board);
@@ -373,7 +367,7 @@ public class Game {
 
     private void doTestsWithManipulatedBitBoard(BitBoard board, boolean isRedTurn, String playerMoveOrComment) {
         long start = System.nanoTime();
-        int evaluated = Evaluate.evaluateComplex(isRedTurn, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+        int evaluated = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         long end = System.nanoTime() - start;
 
         board.printCommented((isRedTurn ? "Red: " : "Blue: ") + playerMoveOrComment + "\nEvaluated score:" + evaluated + " in nanos: " + end);
@@ -448,6 +442,7 @@ public class Game {
     }
     static int botGameRedCounter =0;
     static int botGameBlueCounter =0;
+    long timeLimitStuckSearchMillis = 1000;
 
     public void advancedBotGame(BitBoard board, int millis, boolean onlyNewAlphaBeta,boolean onlyPrintFinishedBoards) {
         byte winner = BitBoard.WINNER_ONGOING;
@@ -457,8 +452,13 @@ public class Game {
         while (true) {
             //String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
             SturdyJumpersAI.TIME_LIMIT = millis * 1000000L;
-            String botMove = isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0)) : SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn)) : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));
 
+            String botMove = isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0)) : SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn)) : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));
+            if(board.previousMove.length>500&&isRedTurn){//If stuck/too many moves, we need a random element (only for one team)
+                List<String> possibleMoves = board.getAllPossibleMoveStringsDeprecated(isRedTurn);
+                botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
+                //System.out.println("Bot stuck, needed random turn");
+            }
             isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
 
             if(!onlyPrintFinishedBoards)board.printCommented((!isRedTurn ? "Red" : "Blue") + " move: " + botMove);
@@ -482,6 +482,9 @@ public class Game {
     }
 
     public void botWorldChampionship(BitBoard board,int millis,int reps,boolean onlyMerthansAlphaBeta){
+        if(!MerthanAlphaBetaExperiment.saveSequence||MerthanAlphaBetaExperiment.detailedLog||MerthanAlphaBetaExperiment.log){
+            throw new IllegalStateException("Wrong config, change the flags in MerthanAlphabeta to true,false,false");
+        }
         for (int i = 0; i < reps; i++) {
             //board = b(board.toFEN());//Object reference error otherwise
             advancedBotGame(b(board.toFEN()),millis,onlyMerthansAlphaBeta,true);
@@ -538,7 +541,7 @@ public class Game {
         //canWinWithMovesFusioned(true,board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
 
 
-        //TODO: STATE: TOO POSITIVE/NEGATIVE AT THE START; DONT KNOW WHY. Changed String to byte and unified maximizingplayer. Perhaps isRed/maximizing combo is wrong (typo, perhaps brute force combi). Maybe reference String/byte[] error too
+        //FIXED ALREADY: STATE: TOO POSITIVE/NEGATIVE AT THE START; DONT KNOW WHY. Changed String to byte and unified maximizingplayer. Perhaps isRed/maximizing combo is wrong (typo, perhaps brute force combi). Maybe reference String/byte[] error too
 
 
         //game.playVsBot(b("3b01b0/1b02b01b01/1r06/1r01b02b01/6r01/8/2r01r0r02/3r0r0r0"),true);//"3bb1b0/1b02b01b01/1r06/3r02b01/6r01/8/2r01r0r02/3r0r0r0"),true);
@@ -559,7 +562,7 @@ public class Game {
         //game.getAllPossibleMovesAndRateThem(b("b0b0b0b0b0b0/1r0b0b0b0b0b01/8/8/3b04/3r04/1r0r01r0rr2/1r0r0r0r0r0"), true);
 
         //game.isRedTurn = false;
-        BitBoard isolated3 = b("b05/r07/2b05/8/8/8/2r05/6");
+        //BitBoard isolated3 = b("b05/r07/2b05/8/8/8/2r05/6");
         //board = isolated3;
 /*        board =b("b0b0b0b0b0b0/1r0b0b0b0b0b01/8/8/3b04/3r04/1r0r01r0rr2/1r0r0r0r0r0");
         System.out.println(board.previousMoves());
@@ -607,11 +610,11 @@ public class Game {
 
         //game.playVsBot(b(DEFAULT_BOARD), true);
         //game.playVsBot(b("2b0b0b0b0/1b04b01/2b04r0/5b02/3r01rr2/8/b02r01r0r01/1r02r01"),true);
-        game.playVsBot(b("6/3b0b03/8/3r04/8/6b01/1r04r01/6"),true);
+        //game.playVsBot(b("6/3b0b03/8/3r04/8/6b01/1r04r01/6"),true);
+        //game.playVsBot("6/3b04/8/3r04/8/6b01/6r01/6");
 
-        //CURRENT STATE: isolated 3 for some reason doesnt have the problem anymore, board does. Maybe hardcode enemyNextMoveWin (eg possiblemoves last row, only if enemy is in last 3 rows ) and then attack whichever figure can win from the enemy
-
-        //game.botWorldChampionship(b(DEFAULT_BOARD),10,100,false);
+        //game.botWorldChampionship(b(DEFAULT_BOARD),10,100,true);
+        game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4

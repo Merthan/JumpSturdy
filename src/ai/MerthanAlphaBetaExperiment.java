@@ -61,6 +61,7 @@ public class MerthanAlphaBetaExperiment {
 
     static final boolean sortMovesBeforeEach =true;
 
+
     public static int counter =0;
     public static int endReachedCounter = 0;
     public static int miscCounter = 0;
@@ -89,7 +90,7 @@ public class MerthanAlphaBetaExperiment {
 
             if(depthZero){//If ruhesuche gets a value, return ruhesuche (doesnt take long)
                 //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
-                int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositions(board,maximizingPlayer):null;
+                int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositions(board,maximizingPlayer):null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 return (ruhesucheArray == null)? eval : ruhesucheArray[ruhesucheArray.length-1];
             }else{//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
@@ -107,14 +108,22 @@ public class MerthanAlphaBetaExperiment {
         }
 
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
-        List<byte[]> currentBestMoves = new ArrayList<>();
+        List<byte[]> currentBestMoves;
+        if(saveSequence){
+            currentBestMoves = new ArrayList<>();
+        }
 
         int evalBound = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;//These dont need the buffer variable
         for (byte[] move : moves) {
             BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
-
-            List<byte[]> childBestMoves = new ArrayList<>();
-            int eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, childBestMoves);
+            List<byte[]> childBestMoves;
+            int eval;
+            if(saveSequence){
+                childBestMoves= new ArrayList<>();
+                eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, childBestMoves);
+            }else{
+                eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, null);
+            }
             boolean condition = maximizingPlayer ? (eval > evalBound) : (eval < evalBound);
 
 /*            if(eval>2100000000){
@@ -132,9 +141,11 @@ public class MerthanAlphaBetaExperiment {
 
             if (condition) {
                 evalBound = eval;
-                currentBestMoves.clear();
-                currentBestMoves.add(move);
-                currentBestMoves.addAll(childBestMoves);
+                if(saveSequence){
+                    currentBestMoves.clear();
+                    currentBestMoves.add(move);
+                    currentBestMoves.addAll(childBestMoves);
+                }
                 //System.out.println("Debug: New best move: " + Tools.parseMoveToString(move) + " with eval " + evalBound+ "for max:"+maximizingPlayer);
             }
             if (maximizingPlayer) {
@@ -149,15 +160,20 @@ public class MerthanAlphaBetaExperiment {
 
 
         }
-        bestMoves.clear();
-        bestMoves.addAll(currentBestMoves);
+        if(saveSequence){
+            bestMoves.clear();
+            bestMoves.addAll(currentBestMoves);
+        }
+
+
         //System.out.println((maximizingPlayer ? "Maximizing" : "Minimizing") + " Player Best Moves: " + bestMoves);
         return evalBound;
     }
 
+    public final static boolean saveSequence = true;
 
-    public final static boolean log = true; //CHANGE WHEN NEEDED
-    public final static boolean detailedLog = true;
+    public final static boolean log = false; //CHANGE WHEN NEEDED
+    public final static boolean detailedLog = false;
 
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
         endTime = System.currentTimeMillis() + timeLimitMillis;
@@ -179,6 +195,7 @@ public class MerthanAlphaBetaExperiment {
         //without streams: 2061100n with streams: 2317900
         long start = System.nanoTime();
         //if(log) Tools.printRed("Before sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
+        //TODO: can be removed, no benefit I guess
         Arrays.sort(moves, Comparator.comparingInt(e -> (isRed?-1:1)* Evaluate.evaluateMoveComplex(isRed,e[0],e[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
         //if(log) Tools.printBlue("After sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
         if(detailedLog)System.out.println("Sorting took: "+(System.nanoTime()-start));
@@ -197,7 +214,8 @@ public class MerthanAlphaBetaExperiment {
 
             boolean didCompleteAndResultsAreValid = true;
 
-            for (byte[] move : moves) {
+            for (int i=0;i<moves.length;i++) {
+                byte[] move = moves[i];
 
                 BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move,isRed);
                 byte winState =executedMoveBoard.currentWinningState();
@@ -207,20 +225,24 @@ public class MerthanAlphaBetaExperiment {
                 }
 
                 //List<String> childBestMoves = new ArrayList<>();
-                List<byte[]> childBestMoves = new ArrayList<>();
+                List<byte[]> childBestMoves = null;
+                if(saveSequence)childBestMoves = new ArrayList<>();
+
                 int moveValue = alphaBeta(executedMoveBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, childBestMoves);
-                if(detailedLog)System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+childBestMoves.stream().map(Tools::parseMoveToString).toList());
+                if(detailedLog)System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+ (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
                 if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
                     currentBestValue = moveValue;
                     currentBestMoveSequence.clear();
                     currentBestMoveSequence.add(move);
                     //childBestMoves.stream().map(Tools::parseMove).toList()
-                    currentBestMoveSequence.addAll(childBestMoves);
+                    if(saveSequence)currentBestMoveSequence.addAll(childBestMoves);//Else we just add the move
                 }
 
                 if (System.currentTimeMillis() > endTime) {
                     didCompleteAndResultsAreValid = false;
-                    if(log)Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: "+Tools.byteListToMoveSequence(currentBestMoveSequence));
+                    if(log){
+                        Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: "+Tools.byteListToMoveSequence(currentBestMoveSequence)+" depth "+depth+", only completed "+i+"/"+moves.length+" last: "+Tools.parseMoveToString(move));
+                    }
                     break; // Time limit reached
                 }
             }

@@ -17,9 +17,38 @@ public class Tools {
     public static final String CYAN = "\u001B[36m";
     public static final String BOLD = "\u001B[1m";
 
+
+    public static String getAnsiColor(int colorCode) {
+        return "\u001B[38;5;" + colorCode + "m";
+    }
+    public static String getAnsiBackgroundColor(int colorCode) {
+        return "\u001B[48;5;" + colorCode + "m";
+    }
+
+    public static void main(String[] args) {
+
+        for (int i = 232; i <= 255; i++) {
+            System.out.print(getAnsiColor(i) + "Shade " + (i - 232) + " " + RESET);
+            if ((i - 232) % 6 == 5) {
+                System.out.println();
+            } else {
+                System.out.print("  ");
+            }
+        }
+        System.out.println(getAnsiColor(232) + "Very dark grey text" + RESET);
+        System.out.println(getAnsiColor(240) + "Medium grey text" + RESET);
+        System.out.println(getAnsiColor(246) + "Medium grey text 2" + RESET);
+        System.out.println(getAnsiColor(250) + "Light grey text" + RESET);
+    }
+
     public static void printInColor(String text, boolean isRed) {
         System.out.println((isRed ? RED : BLUE) + text + RESET);
     }
+
+    public static String stringInColor(String text, boolean isRed) {
+        return ((isRed ? RED : BLUE) + text + RESET);
+    }
+
     public static void printRed(String text){//easier to call often
         printInColor(text,true);
     }
@@ -375,3 +404,4 @@ class BitPackingComparison {
         return byteArray;
     }
 }
+

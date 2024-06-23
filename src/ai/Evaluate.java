@@ -40,7 +40,7 @@ public class Evaluate {
         }
     }
 
-
+    @Deprecated
     public static int evaluateSimple(boolean redsTurn, long r, long b, long rr, long bb, long br, long rb) {
         int pieceWorthValue = calculatePieceWorthValue(redsTurn, r, b, rr, bb, br, rb);
         int opponentPieceWorthValue = calculatePieceWorthValue(!redsTurn, r, b, rr, bb, br, rb);
@@ -52,6 +52,7 @@ public class Evaluate {
 
     public static final int MAXIMUM_WITH_BUFFER_POSITIVE = 2100000000;//High integer for showing close to win, this symbols close to winning for red and blue(negative)
 
+    @Deprecated
     public static int evaluateComplex(boolean isRed, long r, long b, long rr, long bb, long br, long rb) {
 /*        long ownSingles = isRed ? r : b;
         long enemySingles = isRed ? b : r;
@@ -81,7 +82,7 @@ public class Evaluate {
 
         //If winning imminent (no way to prevent by enemy side) TODO: not checking if enemy win imminent, but probably doesnt matter as... we cant prevent it anyways without going steps before
         if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
-            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(isRed, r, b, rr, bb, br, rb);
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(true, r, b, rr, bb, br, rb);//TODO: Changed from isRed to TRUE as well, probably fine
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
@@ -90,7 +91,8 @@ public class Evaluate {
         }
 
         if(blueFiguresThatCanWinIfPromotedAndCloseFigures!=0){
-            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(isRed, r, b, rr, bb, br, rb);
+            //TODO: Changed from isRed to FALSE, probably fixed some things
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(false, r, b, rr, bb, br, rb);
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
@@ -102,7 +104,7 @@ public class Evaluate {
         //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
         // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
         //doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
-        int pieceWorthValue = Long.bitCount(isRed ? r : b) + (2 * Long.bitCount(isRed ? rr : bb)) + 2 * Long.bitCount(isRed ? br : rb);
+/*        int pieceWorthValue = Long.bitCount(isRed ? r : b) + (2 * Long.bitCount(isRed ? rr : bb)) + 2 * Long.bitCount(isRed ? br : rb);
         int enemyPieceWorthValue = Long.bitCount(!isRed ? r : b) + (2 * Long.bitCount(!isRed ? rr : bb)) + 2 * Long.bitCount(!isRed ? br : rb);
 
         long attackedFrom = BitBoardManipulation.calculateAttackedPositions(!isRed, r, b, rr, bb, br, rb); // Checks if attacking more than being attacked
@@ -111,9 +113,18 @@ public class Evaluate {
         int attackedMoreThanEnemy = Long.bitCount(attacking)-Long.bitCount(attackedFrom);
 
         int distanceToEnd =  (isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
-        int enemyDistanceToEnd = (!isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
+        int enemyDistanceToEnd = (!isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse*/
 
+        int pieceWorthValue = Long.bitCount(r) + (2 * Long.bitCount(rr)) + 2 * Long.bitCount(br);
+        int enemyPieceWorthValue = Long.bitCount(b) + (2 * Long.bitCount(bb)) + 2 * Long.bitCount(rb);
 
+        long redAttackedFrom = BitBoardManipulation.calculateAttackedPositions(false, r, b, rr, bb, br, rb); // Checks if attacking more than being attacked
+        long redAttacking = BitBoardManipulation.calculateAttackedPositions(true, r, b, rr, bb, br, rb);
+
+        int attackedMoreThanEnemy = Long.bitCount(redAttacking)-Long.bitCount(redAttackedFrom);
+
+        int redDistanceToEnd =  (Long.numberOfLeadingZeros(redFigures))/8;//Reverse
+        int enemyDistanceToEnd = (Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
 
         int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(redFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(blueFiguresThatCanWinIfPromotedAndCloseFigures);
 
@@ -132,7 +143,91 @@ public class Evaluate {
         return (pieceWorthValue - enemyPieceWorthValue) +
                 (attackedMoreThanEnemy) +
                 //(8-distanceToEnd) +
-                (enemyDistanceToEnd-distanceToEnd)+
+                (enemyDistanceToEnd-redDistanceToEnd)+
+                (thirdLastRowMoreFiguresThanEnemy);
+    }
+
+    public static int evaluateComplex(long r, long b, long rr, long bb, long br, long rb) {
+/*        long ownSingles = isRed ? r : b;
+        long enemySingles = isRed ? b : r;
+        long ownDoubles = isRed ? rr : bb;
+        long enemyDoubles = isRed ? bb : rr;
+        long ownOnEnemy = isRed ? br : rb;
+        long enemyOnOwn = isRed ? rb : br;*/
+
+        long redFigures = (r|rr|br);
+        long blueFigures = (b|bb|rb);
+
+        //IF won
+        if((redFigures&bottomRowMask) != 0){
+            //return isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000; // MAX if won as red, else MIN as other side has won
+            return MAXIMUM_WITH_BUFFER_POSITIVE+10000; // MAX if won as red, else MIN as other side has won
+
+        } else if ((blueFigures & topRowMask) != 0) {
+            //return !isRed? MAXIMUM_WITH_BUFFER_POSITIVE+10000 : -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
+            return -MAXIMUM_WITH_BUFFER_POSITIVE-10000;
+        }
+
+        //Needs to be calculated to make canWin faster
+        //CHANGED to fixed colors as there was an error with handling the return value, now is super negative if blue is in lead and positive if red
+        long redFiguresThatCanWinIfPromotedAndCloseFigures = redFigures&secondThirdRowBottom;//Closer(goal) figures are handled before, so no need to include
+        long blueFiguresThatCanWinIfPromotedAndCloseFigures = blueFigures&secondThirdRowTop;
+
+
+        //If winning imminent (no way to prevent by enemy side) TODO: not checking if enemy win imminent, but probably doesnt matter as... we cant prevent it anyways without going steps before
+        if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(true, r, b, rr, bb, br, rb);//TODO: Changed from isRed to TRUE as well, probably fine
+            // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+            if(canWin!=null){
+                //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+                return (MAXIMUM_WITH_BUFFER_POSITIVE - (canWin.length-1));//2100000000
+            }
+        }
+
+        if(blueFiguresThatCanWinIfPromotedAndCloseFigures!=0){
+            //TODO: Changed from isRed to FALSE, probably fixed some things
+            byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(false, r, b, rr, bb, br, rb);
+            // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+            if(canWin!=null){
+                //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
+                return (-MAXIMUM_WITH_BUFFER_POSITIVE + (canWin.length-1));
+            }
+        }
+
+
+        //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
+        // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
+        //doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
+
+        int pieceWorthValue = Long.bitCount(r) + (2 * Long.bitCount(rr)) + 2 * Long.bitCount(br);
+        int enemyPieceWorthValue = Long.bitCount(b) + (2 * Long.bitCount(bb)) + 2 * Long.bitCount(rb);
+
+        long redAttackedFrom = BitBoardManipulation.calculateAttackedPositions(false, r, b, rr, bb, br, rb); // Checks if attacking more than being attacked
+        long redAttacking = BitBoardManipulation.calculateAttackedPositions(true, r, b, rr, bb, br, rb);
+
+        int attackedMoreThanEnemy = Long.bitCount(redAttacking)-Long.bitCount(redAttackedFrom);
+
+        int redDistanceToEnd =  (Long.numberOfLeadingZeros(redFigures))/8;//Reverse
+        int enemyDistanceToEnd = (Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
+
+        int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(redFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(blueFiguresThatCanWinIfPromotedAndCloseFigures);
+
+        //DEBUG: COMMENT OUT WHEN NOT NEEDED/ALPHABETA
+        //System.out.println("pieceWorthValue: " + pieceWorthValue);
+        //System.out.println("enemyPieceWorthValue: " + enemyPieceWorthValue);
+
+        //System.out.println("8 - distanceToEnd: " + (8 - distanceToEnd));
+
+/*        System.out.println("pieceWorthValue - enemyPieceWorthValue: " + (pieceWorthValue - enemyPieceWorthValue));
+        System.out.println("attackedMoreThanEnemy: " + attackedMoreThanEnemy);
+        System.out.println("distanceToEndMoreThanEnemy:"+(enemyDistanceToEnd-distanceToEnd));
+        System.out.println("thirdLastRowMoreFiguresThanEnemy: " + thirdLastRowMoreFiguresThanEnemy);*/
+        //if(true) return 0;
+
+        return (pieceWorthValue - enemyPieceWorthValue) +
+                (attackedMoreThanEnemy) +
+                //(8-distanceToEnd) +
+                (enemyDistanceToEnd-redDistanceToEnd)+
                 (thirdLastRowMoreFiguresThanEnemy);
     }
 
