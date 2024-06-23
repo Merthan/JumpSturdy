@@ -347,7 +347,7 @@ public class BitBoardManipulation {
         //TODO: remove the minus if evaluate is fixed to account for both teams
         //TODO: change return to what you guys might need, e.g. more than just evaluation int.
 
-        int eval = Evaluate.evaluateComplex(true, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]); /*Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
+        int eval = Evaluate.evaluateComplex( bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]); /*Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
                 Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);*/
 
         positionsAndAtTheEndScoreArray[positionsAndAtTheEndScoreArray.length - 1] = eval;

@@ -717,6 +717,10 @@ public class BitBoard {
         return generateByteMovesForPiecesWithList(isRed);
     }
 
+    public byte[][] getAllPossibleMovesByteSorted(boolean isRed){
+        return generateSortedByteMovesForPiecesWithList(isRed);
+    }
+
     /**
      * Generates a list of moves from a given set of pieces and their possible moves.
      * This method iterates through each bit of the pieces' bitboard, checks if a piece is present,
@@ -769,6 +773,7 @@ public class BitBoard {
      * More efficient version, no Text parsing. tested Performance difference seems to be 5x as fast
      *
      * **/
+
     private byte[][] generateByteMovesForPiecesWithList(boolean isRed) {
 
         List<byte[]> moveList = new ArrayList<>();
@@ -776,7 +781,7 @@ public class BitBoard {
         for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
             if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
                 long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
-                for (byte toIndex = 0; toIndex < 63; toIndex++) {
+                for (byte toIndex = 1; toIndex < 63; toIndex++) {
                     if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
                         //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
                         //moveArray[counter++] = ;
@@ -791,22 +796,40 @@ public class BitBoard {
 
     private byte[][] generateSortedByteMovesForPiecesWithList(boolean isRed) {
 
-        List<byte[]> moveList = new ArrayList<>();
+        List<byte[]> normalMoveList = new ArrayList<>();
+        List<byte[]> prioritizedMoveList = new ArrayList<>();
+
         long ourPieces = (isRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red));
-        for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
+        for (byte fromIndex = 62; fromIndex > 0; fromIndex--) {
+            if(fromIndex==7||fromIndex==56)continue;//Skip corners
             if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
                 long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
-                for (byte toIndex = 0; toIndex < 63; toIndex++) {
+                for (byte toIndex = 62; toIndex > 0; toIndex--) {
+                    if(toIndex==7||toIndex==56)continue;//Skip corners
                     if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
                         //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
                         //moveArray[counter++] = ;
-                        moveList.add(new byte[]{fromIndex,toIndex});
+                        int dif = (fromIndex-toIndex);
+                        dif= Math.abs(dif);
+/*                        if(dif == 7 || dif == 9){//Capture with single, good move
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else if(dif == 15||dif==17){//TwoForwardJump
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else{
+                            normalMoveList.add(new byte[]{fromIndex,toIndex});
+                        }*/
+                        if(dif == 7 || dif == 9||dif == 15||dif==17){//Capture with single, good move
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else{
+                            normalMoveList.add(new byte[]{fromIndex,toIndex});
+                        }
                     }
                 }
             }
 
         }
-        return moveList.toArray(new byte[moveList.size()][]);
+        prioritizedMoveList.addAll(normalMoveList);//Prioritized first
+        return prioritizedMoveList.toArray(new byte[normalMoveList.size()][]);
     }
 
     public void removePositionDebug(byte pos){

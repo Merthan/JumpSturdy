@@ -606,6 +606,26 @@ public class Game {
          *
          * Old
          * AlphaBeta method was called: 3757505 and end point reached/Evaluated: 3303276 cutoffs: 364744 misc0
+         *
+         *
+         * TODO: NEWEST, sorting test: c5 not sorted:
+         * AlphaBeta method was called: 8930918 and end point reached/Evaluated: 7658168 cutoffs: 1103311 misc0
+         * AlphaBeta method was called: 5227360 and end point reached/Evaluated: 4207683 cutoffs: 902868 misc0 sorted, again:
+         * AlphaBeta method was called: 8949236 and end point reached/Evaluated: 7717693 cutoffs: 1968893 misc0
+         * without twice:
+         * AlphaBeta method was called: 9100963 and end point reached/Evaluated: 7795321 cutoffs: 1132994 misc0
+         * AlphaBeta method was called: 12327250 and end point reached/Evaluated: 10649327 cutoffs: 2644621 misc0
+         *
+         * unsorted 2x c5
+         * AlphaBeta method was called: 11341098 and end point reached/Evaluated: 9811984 cutoffs: 2415897 misc0
+         * sorted
+         * AlphaBeta method was called: 9268867 and end point reached/Evaluated: 7960722 cutoffs: 2148366 misc0
+         *
+         * first: c5 sorted
+         * AlphaBeta method was called: 5580214 and end point reached/Evaluated: 4489894 cutoffs: 966462 misc0
+         * changed:
+         * AlphaBeta method was called: 5662183 and end point reached/Evaluated: 4547648 cutoffs: 989185 misc0
+         *
          * */
 
         //game.playVsBot(b(DEFAULT_BOARD), true);
@@ -614,7 +634,9 @@ public class Game {
         //game.playVsBot("6/3b04/8/3r04/8/6b01/6r01/6");
 
         //game.botWorldChampionship(b(DEFAULT_BOARD),10,100,true);
-        game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
+        //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
+
+        game.playVsBot();
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4

@@ -59,13 +59,21 @@ public class MerthanAlphaBetaExperiment {
         return byteArray;
     }
 
-    static final boolean sortMovesBeforeEach =true;
+
 
 
     public static int counter =0;
     public static int endReachedCounter = 0;
     public static int miscCounter = 0;
     public static int cutoffCounter = 0;
+
+
+    static final boolean sortMovesBeforeEach =true;
+
+    public final static boolean saveSequence = true;
+
+    public final static boolean log = true; //CHANGE WHEN NEEDED
+    public final static boolean detailedLog = false;
     public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer,List<byte[]> bestMoves) {
         if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
             //return 0; // Return a neutral value if time limit is reached
@@ -80,7 +88,7 @@ public class MerthanAlphaBetaExperiment {
 
         if (depthZero|| gameEnded ||canWin) {
             //TODO: isRed worked, now replaced by true
-            int eval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+            int eval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             endReachedCounter++;
             //Depth 0, to account for attacked pieces afterwards
             if(log && gameEnded){
@@ -99,13 +107,12 @@ public class MerthanAlphaBetaExperiment {
             //return eval;
         }
 
-        byte[][] moves = board.getAllPossibleMovesByte(maximizingPlayer);
-        if(sortMovesBeforeEach){
+        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer):board.getAllPossibleMovesByte(maximizingPlayer);
+/*        if(sortMovesBeforeEach){
             final int multiplier = (maximizingPlayer?-1:1);
             //Arrays.sort(moves, Comparator.comparingInt(e ->multiplier * Evaluate.evaluateMoveComplex(maximizingPlayer,e[0],e[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
             //moves = sortMovesPerformant(board,maximizingPlayer);
-
-        }
+        }*/
 
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves;
@@ -148,7 +155,9 @@ public class MerthanAlphaBetaExperiment {
                 }
                 //System.out.println("Debug: New best move: " + Tools.parseMoveToString(move) + " with eval " + evalBound+ "for max:"+maximizingPlayer);
             }
-            if (maximizingPlayer) {
+
+
+/*            if (maximizingPlayer) {
                 alpha = Math.max(alpha, eval);
             } else {
                 beta = Math.min(beta, eval);
@@ -156,9 +165,24 @@ public class MerthanAlphaBetaExperiment {
             if (beta <= alpha) {
                 cutoffCounter++;
                 break; // Alpha-Beta cutoff
+            }*/
+            if (maximizingPlayer) {
+                alpha = Math.max(alpha, eval);
+                if (eval >= beta) {
+                    cutoffCounter++;
+                    break;
+                }
+            } else {
+                beta = Math.min(beta, eval);
+                if (eval <= alpha) {
+                    cutoffCounter++;
+                    break;
+                }
             }
 
 
+            //AlphaBeta method was called: 9090503 and end point reached/Evaluated: 7787512 cutoffs: 1130481 misc0
+            //AlphaBeta method was called: 5868583 and end point reached/Evaluated: 4222722 cutoffs: 1505685 misc0
         }
         if(saveSequence){
             bestMoves.clear();
@@ -170,10 +194,7 @@ public class MerthanAlphaBetaExperiment {
         return evalBound;
     }
 
-    public final static boolean saveSequence = true;
 
-    public final static boolean log = false; //CHANGE WHEN NEEDED
-    public final static boolean detailedLog = false;
 
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
         endTime = System.currentTimeMillis() + timeLimitMillis;
@@ -191,7 +212,7 @@ public class MerthanAlphaBetaExperiment {
             }
         }
 
-        byte[][] moves = board.getAllPossibleMovesByte(isRed);
+        byte[][] moves = sortMovesBeforeEach? board.getAllPossibleMovesByteSorted(isRed): board.getAllPossibleMovesByte(isRed);
         //without streams: 2061100n with streams: 2317900
         long start = System.nanoTime();
         //if(log) Tools.printRed("Before sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
@@ -200,6 +221,7 @@ public class MerthanAlphaBetaExperiment {
         //if(log) Tools.printBlue("After sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
         if(detailedLog)System.out.println("Sorting took: "+(System.nanoTime()-start));
         //if(true)System.exit(0);
+        int lastIndexReached=0;
         for (int depth = 1; ; depth++) {
 
 
@@ -242,6 +264,7 @@ public class MerthanAlphaBetaExperiment {
                     didCompleteAndResultsAreValid = false;
                     if(log){
                         Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: "+Tools.byteListToMoveSequence(currentBestMoveSequence)+" depth "+depth+", only completed "+i+"/"+moves.length+" last: "+Tools.parseMoveToString(move));
+                        lastIndexReached=i;
                     }
                     break; // Time limit reached
                 }
@@ -268,7 +291,7 @@ public class MerthanAlphaBetaExperiment {
 
 
         if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
-        if(log)System.out.println("Depth Reached: " + bestDepthReached);
+        if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
         if(log)System.out.println("Current best valuee: " + currentBestValue);
         if(log)System.out.println("AlphaBeta method was called: " + counter+" and end point reached/Evaluated: "+endReachedCounter+ " cutoffs: "+cutoffCounter+" misc"+miscCounter);
         if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms");
