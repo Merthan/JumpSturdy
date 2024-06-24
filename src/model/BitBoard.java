@@ -428,7 +428,7 @@ public class BitBoard {
             long possibleMoves = getPossibleMovesForIndividualPiece(indices[0], isRedTurn);
 
             if ((possibleMoves & (1L << indices[1])) == 0) { //Move not included, index conversion
-                throw new BoardException(this,"Move is not possible:" + move);
+                throw new BoardException(this,"Move is not possible:" + move+" isred:"+isRedTurn);
             }
         }
         if (isRedTurn) {
@@ -1011,6 +1011,11 @@ public class BitBoard {
         newBoard.red_on_blue = bitBoards[4];
         newBoard.blue_on_red = bitBoards[5];
         return newBoard;
+    }
+
+    public void deleteRandomFigure(boolean fromRed){
+        byte index = Tools.getRandomIndex( (fromRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red)));
+        removePositionDebug(index);
     }
 
     @Deprecated

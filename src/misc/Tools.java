@@ -175,6 +175,22 @@ public class Tools {
         return possibleMoves.get(random.nextInt(possibleMoves.size()));
     }
 
+    public static byte getRandomIndex(long bitboard) {
+        List<Byte> indices = new ArrayList<>();
+        for (int i = 0; i < 64; i++) {
+            if ((bitboard & (1L << i)) != 0) {
+                indices.add((byte)i);
+            }
+        }
+
+        if (indices.isEmpty()) {
+            return -1; // No bits set to 1
+        }
+
+        Random random = new Random();
+        return indices.get(random.nextInt(indices.size()));
+    }
+
     // Utility method to shift bitboards for movement
     // TODO: Performance, checked and seems to be VERY similar to inline, so no further opt necessary after 0 check
     public static long shift(long bitboard, int offset) {

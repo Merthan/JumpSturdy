@@ -487,14 +487,16 @@ public class Game {
         }
     }
 
-    public void botWorldChampionship(BitBoard board,int millis,int reps,boolean onlyMerthansAlphaBeta){
+    public void botWorldChampionship(BitBoard board,int millis,int reps,boolean onlyMerthansAlphaBeta,boolean deleteOneRandom){
         if(!MerthanAlphaBetaExperiment.saveSequence||MerthanAlphaBetaExperiment.detailedLog||MerthanAlphaBetaExperiment.log){
             //throw new IllegalStateException("Wrong config, change the flags in MerthanAlphabeta to true,false,false");
         }
         for (int i = 0; i < reps; i++) {
             //board = b(board.toFEN());//Object reference error otherwise
+            BitBoard b = b(board.toFEN());
+            if(deleteOneRandom) b.deleteRandomFigure(false);
             System.out.println("Game ["+(i+1)+"/"+reps+"]");
-            advancedBotGame(b(board.toFEN()),millis,onlyMerthansAlphaBeta,true,true);
+            advancedBotGame(b,millis,onlyMerthansAlphaBeta,true,true);
 
         }
 
@@ -682,9 +684,14 @@ public class Game {
         //game.playVsBot(b("6/3b0b03/8/3r04/8/6b01/1r04r01/6"),true);
         //game.playVsBot("6/3b04/8/3r04/8/6b01/6r01/6");
 
-        game.botWorldChampionship(b(DEFAULT_BOARD),50,10,true);
-        //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
+        //game.botWorldChampionship(b("1b03b0/r0b02bb1b01/3b02r01/8/8/3r0b03/1r06/r0r02r01"),100,10,false);
+        //game.botWorldChampionship(b("1b03b0/r0b02bb1b01/3b02r01/8/8/3r0b03/1r06/r0r02r01"),60,100,false,true);
 
+        //BitBoard b= b(DEFAULT_BOARD);
+        //b.deleteRandomFigure(false);
+        //b.print();
+        //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
+        game.playVsBot();
         //game.playVsBot();
         //game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true);
         //game.manipulateAndTestBoard(b("br4b0/5b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0"),false);

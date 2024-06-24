@@ -183,7 +183,7 @@ public class Evaluate {
             int enemyCanWinResult=10;//10 so its never the case (own win returned) unless set
             if(blueFiguresThatCanWinIfPromotedAndCloseFigures!=0){
                 byte[] enemyCanWin = canWinWithMovesFusioned(false, r, b, rr, bb, br, rb);
-                enemyCanWinResult = enemyCanWin==null?0:enemyCanWin.length;
+                enemyCanWinResult = enemyCanWin==null?10:enemyCanWin.length;
             }
 
             if(canWin!=null){
@@ -204,7 +204,7 @@ public class Evaluate {
             int enemyCanWinResult=10;
             if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){
                 byte[] enemyCanWin = canWinWithMovesFusioned(true, r, b, rr, bb, br, rb);
-                enemyCanWinResult = enemyCanWin==null?0:enemyCanWin.length;
+                enemyCanWinResult = enemyCanWin==null?10:enemyCanWin.length;
             }
 
             if(canWin!=null){

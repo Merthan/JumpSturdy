@@ -83,9 +83,9 @@ public class MerthanAlphaBetaExperiment {
         }
         counter++;
 
-        if(board.previousMoves().contains("C1-B1")){
+/*        if(board.previousMoves().contains("C1-B1")){
             Math.abs(0);
-        }
+        }*/
 
 
         boolean canWin = null != BitBoardManipulation.canWinWithMovesFusioned(maximizingPlayer, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
@@ -437,10 +437,14 @@ public class MerthanAlphaBetaExperiment {
                 }
 
                 //List<String> childBestMoves = new ArrayList<>();
-
+                if(depth>=1000){
+                    //Math.abs(0);
+                    BitBoard.fromLongArray(executedMoveBoard).printCommented("depth too high"+Tools.movesToString(moves)+" >>"+ (winningMoves != null ? winningMoves.length : -1));
+                    //System.exit(0);
+                }
 
                 int moveValue = alphaBetaLessObjects(depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, executedMoveBoard[0],executedMoveBoard[1],executedMoveBoard[2],executedMoveBoard[3],executedMoveBoard[4],executedMoveBoard[5]);
-                if(detailedLog)System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:empty");
+                if(detailedLog)System.out.println("|AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:empty");
                 if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
                     currentBestValue = moveValue;
                     currentBestMoveSequence.clear();
@@ -449,11 +453,7 @@ public class MerthanAlphaBetaExperiment {
                     //if(saveSequence)currentBestMoveSequence.addAll(childBestMoves);//Else we just add the move
                 }
 
-                if(depth>25000){
-                    Math.abs(0);
-                    //BitBoard.fromLongArray(executedMoveBoard).printCommented("depth too high"+Tools.movesToString(moves)+" >>"+ (winningMoves != null ? winningMoves.length : -1));
-                    //System.exit(0);
-                }
+
 
                 if (System.currentTimeMillis() > endTime) {//TODO: BUG; WHEN NOT SET TO && FALSE; TOO MUCH DEPTH
                     didCompleteAndResultsAreValid = false;
