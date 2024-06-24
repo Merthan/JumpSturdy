@@ -178,9 +178,19 @@ public class Evaluate {
         if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){ // If there are ANY, then we can check as its possible. However this doesnt guarantee canWin so if false we continue with normal eval below
             byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(true, r, b, rr, bb, br, rb);//TODO: Changed from isRed to TRUE as well, probably fine
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+
+            //Update: Added enemy canWin result if both are in a canWin situation just in case, then whichever is smaller(less moves) is the definitive one
+            int enemyCanWinResult=10;//10 so its never the case (own win returned) unless set
+            if(blueFiguresThatCanWinIfPromotedAndCloseFigures!=0){
+                byte[] enemyCanWin = canWinWithMovesFusioned(false, r, b, rr, bb, br, rb);
+                enemyCanWinResult = enemyCanWin==null?0:enemyCanWin.length;
+            }
+
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
-                return (MAXIMUM_WITH_BUFFER_POSITIVE - (canWin.length-1));//2100000000
+
+                //Now if enemy can win in less moves, we dont get a high rating anymore
+                return enemyCanWinResult>(canWin.length)? (MAXIMUM_WITH_BUFFER_POSITIVE - (canWin.length-1)) : (-MAXIMUM_WITH_BUFFER_POSITIVE + (enemyCanWinResult -1));//2100000000
             }
         }
 
@@ -188,9 +198,18 @@ public class Evaluate {
             //TODO: Changed from isRed to FALSE, probably fixed some things
             byte[] canWin = BitBoardManipulation.canWinWithMovesFusioned(false, r, b, rr, bb, br, rb);
             // If we can win, dont return MAX Value as not won yet (move remaining, dont say winning is worth the same) but make it obvious by using max-1
+
+
+            //Update: Added enemy canWin result if both are in a canWin situation just in case, then whichever is smaller(less moves) is the definitive one
+            int enemyCanWinResult=10;
+            if(redFiguresThatCanWinIfPromotedAndCloseFigures!=0){
+                byte[] enemyCanWin = canWinWithMovesFusioned(true, r, b, rr, bb, br, rb);
+                enemyCanWinResult = enemyCanWin==null?0:enemyCanWin.length;
+            }
+
             if(canWin!=null){
                 //return isRed?(Integer.MAX_VALUE- (canWin.length-1)):(Integer.MIN_VALUE+(canWin.length-1));//if 2 turns away (length 3), length-2 else if 1 turn away -1 (also so that is more favorable)
-                return (-MAXIMUM_WITH_BUFFER_POSITIVE + (canWin.length-1));
+                return enemyCanWinResult>(canWin.length)?(-MAXIMUM_WITH_BUFFER_POSITIVE + (canWin.length-1)) : (MAXIMUM_WITH_BUFFER_POSITIVE - (enemyCanWinResult-1));
             }
         }
 

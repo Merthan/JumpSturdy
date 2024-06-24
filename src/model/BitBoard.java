@@ -333,6 +333,38 @@ public class BitBoard {
         return WINNER_ONGOING;
     }
 
+    public static byte currentWinningStateStaticOptimized(long r, long b, long rr, long bb, long br, long rb) {
+        // Define masks for the top and bottom rows
+
+        long bluePieces = b| bb | rb;
+        long redPieces = r | rr | br;
+
+        // Check if any blue piece is in the top row or no red pieces
+        if ((bluePieces & topRowMask) != 0 || redPieces == 0) {
+            return WINNER_BLUE;
+        }
+        // Check if any red piece is in the bottom row or no blue pieces
+        else if ((redPieces & bottomRowMask) != 0 || bluePieces == 0) {
+            return WINNER_RED;
+        }
+        //TODO: changed the next part, lets just check if there are figures left, contest they would lose anyways and here it probably doesnt matter? Weird errors but performance gain
+
+
+/*        // Check if there are any possible moves for blue
+        else if (getPossibleMovesForTeam(false) == 0) {
+            // Check if there are any possible moves for red, if no -> draw
+            if (getPossibleMovesForTeam(true) == 0) return WINNER_DRAW;
+            else return WINNER_RED;
+        }
+        // Check if there are any possible moves for red
+        else if (getPossibleMovesForTeam(true) == 0) {
+            // Check if there are any possible moves for blue, if no -> draw
+            if (getPossibleMovesForTeam(false) == 0) return WINNER_DRAW;
+            else return WINNER_BLUE;
+        }*/
+        return WINNER_ONGOING;
+    }
+
     public void doMoveNoParse(byte[] move,boolean isRedTurn, boolean checkIfPossible){
         if(preserveAllMoves){
             byte[] addedMoves = new byte[previousMove.length+2];
@@ -832,6 +864,66 @@ public class BitBoard {
         return prioritizedMoveList.toArray(new byte[normalMoveList.size()][]);
     }
 
+    public static byte[][] generateSortedByteMovesForPiecesWithListStatic(boolean isRed,long r, long b, long rr, long bb, long br, long rb) {
+
+        List<byte[]> normalMoveList = new ArrayList<>();
+        List<byte[]> prioritizedMoveList = new ArrayList<>();
+
+        long ourPieces = (isRed?(r|rr|br):(b|bb|rb));
+        for (byte fromIndex = 62; fromIndex > 0; fromIndex--) {
+            if(fromIndex==7||fromIndex==56)continue;//Skip corners
+            if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
+                long moves = getPossibleMovesForIndividualPieceStatic(fromIndex,isRed,r,b,rr,bb,br,rb);
+                for (byte toIndex = 62; toIndex > 0; toIndex--) {
+                    if(toIndex==7||toIndex==56)continue;//Skip corners
+                    if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
+                        //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
+                        //moveArray[counter++] = ;
+                        int dif = (fromIndex-toIndex);
+                        dif= Math.abs(dif);
+/*                        if(dif == 7 || dif == 9){//Capture with single, good move
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else if(dif == 15||dif==17){//TwoForwardJump
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else{
+                            normalMoveList.add(new byte[]{fromIndex,toIndex});
+                        }*/
+                        if(dif == 7 || dif == 9||dif == 15||dif==17){//Capture with single, good move
+                            prioritizedMoveList.add(new byte[]{fromIndex,toIndex});
+                        }else{
+                            normalMoveList.add(new byte[]{fromIndex,toIndex});
+                        }
+                    }
+                }
+            }
+
+        }
+        prioritizedMoveList.addAll(normalMoveList);//Prioritized first
+        return prioritizedMoveList.toArray(new byte[normalMoveList.size()][]);
+    }
+
+    public static long getPossibleMovesForIndividualPieceStatic(byte index, boolean isRed,long r, long b, long rr, long bb, long br, long rb) {
+        long singlePieceMask = 1L << index;
+        //long moves = 0L;
+
+        // Überprüfen, ob es sich um einen Einzelstein handelt
+        if (((isRed ? r : b) & singlePieceMask) != 0) {
+            // Erzeuge ein Bitboard, das nur diesen Stein enthält
+            // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Stein zu ermitteln
+            return BitBoardManipulation.getPossibleMovesSingles(singlePieceMask, isRed,r,b,rr,bb,br,rb);
+        }
+
+        // Überprüfen, ob es sich um einen Doppelstein handelt
+        if (((isRed ? (rr | br) : (bb | rb)) & singlePieceMask) != 0) {
+            // Erzeuge ein Bitboard, das nur diesen Stein enthält
+
+            // Rufe die vorhandene Methode auf, um mögliche Züge für diesen einen Doppelstein zu ermitteln
+            return BitBoardManipulation.getPossibleMovesDoubles(singlePieceMask, isRed,r,b,rr,bb,br,rb);
+        }
+        throw new IllegalStateException("index"+index +" doesnt fit any figure type");
+        //Removed move variable, returning directly as cant be both single and double
+    }
+
     public void removePositionDebug(byte pos){
         redSingles &= ~(1L << pos);
         blueSingles&= ~(1L << pos);
@@ -895,6 +987,17 @@ public class BitBoard {
         newBoard.blueDoubles = bitBoards[3];
         newBoard.red_on_blue = bitBoards[4];
         newBoard.blue_on_red = bitBoards[5];
+        return newBoard;
+    }
+
+    public static BitBoard fromLongs(long r, long b, long rr, long bb, long br, long rb){
+        BitBoard newBoard = new BitBoard();
+        newBoard.redSingles = r;
+        newBoard.blueSingles =b;
+        newBoard.redDoubles = rr;
+        newBoard.blueDoubles =bb;
+        newBoard.red_on_blue =br;
+        newBoard.blue_on_red =rb;
         return newBoard;
     }
 

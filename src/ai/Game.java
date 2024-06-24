@@ -61,7 +61,7 @@ public class Game {
                     if (resultNew[i] == 0) break; // End reached, no indexes
                 }
             }
-            System.out.println("RuhesucheWithPos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length - 1]));
+            System.out.println("Pos took nanos " + (endNew) + " and result eval is:" + (resultNew == null ? " NONE " : "" + resultNew[resultNew.length - 1]));
 
 
             Tools.printInColor("Enter your move ⬇\uFE0F \t\t\tOr Modify: (add f5 rr) (remove f4)" + player, "\u001B[5m");
@@ -227,6 +227,7 @@ public class Game {
                             botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
                         }else{
                             List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
+                            //List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, 2000,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
                             Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
                             botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
                         }
@@ -367,7 +368,7 @@ public class Game {
 
     private void doTestsWithManipulatedBitBoard(BitBoard board, boolean isRedTurn, String playerMoveOrComment) {
         long start = System.nanoTime();
-        int evaluated = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+        int evaluated = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         long end = System.nanoTime() - start;
 
         board.printCommented((isRedTurn ? "Red: " : "Blue: ") + playerMoveOrComment + "\nEvaluated score:" + evaluated + " in nanos: " + end);
@@ -444,16 +445,21 @@ public class Game {
     static int botGameBlueCounter =0;
     long timeLimitStuckSearchMillis = 1000;
 
-    public void advancedBotGame(BitBoard board, int millis, boolean onlyNewAlphaBeta,boolean onlyPrintFinishedBoards) {
+    public void advancedBotGame(BitBoard board, int millis, boolean onlyNewAlphaBeta,boolean onlyPrintFinishedBoards,boolean newVsNewNoObjects) {
         byte winner = BitBoard.WINNER_ONGOING;
-        int oldEval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+        int oldEval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red);
         if(!onlyPrintFinishedBoards)board.printCommented("timedBotGameStart");
         while (true) {
             //String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
             SturdyJumpersAI.TIME_LIMIT = millis * 1000000L;
 
-            String botMove = isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0)) : SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn)) : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));
+            String botMove=isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((
+                    newVsNewNoObjects?new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, millis,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)
+                            :new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0))
+                    : SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn))
+                    : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));
+
             if(board.previousMove.length>500&&isRedTurn){//If stuck/too many moves, we need a random element (only for one team)
                 List<String> possibleMoves = board.getAllPossibleMoveStringsDeprecated(isRedTurn);
                 botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
@@ -462,7 +468,7 @@ public class Game {
             isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
 
             if(!onlyPrintFinishedBoards)board.printCommented((!isRedTurn ? "Red" : "Blue") + " move: " + botMove);
-            int newEval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+            int newEval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                     board.red_on_blue, board.blue_on_red);
 
             if(!onlyPrintFinishedBoards)Tools.printInColor("Move: " + botMove + " new eval:" + newEval + " change: " + (newEval - oldEval), !isRedTurn);
@@ -483,11 +489,12 @@ public class Game {
 
     public void botWorldChampionship(BitBoard board,int millis,int reps,boolean onlyMerthansAlphaBeta){
         if(!MerthanAlphaBetaExperiment.saveSequence||MerthanAlphaBetaExperiment.detailedLog||MerthanAlphaBetaExperiment.log){
-            throw new IllegalStateException("Wrong config, change the flags in MerthanAlphabeta to true,false,false");
+            //throw new IllegalStateException("Wrong config, change the flags in MerthanAlphabeta to true,false,false");
         }
         for (int i = 0; i < reps; i++) {
             //board = b(board.toFEN());//Object reference error otherwise
-            advancedBotGame(b(board.toFEN()),millis,onlyMerthansAlphaBeta,true);
+            System.out.println("Game ["+(i+1)+"/"+reps+"]");
+            advancedBotGame(b(board.toFEN()),millis,onlyMerthansAlphaBeta,true,true);
 
         }
 
@@ -626,6 +633,48 @@ public class Game {
          * changed:
          * AlphaBeta method was called: 5662183 and end point reached/Evaluated: 4547648 cutoffs: 989185 misc0
          *
+         *
+         * With bitboard move saving:
+         * AlphaBeta called: 9031233 End Evaluated: 7913075 Cuts: 963584 Depth Reached: 6 and last index was 15/34 misc:47 d6
+         * AlphaBeta called: 13171061 End Evaluated: 12083378 Cuts: 1898237 Depth Reached: 6 and last index was 7/34 misc:23 d5
+         *
+         * without Bitboard full move saving (arraycopy):
+         * AlphaBeta called: 9521233 End Evaluated: 8323700 Cuts: 1035474 Depth Reached: 6 and last index was 17/34 misc: depth6: 52%
+         * AlphaBeta called: 14355913 End Evaluated: 13181843 Cuts: 2045453 Depth Reached: 6 and last index was 8/34 misc: depth6: 26%
+         *
+         * --
+         * AlphaBeta called: 8461647 End Evaluated: 7420542 Cuts: 894307 Depth Reached: 6 and last index was 13/34 misc: depth6: 41%
+         * AlphaBeta called: 7931292 End Evaluated: 6987053 Cuts: 805674 Depth Reached: 6 and last index was 11/34 misc: depth6: 35%
+         *
+         * old:
+         * AlphaBeta called: 8414508 End Evaluated: 7397172 Cuts: 871292 Depth Reached: 6 and last index was 13/34 misc: depth6: 41%
+         *
+         * AlphaBeta called: 7725516 End Evaluated: 6805230 Cuts: 784943 Depth Reached: 6 and last index was 11/34 misc: depth6: 35%
+         *
+         * newd5 : old cutoffs were better than previous commit?
+         * AlphaBeta called: 10570592 End Evaluated: 9717529 Cuts: 1509383 Depth Reached: 6 and last index was 3/34 misc: depth6: 11%
+         * old d5
+         * AlphaBeta called: 11023004 End Evaluated: 10139485 Cuts: 1572455 Depth Reached: 6 and last index was 4/34 misc: depth6: 14%
+         *
+         *
+         * Now testing without objects:
+         * with: d6 d5
+         * AlphaBeta called: 8686829 End Evaluated: 7614461 Cuts: 921912 Depth Reached: 6 and last index was 14/34 misc: depth6: 44%
+         * AlphaBeta called: 12990214 End Evaluated: 11929278 Cuts: 1831337 Depth Reached: 6 and last index was 7/34 misc: depth6: 23%
+         * without objects:
+         * AlphaBeta called: 9807400 End Evaluated: 8563381 Cuts: 1077828 Depth Reached: 6 and last index was 18/34 misc: depth6: 55%
+         * AlphaBeta called: 16222713 End Evaluated: 14940830 Cuts: 2182827 Depth Reached: 6 and last index was 9/34 misc: depth6: 29%
+         *
+         * Tournament:
+         * Red Won:45
+         * Blue Won:55
+         *
+         *
+         *
+         * 100millis, 3 reps
+         * Red Won:1
+         * Blue Won:2
+         *
          * */
 
         //game.playVsBot(b(DEFAULT_BOARD), true);
@@ -633,10 +682,17 @@ public class Game {
         //game.playVsBot(b("6/3b0b03/8/3r04/8/6b01/1r04r01/6"),true);
         //game.playVsBot("6/3b04/8/3r04/8/6b01/6r01/6");
 
-        //game.botWorldChampionship(b(DEFAULT_BOARD),10,100,true);
+        game.botWorldChampionship(b(DEFAULT_BOARD),50,10,true);
         //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
 
-        game.playVsBot();
+        //game.playVsBot();
+        //game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true);
+        //game.manipulateAndTestBoard(b("br4b0/5b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0"),false);
+
+        // error: b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0
+
+        //game.playVsBot("b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0");
+
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4

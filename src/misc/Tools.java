@@ -49,6 +49,12 @@ public class Tools {
         return ((isRed ? RED : BLUE) + text + RESET);
     }
 
+    public static long previousTime = 0;
+    public static void timed(String comment){
+        Tools.printRed(comment+"| NANOS since last call: "+(System.nanoTime()-previousTime));
+        previousTime = System.nanoTime();
+    }
+
     public static void printRed(String text){//easier to call often
         printInColor(text,true);
     }
@@ -143,6 +149,12 @@ public class Tools {
         byte toIndex = positionToIndex(parts[1]);
         // Return the indices as an array
         return new byte[]{fromIndex, toIndex};
+    }
+
+    public static String movesToString(byte[][] moves){
+        return Arrays.stream(moves)
+                .map(Tools::parseMoveToString)
+                .collect(Collectors.joining(","));
     }
 
     public static String byteListToMoveSequence(List<byte[]> moves){
