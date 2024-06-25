@@ -1056,8 +1056,10 @@ public class BitBoard {
                     red_on_blue, blue_on_red),move);
         }
 
+    }
 
-
+    public long[] getPlayer(boolean isRed){
+        return isRed ? new long[]{redSingles, redDoubles, red_on_blue} : new long[]{blueSingles, blueDoubles, blue_on_red};
     }
 
     public static void main(String[] args) {

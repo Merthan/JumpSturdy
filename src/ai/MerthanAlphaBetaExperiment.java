@@ -16,6 +16,13 @@ public class MerthanAlphaBetaExperiment {
 
     public long endTime;
     public int bestDepthReached;
+    private final ZobristHashing zobristHashing;
+    private final TranspositionTable transpositionTable;
+
+    public MerthanAlphaBetaExperiment() {
+        zobristHashing = new ZobristHashing();
+        transpositionTable = new TranspositionTable();
+    }
 
 
 /*        //TODO REMOVE
@@ -59,71 +66,99 @@ public class MerthanAlphaBetaExperiment {
         return byteArray;
     }
 
-
-
-
     public static int counter =0;
     public static int endReachedCounter = 0;
     public static int miscCounter = 0;
     public static int cutoffCounter = 0;
 
 
-    static final boolean sortMovesBeforeEach =true;
-
+    static final boolean sortMovesBeforeEach = true;
+    static final boolean useTranspositionTable = false; //switch Transposition Table
     public final static boolean saveSequence = false;
 
-    public final static boolean log = false; //CHANGE WHEN NEEDED
+    public final static boolean log = true; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
 
     public static long ruhesucheTime=0;
-    public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer,List<byte[]> bestMoves) {
+
+    public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer, List<byte[]> bestMoves) {
         if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
             //return 0; // Return a neutral value if time limit is reached
-            return maximizingPlayer? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
+            return maximizingPlayer ? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
         }
+
+        long zobristKey = 0;
+        if (useTranspositionTable) {
+
+            TranspositionTable.TranspositionEntry entry = null;
+            zobristKey = zobristHashing.generateZobristKey(board);
+            entry = transpositionTable.get(zobristKey);
+
+            if (entry != null && entry.depth >= depth) {
+                if (entry.alpha == entry.beta) {
+                    if (bestMoves != null && entry.bestMove != null) {
+                        bestMoves.add(entry.bestMove);
+                    }
+                    return entry.value; // Exakte Übereinstimmung
+                }
+                if (entry.alpha > alpha) {
+                    alpha = entry.alpha; // Obergrenze anpassen
+                }
+                if (entry.beta < beta) {
+                    beta = entry.beta; // Untergrenze anpassen
+                }
+                if (alpha >= beta) {
+                    if (bestMoves != null && entry.bestMove != null) {
+                        bestMoves.clear();
+                        bestMoves.add(entry.bestMove);
+                    }
+                    return entry.value; // Beta-Cutoff
+                }
+            }
+        }
+
         counter++;
 
 /*        if(board.previousMoves().contains("C1-B1")){
             Math.abs(0);
         }*/
 
-
         boolean canWin = null != BitBoardManipulation.canWinWithMovesFusioned(maximizingPlayer, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         boolean depthZero = depth == 0;
         boolean gameEnded = board.currentWinningState() != BitBoard.WINNER_ONGOING;
 
-        if (depthZero|| gameEnded ||canWin) {
+        if (depthZero || gameEnded || canWin) {
             //TODO: isRed worked, now replaced by true
             int eval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             endReachedCounter++;
             //Depth 0, to account for attacked pieces afterwards
-            if(log && gameEnded){
+            if (log && gameEnded) {
                 //board.printCommented("GameEnded at depth "+depth+ " state:"+board.currentWinningState());
                 //System.out.println(board.eval() + board.previousMoves()+counter);
             }
 
-            if(depthZero){//If ruhesuche gets a value, return ruhesuche (doesnt take long)
+            if (depthZero) {//If ruhesuche gets a value, return ruhesuche (doesnt take long)
 
                 //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
                 //int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositionsOptimized(board,maximizingPlayer):null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 //System.out.println(ruhesucheTime);
                 long start = System.currentTimeMillis();
-                int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositions(board,maximizingPlayer):null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
-                ruhesucheTime += System.currentTimeMillis()-start;
-                return (ruhesucheArray == null)? eval : ruhesucheArray[ruhesucheArray.length-1];
+                int[] ruhesucheArray = (Math.abs(eval) < 2000000000) ? BitBoardManipulation.ruhesucheWithPositions(board, maximizingPlayer) : null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
+                ruhesucheTime += System.currentTimeMillis() - start;
+                return (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
 /*                int ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesuche(board,maximizingPlayer):BitBoardManipulation.RUHESUCHE_NOT_PERFORMED; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 ruhesucheTime += System.nanoTime()-start;
                 return (ruhesucheArray == BitBoardManipulation.RUHESUCHE_NOT_PERFORMED)? eval : ruhesucheArray;*/
 
-            }else{//Aka canWin || gameEnded
+            } else {//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
-                return maximizingPlayer?(eval+depth):(eval-depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
+                return maximizingPlayer ? (eval + depth) : (eval - depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
             //return eval;
         }
 
-        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer):board.getAllPossibleMovesByte(maximizingPlayer);
-/*        if(sortMovesBeforeEach){
+        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+        /*  if(sortMovesBeforeEach){
             final int multiplier = (maximizingPlayer?-1:1);
             //Arrays.sort(moves, Comparator.comparingInt(e ->multiplier * Evaluate.evaluateMoveComplex(maximizingPlayer,e[0],e[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
             //moves = sortMovesPerformant(board,maximizingPlayer);
@@ -131,7 +166,7 @@ public class MerthanAlphaBetaExperiment {
 
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves;
-        if(saveSequence){
+        if (saveSequence) {
             currentBestMoves = new ArrayList<>();
         }
 
@@ -140,10 +175,10 @@ public class MerthanAlphaBetaExperiment {
             BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
             List<byte[]> childBestMoves;
             int eval;
-            if(saveSequence){
-                childBestMoves= new ArrayList<>();
+            if (saveSequence) {
+                childBestMoves = new ArrayList<>();
                 eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, childBestMoves);
-            }else{
+            } else {
                 eval = alphaBeta(executedMoveBoard, depth - 1, alpha, beta, !maximizingPlayer, null);
             }
             boolean condition = maximizingPlayer ? (eval > evalBound) : (eval < evalBound);
@@ -163,7 +198,7 @@ public class MerthanAlphaBetaExperiment {
 
             if (condition) {
                 evalBound = eval;
-                if(saveSequence){
+                if (saveSequence) {
                     currentBestMoves.clear();
                     currentBestMoves.add(move);
                     currentBestMoves.addAll(childBestMoves);
@@ -184,17 +219,20 @@ public class MerthanAlphaBetaExperiment {
             //AlphaBeta method was called: 9090503 and end point reached/Evaluated: 7787512 cutoffs: 1130481 misc0
             //AlphaBeta method was called: 5868583 and end point reached/Evaluated: 4222722 cutoffs: 1505685 misc0
         }
-        if(saveSequence){
+        if (saveSequence) {
             bestMoves.clear();
             bestMoves.addAll(currentBestMoves);
         }
 
 
         //System.out.println((maximizingPlayer ? "Maximizing" : "Minimizing") + " Player Best Moves: " + bestMoves);
+        if (useTranspositionTable) {
+            transpositionTable.put(zobristKey, depth, evalBound, alpha, beta, bestMoves.get(0));
+        }
         return evalBound;
     }
 
-    public int alphaBetaLessObjects(int depth, int alpha, int beta, boolean maximizingPlayer,long r, long b, long rr, long bb, long br, long rb ) {
+    public int alphaBetaLessObjects(int depth, int alpha, int beta, boolean maximizingPlayer, long r, long b, long rr, long bb, long br, long rb) {
         if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
             //return 0; // Return a neutral value if time limit is reached
             return maximizingPlayer? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
@@ -329,7 +367,7 @@ public class MerthanAlphaBetaExperiment {
                 if(saveSequence)childBestMoves = new ArrayList<>();
 
                 int moveValue = alphaBeta(executedMoveBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, childBestMoves);
-                if(detailedLog)System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+ (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
+                if(detailedLog) System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+ (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
                 if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
                     currentBestValue = moveValue;
                     currentBestMoveSequence.clear();
@@ -368,11 +406,11 @@ public class MerthanAlphaBetaExperiment {
         }
         miscCounter = ((lastIndexReached+1) * 100) / moves.length;
 
-        //if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
-        //if(log)System.out.println("Current best valuee: " + currentBestValue);
-        //if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
+        if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
+        if(log)System.out.println("Current best valuee: " + currentBestValue);
+        if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
         if(log)System.out.println("NoObject:AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"%");
-        //if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
+        if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
         ruhesucheTime=0;
         counter=0;
         endReachedCounter =0;
