@@ -414,7 +414,7 @@ public class MerthanAlphaBetaExperiment {
         ruhesucheTime=0;
         counter=0;
         endReachedCounter =0;
-
+        transpositionTable.clear();
 
 
         return bestMoveSequence;
