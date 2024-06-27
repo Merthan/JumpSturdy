@@ -4,6 +4,8 @@ import ai.BitBoardManipulation;
 import ai.Evaluate;
 import misc.Tools;
 
+import ai.ZobristHashing;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,7 +48,9 @@ public class BitBoard {
 
     // Directions for single figures based on team
     private static final int RED_DIRECTION = 8;   // Red moves down
-    private static final int BLUE_DIRECTION = -8;   // Blue moves up
+    private static final int BLUE_DIRECTION = -8;// Blue moves up
+
+
 
     // Constructor to initialize the game board
     public BitBoard() {
@@ -224,6 +228,41 @@ public class BitBoard {
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
+
+
+
+
+    public long generateHashCode(boolean isRed) {
+        long hashcode = 0L;
+        ZobristHashing zobrist = new ZobristHashing();
+
+        // Bitboards corresponding to piece types: 0=redSingles, 1=blueSingles, 2=redDoubles, 3=blueDoubles, 4=red_on_blue, 5=blue_on_red
+        long[] piecePositions = {redSingles, blueSingles, redDoubles, blueDoubles, red_on_blue, blue_on_red};
+
+        // Process each piece type
+        for (int pieceType = 0; pieceType < 6; pieceType++) {
+            long pieces = piecePositions[pieceType];
+            // Check each position on the bitboard
+            for (int position = 0; position < 64; position++) {
+                if ((pieces & (1L << position)) != 0) {
+                    // Calculate player: even indices for red, odd for blue
+                    int player = pieceType % 2;
+                    hashcode ^= zobrist.getZobristNumber(pieceType, position, player);
+                }
+            }
+        }
+
+        // Turn information: using 6 as special index for player turn
+        if (isRed) {
+            hashcode ^= zobrist.getZobristNumber(6, 0, 0);  // Specific Zobrist value for Red's turn
+        } else {
+            hashcode ^= zobrist.getZobristNumber(6, 0, 1);  // Specific Zobrist value for Blue's turn
+        }
+
+        return hashcode;
+    }
+
+
 
     //Static as it might be used in other classes too
     //TODO: REMOVE LATER FOR PERFORMANCE REASONS WHEN NOT THROWING
