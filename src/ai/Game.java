@@ -226,7 +226,7 @@ public class Game {
                         if(!smartBot){
                             botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
                         }else{
-                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 20000);
+                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
                             //List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, 2000,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
                             Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
                             botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
@@ -242,7 +242,7 @@ public class Game {
                     System.out.println(board.toFEN());
                     testPreWinMoveDetection(board, isRedTurn);
 
-                    System.out.println("Game evaluated:" + Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
+                    System.out.println("Game evaluated:" + Evaluate.evaluateComplex( board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     //System.out.println("Game evaluated blue:" + Evaluate.evaluateComplex(false, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red));
                     //System.out.println("Total times Ruhesuche executed: " + totalRuheSucheExecuted + "max times looped:" + maxTimesRuheSucheLooped + " total millis:" + totalTimeRuheSucheExecuted + " max time single:" + maxTimeSingleRuheSucheExecuted);
                     totalTimeRuheSucheExecuted = 0;//Reset for next
@@ -713,6 +713,21 @@ public class Game {
         // error: b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0
 
         //game.playVsBot("b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0");
+
+        /***
+         * Mert Transpo test: previous, without code changes:
+         * AlphaBeta called: 8546159 End Evaluated: 7491398 Cuts: 906706 Depth Reached: 6 and last index was 14/34 misc: depth6: 44%
+         * with code changes, BUT TRANSPO OFF:
+         * AlphaBeta called: 8266168 End Evaluated: 7262478 Cuts: 860719 Depth Reached: 6 and last index was 12/34 misc: depth6: 38%
+         * with transpo on:
+         * AlphaBeta called: 6243803 End Evaluated: 5578152 Cuts: 566320 Depth Reached: 8 and last index was 0/34 misc: depth8: 2%
+         *
+         * middle of testing, transpo off but alphabeta changed
+         * AlphaBeta called: 8573367 End Evaluated: 7516582 Cuts: 907967 Depth Reached: 6 and last index was 14/34 misc: depth6: 44%
+         *
+         *
+         * */
+
 
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
