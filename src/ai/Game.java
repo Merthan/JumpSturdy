@@ -226,7 +226,7 @@ public class Game {
                         if(!smartBot){
                             botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
                         }else{
-                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
+                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 20000);
                             //List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, 2000,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
                             Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
                             botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
@@ -677,6 +677,20 @@ public class Game {
          * Red Won:1
          * Blue Won:2
          *
+         * trans without d6 d5
+         * AlphaBeta called: 4801082 End Evaluated: 4271067 Cuts: 426398 Depth Reached: 6 and last index was 17/34 misc: depth6: 52%
+         * AlphaBeta called: 6806577 End Evaluated: 6219198 Cuts: 908568 Depth Reached: 6 and last index was 8/34 misc: depth6: 26%
+         * with
+         * AlphaBeta called: 8436952 End Evaluated: 7408445 Cuts: 882109 Depth Reached: 6 and last index was 13/34 misc: depth6: 41%
+         * AlphaBeta called: 12615938 End Evaluated: 11605934 Cuts: 1745586 Depth Reached: 6 and last index was 6/34 misc: depth6: 20%
+         *
+         *
+         * 20 seconds trans off:
+         * AlphaBeta called: 98075421 End Evaluated: 86477499 Cuts: 9393488 Depth Reached: 8 and last index was 0/34 misc: depth8: 2%
+         * AlphaBeta called: 98352669 End Evaluated: 87774245 Cuts: 17392235 Depth Reached: 7 and last index was 19/34 misc: depth7: 58%
+         * trans on:
+         * AlphaBeta called: 56391255 End Evaluated: 51287796 Cuts: 3985696 Depth Reached: 8 and last index was 1/34 misc: depth8: 5%
+         * AlphaBeta called: 56477664 End Evaluated: 50410551 Cuts: 9035930 Depth Reached: 8 and last index was 0/34 misc: depth8: 2%
          * */
 
         //game.playVsBot(b(DEFAULT_BOARD), true);

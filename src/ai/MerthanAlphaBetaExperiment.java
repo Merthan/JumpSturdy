@@ -74,7 +74,7 @@ public class MerthanAlphaBetaExperiment {
 
     static final boolean sortMovesBeforeEach = true;
     static final boolean useTranspositionTable = false; //switch Transposition Table
-    public final static boolean saveSequence = false;
+    public final static boolean saveSequence = true;
 
     public final static boolean log = true; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
@@ -132,44 +132,24 @@ public class MerthanAlphaBetaExperiment {
             int eval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             endReachedCounter++;
             //Depth 0, to account for attacked pieces afterwards
-            if (log && gameEnded) {
-                //board.printCommented("GameEnded at depth "+depth+ " state:"+board.currentWinningState());
-                //System.out.println(board.eval() + board.previousMoves()+counter);
-            }
-
             if (depthZero) {//If ruhesuche gets a value, return ruhesuche (doesnt take long)
 
                 //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
-                //int[] ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesucheWithPositionsOptimized(board,maximizingPlayer):null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
-                //System.out.println(ruhesucheTime);
                 long start = System.currentTimeMillis();
                 int[] ruhesucheArray = (Math.abs(eval) < 2000000000) ? BitBoardManipulation.ruhesucheWithPositions(board, maximizingPlayer) : null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 ruhesucheTime += System.currentTimeMillis() - start;
                 return (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
-/*                int ruhesucheArray = (Math.abs(eval)<2000000000)? BitBoardManipulation.ruhesuche(board,maximizingPlayer):BitBoardManipulation.RUHESUCHE_NOT_PERFORMED; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
-                ruhesucheTime += System.nanoTime()-start;
-                return (ruhesucheArray == BitBoardManipulation.RUHESUCHE_NOT_PERFORMED)? eval : ruhesucheArray;*/
-
             } else {//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
                 return maximizingPlayer ? (eval + depth) : (eval - depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
-            //return eval;
         }
-
         byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
-        /*  if(sortMovesBeforeEach){
-            final int multiplier = (maximizingPlayer?-1:1);
-            //Arrays.sort(moves, Comparator.comparingInt(e ->multiplier * Evaluate.evaluateMoveComplex(maximizingPlayer,e[0],e[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
-            //moves = sortMovesPerformant(board,maximizingPlayer);
-        }*/
-
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves;
         if (saveSequence) {
             currentBestMoves = new ArrayList<>();
         }
-
         int evalBound = maximizingPlayer ? Integer.MIN_VALUE : Integer.MAX_VALUE;//These dont need the buffer variable
         for (byte[] move : moves) {
             BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
@@ -183,18 +163,6 @@ public class MerthanAlphaBetaExperiment {
             }
             boolean condition = maximizingPlayer ? (eval > evalBound) : (eval < evalBound);
 
-/*            if(eval>2100000000){
-                System.out.println(depth+"won remove"+(eval-2100000000));
-
-                System.out.println(executedMoveBoard.previousMoves()+ executedMoveBoard.previousMove);
-                if(executedMoveBoard.previousMoves().contains("[C7-C6] [C3-C4] [C6-B6] [C4-B4]")){
-                    executedMoveBoard.printCommented("Mod");
-
-                }
-                //executedMoveBoard.print();
-                //System.out.println("evaal:"+executedMoveBoard.eval());
-                //System.out.println("done");
-            }*/
 
             if (condition) {
                 evalBound = eval;
@@ -231,6 +199,20 @@ public class MerthanAlphaBetaExperiment {
         }
         return evalBound;
     }
+
+    /*            if(eval>2100000000){
+                System.out.println(depth+"won remove"+(eval-2100000000));
+
+                System.out.println(executedMoveBoard.previousMoves()+ executedMoveBoard.previousMove);
+                if(executedMoveBoard.previousMoves().contains("[C7-C6] [C3-C4] [C6-B6] [C4-B4]")){
+                    executedMoveBoard.printCommented("Mod");
+
+                }
+                //executedMoveBoard.print();
+                //System.out.println("evaal:"+executedMoveBoard.eval());
+                //System.out.println("done");
+            }*/
+
 
     public int alphaBetaLessObjects(int depth, int alpha, int beta, boolean maximizingPlayer, long r, long b, long rr, long bb, long br, long rb) {
         if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
@@ -409,7 +391,7 @@ public class MerthanAlphaBetaExperiment {
         if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
         if(log)System.out.println("Current best valuee: " + currentBestValue);
         if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
-        if(log)System.out.println("NoObject:AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"%");
+        if(log)System.out.println("AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"%");
         if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
         ruhesucheTime=0;
         counter=0;
