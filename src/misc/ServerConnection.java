@@ -1,14 +1,18 @@
+package misc;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import ai.MerthanAlphaBetaExperiment;
 import ai.SearchType;
 import ai.SturdyJumpersAI;
 import model.BitBoard;
 
 public class ServerConnection {
 
+    MerthanAlphaBetaExperiment experiment = new MerthanAlphaBetaExperiment();
     public static void main(String[] args) {
         System.out.println("-------Starting Server Connection------\n\n\n");
         String serverAddress = "localhost";
@@ -55,7 +59,7 @@ public class ServerConnection {
         boolean isRed = false;  // You would set this according to your game logic
 
         BitBoard board = new BitBoard(fen); // Assuming constructor from FEN
-        String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
+        //String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
         return bestMove;
     }
 }
