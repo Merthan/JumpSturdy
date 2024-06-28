@@ -74,9 +74,10 @@ public class MerthanAlphaBetaExperiment {
 
     static final boolean sortMovesBeforeEach = true;
     static final boolean useTranspositionTable = false; //switch Transposition Table
-    public final static boolean saveSequence = true;
+    public final static boolean saveSequence = false;
+    public final static boolean dynamicTimeManagement = false;
 
-    public final static boolean log = true; //CHANGE WHEN NEEDED
+    public final static boolean log = false; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
 
     public static long ruhesucheTime=0;
@@ -294,7 +295,7 @@ public class MerthanAlphaBetaExperiment {
 
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
 
-        endTime = System.currentTimeMillis() + timeLimitMillis;
+        endTime = dynamicTimeManagement ? (System.currentTimeMillis() + TIME_LIMIT) : (System.currentTimeMillis() + timeLimitMillis);
         bestDepthReached = 0;
         ArrayList<byte[]> bestMoveSequence = new ArrayList<>();
         int currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
@@ -393,6 +394,11 @@ public class MerthanAlphaBetaExperiment {
         if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
         if(log)System.out.println("AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"%");
         if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
+
+        if(dynamicTimeManagement) {
+            adjustTimeLimit(moves.length, board);
+            System.out.println("New Limit Time Limit: " + TIME_LIMIT);
+        }
         ruhesucheTime=0;
         counter=0;
         endReachedCounter =0;
@@ -505,6 +511,7 @@ public class MerthanAlphaBetaExperiment {
         }
         miscCounter = ((lastIndexReached+1) * 100) / moves.length;
 
+
         //if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
         //if(log)System.out.println("Current best valuee: " + currentBestValue);
         //if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
@@ -514,12 +521,65 @@ public class MerthanAlphaBetaExperiment {
         counter=0;
         endReachedCounter =0;
 
-
-
         return bestMoveSequence;
     }
 
+    private static int evaluateGamePhase(BitBoard board) {
+        // Heuristik zur Bestimmung der Spielphase (1: Eröffnung, 2: Mittelspiel, 3: Endspiel)
+        int totalPieces = board.countTotalPieces();
+        if (totalPieces > 20) {
+            return 1;
+        } else if (totalPieces > 10) {
+            return 2;
+        } else {
+            return 3;
+        }
+    }
 
+    private static int estimateRemainingMoves(BitBoard board) {
+        //Heuristik zur Schätzung der verbleibenden Züge bis zum Spielende
+        int totalPieces = board.countTotalPieces();
+        if (totalPieces > 20) {
+            return 40; // Schätzung für Eröffnung
+        } else if (totalPieces > 10) {
+            return 20; // Schätzung für Mittelspiel
+        } else {
+            return 10; // Schätzung für Endspiel
+        }
+    }
+
+    private static int TIME_LIMIT = 2000; // 2 sec
+    private static final int MAX_TIME_LIMIT = 4000;
+    private static final int remainingTime = 30000;
+
+    private static void adjustTimeLimit(int numMoves, BitBoard board) {
+        int timeLimit = TIME_LIMIT;
+
+        // Spielphasenanalyse: Anpassung des Zeitlimits basierend auf der Spielphase
+        int gamePhase = evaluateGamePhase(board);
+        switch (gamePhase) {
+            case 1: // Eröffnung
+                timeLimit *= 1.5; // Erhöhtes Zeitlimit in der Eröffnung
+                break;
+            case 2: // Mittelspiel
+                timeLimit *= 1.2; // Mittel hohes Zeitlimit im Mittelspiel
+                break;
+            case 3: // Endspiel
+                timeLimit *= 1.3; // Erhöhtes Zeitlimit im Endspiel
+                break;
+        }
+
+        if (numMoves < 10) timeLimit *= 0.9;
+        else if (numMoves > 30) timeLimit *= 1.1;
+
+
+        // Verbleibende Zeit analysieren und anpassen
+        int estimatedMovesLeft = estimateRemainingMoves(board);
+        int timePerMove = remainingTime / estimatedMovesLeft;
+        timeLimit = Math.min(timeLimit, timePerMove);
+
+        TIME_LIMIT = Math.min(timeLimit, MAX_TIME_LIMIT);
+    }
 
 }
 

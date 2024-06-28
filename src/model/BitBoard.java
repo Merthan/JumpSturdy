@@ -1062,6 +1062,16 @@ public class BitBoard {
         return isRed ? new long[]{redSingles, redDoubles, red_on_blue} : new long[]{blueSingles, blueDoubles, blue_on_red};
     }
 
+    public int countTotalPieces() {
+        return Long.bitCount(redSingles) +
+                Long.bitCount(blueSingles) +
+                Long.bitCount(redDoubles) +
+                Long.bitCount(blueDoubles) +
+                Long.bitCount(red_on_blue) +
+                Long.bitCount(blue_on_red);
+    }
+
+
     public static void main(String[] args) {
         // Example usage
         String move = "A8-H1";

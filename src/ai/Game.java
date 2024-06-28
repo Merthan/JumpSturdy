@@ -705,9 +705,9 @@ public class Game {
         //b.deleteRandomFigure(false);
         //b.print();
         //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
-        game.playVsBot();
         //game.playVsBot();
-        //game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true);
+        //game.playVsBot();
+        game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true,true);
         //game.manipulateAndTestBoard(b("br4b0/5b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0"),false);
 
         // error: b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0
