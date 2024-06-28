@@ -1,3 +1,5 @@
+package misc;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -5,14 +7,18 @@ import java.nio.charset.StandardCharsets;
 
 import ai.SearchType;
 import ai.SturdyJumpersAI;
+import misc.Tools;
 import model.BitBoard;
 
 public class ServerConnection {
 
+    public static long ZEIT = 2000L;
+
+
     public static void main(String[] args) {
         System.out.println("-------Starting Server Connection------\n\n\n");
         String serverAddress = "localhost";
-        int port = 5050; // The port on which the Python server is listening
+        int port = 5060; // The port on which the Python server is listening
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port);
@@ -55,7 +61,7 @@ public class ServerConnection {
         boolean isRed = false;  // You would set this according to your game logic
 
         BitBoard board = new BitBoard(fen); // Assuming constructor from FEN
-        String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
+        String bestMove = Tools.parseMoveToString( new ai.MerthanAlphaBetaExperiment().findBestMove(board,isRed, (int) ZEIT).get(0));
         return bestMove;
     }
 }
