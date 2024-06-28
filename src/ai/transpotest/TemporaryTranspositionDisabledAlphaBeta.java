@@ -1,5 +1,9 @@
-package ai;
+package ai.transpotest;
 
+import ai.BitBoardManipulation;
+import ai.Evaluate;
+import ai.TranspositionTable;
+import ai.ZobristHashing;
 import ai.transpotest.FastTranspo;
 import ai.transpotest.Zobrist;
 import misc.Tools;
@@ -14,7 +18,7 @@ import static ai.Evaluate.MAXIMUM_WITH_BUFFER_POSITIVE;
 import static model.BitBoard.WINNER_BLUE;
 import static model.BitBoard.WINNER_RED;
 
-public class MerthanAlphaBetaExperiment {
+public class TemporaryTranspositionDisabledAlphaBeta {
 
     public long endTime;
     public int bestDepthReached;
@@ -24,7 +28,7 @@ public class MerthanAlphaBetaExperiment {
     private final FastTranspo fastTranspo;
     private final Zobrist zobrist;
 
-    public MerthanAlphaBetaExperiment() {
+    public TemporaryTranspositionDisabledAlphaBeta() {
         zobristHashing = new ZobristHashing();
         transpositionTable = new TranspositionTable();
         fastTranspo = new FastTranspo();
@@ -80,10 +84,8 @@ public class MerthanAlphaBetaExperiment {
 
 
     static final boolean sortMovesBeforeEach = true;
-    static final boolean useTranspositionTable = true; //switch Transposition Table
+    static final boolean useTranspositionTable = false; //switch Transposition Table
     public final static boolean saveSequence = true;
-    public final static boolean dynamicTimeManagement = false;
-
 
     public final static boolean log = false; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
@@ -210,13 +212,10 @@ public class MerthanAlphaBetaExperiment {
     }*/
 
     int transpoCounter = 0;
-    boolean timeoutReached = false;
-    final static byte z = 0; //Faster, fixes compilation
 
     public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer, List<byte[]> bestMoves, long incrementalZobristKey) {
-        if (System.currentTimeMillis() > endTime||timeoutReached) {//Deactivated for debugging with  && false
+        if (System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
             //return 0; // Return a neutral value if time limit is reached
-            timeoutReached=true;//So no overhead calling currenttimemillis, gets reset in findbestmove
             return maximizingPlayer ? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
         }
 
@@ -233,7 +232,7 @@ public class MerthanAlphaBetaExperiment {
                     if(type==0){//EXACT
                         if (saveSequence) {
                             bestMoves.clear();
-                            //bestMoves.add(new byte[]{(byte) ((entry >> 24) & 0xFFL),(byte) ((entry >> 16) & 0xFFL) });
+                            bestMoves.add(new byte[]{(byte) ((entry >> 24) & 0xFFL),(byte) ((entry >> 16) & 0xFFL) });
                             //bestMoves.add(new byte[]{(byte)1,(byte)0});//TODO REMOVE
                         }
                         return (int) (entry >> 32);//Return eval
@@ -263,6 +262,7 @@ public class MerthanAlphaBetaExperiment {
         boolean canWin = null != BitBoardManipulation.canWinWithMovesFusioned(maximizingPlayer, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
         boolean depthZero = depth == 0;
         boolean gameEnded = board.currentWinningState() != BitBoard.WINNER_ONGOING;
+
         if (depthZero || gameEnded || canWin) {
             //TODO: isRed worked, now replaced by true
             int eval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
@@ -274,15 +274,10 @@ public class MerthanAlphaBetaExperiment {
                 long start = System.currentTimeMillis();
                 int[] ruhesucheArray = (Math.abs(eval) < 2000000000) ? BitBoardManipulation.ruhesucheWithPositions(board, maximizingPlayer) : null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 ruhesucheTime += System.currentTimeMillis() - start;
-                int finalEval = (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
-                fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
-                return finalEval;
+                return (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
             } else {//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
-                int finalEval = maximizingPlayer ? (eval + depth) : (eval - depth);
-                fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
-
-                return finalEval;//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
+                return maximizingPlayer ? (eval + depth) : (eval - depth);//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
         }
         byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
@@ -360,10 +355,6 @@ public class MerthanAlphaBetaExperiment {
 
         //System.out.println((maximizingPlayer ? "Maximizing" : "Minimizing") + " Player Best Moves: " + bestMoves);
         if (useTranspositionTable) {
-            if(timeoutReached){//Dont store wrong values in table
-                return maximizingPlayer ? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE;
-            }
-
             if(depth > 127){
                 return evalBound;//Depth too high to be stored but at this depth doesnt matter, in that case just ignore transpo
             }
@@ -372,13 +363,10 @@ public class MerthanAlphaBetaExperiment {
             byte type = 0;//Start at exact
             if(evalBound <=alphaOriginal){
                 type = 2;//upper
-            }else if(evalBound>=betaOriginal){//TODO: testing once, not original was 2:8 (loss while original was 5:5)
+            }else if(evalBound>=betaOriginal){
                 type = 1;//lower
             }
             //if(detailedLog) Tools.printBlue("TranspoEval:"+type+" evalbound:"+evalBound+" a:"+alpha+" b:"+beta);
-/*            byte[] prev = board.previousMove;
-            byte from = prev[prev.length-2];//TODO: not sure if this or bestMove var
-            byte to = prev[prev.length-1];*/
             fastTranspo.storeEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type);
         }
         return evalBound;
@@ -402,11 +390,8 @@ public class MerthanAlphaBetaExperiment {
 
 
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
-        //System.out.println("isred"+isRed);
-        timeoutReached = false;
-        endTime = System.currentTimeMillis() + timeLimitMillis;
 
-        endTime = dynamicTimeManagement ? (System.currentTimeMillis() + TIME_LIMIT) : (System.currentTimeMillis() + timeLimitMillis);
+        endTime = System.currentTimeMillis() + timeLimitMillis;
         bestDepthReached = 0;
         ArrayList<byte[]> bestMoveSequence = new ArrayList<>();
 
@@ -510,11 +495,6 @@ public class MerthanAlphaBetaExperiment {
         if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
         if(log)System.out.println("AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"% TranspoCounter: "+ transpoCounter);
         if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
-
-        if(dynamicTimeManagement) {
-            adjustTimeLimit(moves.length, board);
-            System.out.println("New Limit Time Limit: " + TIME_LIMIT);
-        }
         ruhesucheTime=0;
         counter=0;
         endReachedCounter =0;
@@ -526,178 +506,8 @@ public class MerthanAlphaBetaExperiment {
     }
 
 
-    public List<byte[]> findBestMoveNoObjects(boolean isRed, int timeLimitMillis,long r, long b, long rr, long bb, long br, long rb) {
-        endTime = System.currentTimeMillis() + timeLimitMillis;
-
-        bestDepthReached = 0;
-        ArrayList<byte[]> bestMoveSequence = new ArrayList<>();
-        int currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
-//TODO: Changed from not initialized to 0, might cause bugs
-
-        int confirmedBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Only after all options have gone through
-        byte[] winningMoves = BitBoardManipulation.canWinWithMovesFusioned(isRed, r,b,rr,bb,br,rb);
-        if(winningMoves!=null){ // If we can win, dont do alphabeta search, just do the moves to win
-            if(winningMoves.length==2){
-                return List.of(winningMoves);//new ArrayList<>(new byte[]{(byte)2});
-            }
-            if(winningMoves.length==3){
-                return List.of(new byte[]{winningMoves[0], winningMoves[1]});
-            }
-        }
-
-        byte[][] moves = BitBoard.generateSortedByteMovesForPiecesWithListStatic(isRed,r,b,rr,bb,br,rb);
-        //without streams: 2061100n with streams: 2317900
-        long start = System.nanoTime();
-        //if(log) Tools.printRed("Before sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
-        //TODO: can be removed, no benefit I guess
-        Arrays.sort(moves, Comparator.comparingInt(e -> (isRed?-1:1)* Evaluate.evaluateMoveComplex(isRed,e[0],e[1],r,b,rr,bb,br,rb)));
-        //if(log) Tools.printBlue("After sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
-        if(detailedLog)System.out.println("Sorting took: "+(System.nanoTime()-start));
-        //if(true)System.exit(0);
-        int lastIndexReached=0;
-        for (int depth = 1; ; depth++) {
-
-
-            if(log)Tools.printInColor("|New Depth reached: "+depth+" currentbest:"+currentBestValue+" move length "+moves.length+" "+(BitBoard.currentWinningStateStaticOptimized(r,b,rr,bb,br,rb)),true);
-
-            currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
-            //if(depth==6)break; //TODO REMOVE
-            ArrayList<byte[]> currentBestMoveSequence = new ArrayList<>();
-            //byte[][] moves = board.getAllPossibleMovesByte(isRed);
-            //System.out.println("Moves here:" + legalMoves);
-            //System.out.println("isRedTurn:" + isRed);
-
-            boolean didCompleteAndResultsAreValid = true;
-
-            for (int i=0;i<moves.length;i++) {
-                byte[] move = moves[i];
-
-                long[] executedMoveBoard = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(move[0],move[1],isRed,r,b,rr,bb,br,rb);//.doMoveAndReturnBitboard(move,isRed);
-                byte winState =BitBoard.currentWinningStateStaticOptimized(executedMoveBoard[0],executedMoveBoard[1],executedMoveBoard[2],executedMoveBoard[3],executedMoveBoard[4],executedMoveBoard[5]);
-                if(winState == (isRed?WINNER_RED:WINNER_BLUE)){ // If found winning move first move, just do it
-                    if(log) System.out.println("WON, NO ALPHABETA");
-                    return List.of(move);
-                }
-
-                //List<String> childBestMoves = new ArrayList<>();
-                if(depth>=1000){
-                    //Math.abs(0);
-                    BitBoard.fromLongArray(executedMoveBoard).printCommented("depth too high"+Tools.movesToString(moves)+" >>"+ (winningMoves != null ? winningMoves.length : -1));
-                    //System.exit(0);
-                }
-
-                int moveValue = alphaBetaLessObjects(depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, executedMoveBoard[0],executedMoveBoard[1],executedMoveBoard[2],executedMoveBoard[3],executedMoveBoard[4],executedMoveBoard[5]);
-                if(detailedLog)System.out.println("|AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:empty");
-                if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
-                    currentBestValue = moveValue;
-                    currentBestMoveSequence.clear();
-                    currentBestMoveSequence.add(move);
-                    //childBestMoves.stream().map(Tools::parseMove).toList()
-                    //if(saveSequence)currentBestMoveSequence.addAll(childBestMoves);//Else we just add the move
-                }
-
-
-
-                if (System.currentTimeMillis() > endTime) {//TODO: BUG; WHEN NOT SET TO && FALSE; TOO MUCH DEPTH
-                    didCompleteAndResultsAreValid = false;
-                    if(log){
-                        Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: "+Tools.byteListToMoveSequence(currentBestMoveSequence)+" depth "+depth+", only completed "+i+"/"+moves.length+" last: "+Tools.parseMoveToString(move));
-                        lastIndexReached=i;
-                    }
-                    break; // Time limit reached
-                }
-            }
-
-
-            if(didCompleteAndResultsAreValid){
-                bestMoveSequence = currentBestMoveSequence;
-                confirmedBestValue = currentBestValue;
-            }
-
-            bestDepthReached = depth;
-
-            if(detailedLog)System.out.println("AlphaBetaStart for DEPTH: "+depth +" bestmoveValue " +confirmedBestValue+ " sequence:"+Tools.byteListToMoveSequence(bestMoveSequence));
-
-
-            if (System.currentTimeMillis() > endTime) {//TODO REMOVE false
-                if(log)System.out.println("time limit reached in going through depths");
-                break; // Time limit reached
-            }
-
-
-        }
-        miscCounter = ((lastIndexReached+1) * 100) / moves.length;
-
-
-        //if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
-        //if(log)System.out.println("Current best valuee: " + currentBestValue);
-        //if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
-        if(log)System.out.println("AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"%");
-        //if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
-        ruhesucheTime=0;
-        counter=0;
-        endReachedCounter =0;
-
-        return bestMoveSequence;
-    }
-
-    private static int evaluateGamePhase(BitBoard board) {
-        // Heuristik zur Bestimmung der Spielphase (1: Eröffnung, 2: Mittelspiel, 3: Endspiel)
-        int totalPieces = board.countTotalPieces();
-        if (totalPieces > 20) {
-            return 1;
-        } else if (totalPieces > 10) {
-            return 2;
-        } else {
-            return 3;
-        }
-    }
-
-    private static int estimateRemainingMoves(BitBoard board) {
-        //Heuristik zur Schätzung der verbleibenden Züge bis zum Spielende
-        int totalPieces = board.countTotalPieces();
-        if (totalPieces > 20) {
-            return 40; // Schätzung für Eröffnung
-        } else if (totalPieces > 10) {
-            return 20; // Schätzung für Mittelspiel
-        } else {
-            return 10; // Schätzung für Endspiel
-        }
-    }
-
-    private static int TIME_LIMIT = 2000; // 2 sec
-    private static final int MAX_TIME_LIMIT = 4000;
-    private static final int remainingTime = 30000;
-
-    private static void adjustTimeLimit(int numMoves, BitBoard board) {
-        int timeLimit = TIME_LIMIT;
-
-        // Spielphasenanalyse: Anpassung des Zeitlimits basierend auf der Spielphase
-        int gamePhase = evaluateGamePhase(board);
-        switch (gamePhase) {
-            case 1: // Eröffnung
-                timeLimit *= 1.5; // Erhöhtes Zeitlimit in der Eröffnung
-                break;
-            case 2: // Mittelspiel
-                timeLimit *= 1.2; // Mittel hohes Zeitlimit im Mittelspiel
-                break;
-            case 3: // Endspiel
-                timeLimit *= 1.3; // Erhöhtes Zeitlimit im Endspiel
-                break;
-        }
-
-        if (numMoves < 10) timeLimit *= 0.9;
-        else if (numMoves > 30) timeLimit *= 1.1;
-
-
-        // Verbleibende Zeit analysieren und anpassen
-        int estimatedMovesLeft = estimateRemainingMoves(board);
-        int timePerMove = remainingTime / estimatedMovesLeft;
-        timeLimit = Math.min(timeLimit, timePerMove);
-
-        TIME_LIMIT = Math.min(timeLimit, MAX_TIME_LIMIT);
-    }
 
 
 }
+
 

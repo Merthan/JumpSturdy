@@ -1,5 +1,6 @@
 package ai;
 
+import ai.transpotest.TemporaryTranspositionDisabledAlphaBeta;
 import model.BitBoard;
 import misc.Tools;
 import model.BoardException;
@@ -450,21 +451,29 @@ public class Game {
         int oldEval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red);
         if(!onlyPrintFinishedBoards)board.printCommented("timedBotGameStart");
+
+        MerthanAlphaBetaExperiment persistedForLongerTable = new MerthanAlphaBetaExperiment();
+
         while (true) {
             //String botMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn);
             SturdyJumpersAI.TIME_LIMIT = millis * 1000000L;
 
-            String botMove=isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((
-                    newVsNewNoObjects?new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, millis,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)
+/*            String botMove=isRedTurn ? (onlyNewAlphaBeta ? Tools.parseMoveToString((
+                    newVsNewNoObjects?new AlphaBetaNoObject().findBestMoveNoObjects(isRedTurn, millis,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)
                             :new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0))
                     : SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRedTurn))
-                    : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));
-
-            if(board.previousMove.length>500&&isRedTurn){//If stuck/too many moves, we need a random element (only for one team)
+                    : Tools.parseMoveToString((new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, millis)).get(0));*/
+            String botMove;//&&board.previousMove.length % 20==0
+            if((board.previousMove.length>500) &&!isRedTurn){//If stuck/too many moves, we need a random element (only for one team)
                 List<String> possibleMoves = board.getAllPossibleMoveStringsDeprecated(isRedTurn);
                 botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
-                //System.out.println("Bot stuck, needed random turn");
+                System.out.println("Bot stuck, needed random turn:"+botMove);
+            }else{
+                if(true){
+                    botMove = Tools.parseMoveToString((isRedTurn? persistedForLongerTable.findBestMove(board,true,millis):new TemporaryTranspositionDisabledAlphaBeta().findBestMove(board,false,millis)).get(0));
+                }
             }
+
             isRedTurn = board.doMove(botMove, isRedTurn, true); //Do and switch turn
 
             if(!onlyPrintFinishedBoards)board.printCommented((!isRedTurn ? "Red" : "Blue") + " move: " + botMove);
@@ -488,20 +497,26 @@ public class Game {
     }
 
     public void botWorldChampionship(BitBoard board,int millis,int reps,boolean onlyMerthansAlphaBeta,boolean deleteOneRandom){
+        long start = System.currentTimeMillis();
         if(!MerthanAlphaBetaExperiment.saveSequence||MerthanAlphaBetaExperiment.detailedLog||MerthanAlphaBetaExperiment.log){
             //throw new IllegalStateException("Wrong config, change the flags in MerthanAlphabeta to true,false,false");
         }
         for (int i = 0; i < reps; i++) {
             //board = b(board.toFEN());//Object reference error otherwise
             BitBoard b = b(board.toFEN());
-            if(deleteOneRandom) b.deleteRandomFigure(false);
-            System.out.println("Game ["+(i+1)+"/"+reps+"]");
+            if(deleteOneRandom){
+                boolean random = new Random().nextBoolean();
+                b.deleteRandomFigure(random);
+                System.out.println("Deleted random from: "+(random?"red":"blue"));
+            }
             advancedBotGame(b,millis,onlyMerthansAlphaBeta,true,true);
+            System.out.println("Game ["+(i+1)+"/"+reps+"]   moves:"+b.previousMove.length);
 
         }
 
         System.out.println("Red Won:"+botGameRedCounter);
         System.out.println("Blue Won:"+botGameBlueCounter);
+        System.out.println("Games took s:"+((System.currentTimeMillis()-start)/1000.0));
     }
 
     private boolean isValidMove(BitBoard board, String move) {
@@ -706,8 +721,21 @@ public class Game {
         //b.print();
         //game.playVsBot("b0b0b0b0b0b0/2b0b0b0b0b01/8/1b06/4r03/1r0r05/3r01r0r01/r0r0r0r0r0r0");
         //game.playVsBot();
+        BitBoard random = b(DEFAULT_BOARD);
+        //random.deleteRandomFigure(new Random().nextBoolean());
+        game.botWorldChampionship(random,200,3,false,true);
+
+        /**
+         * 100ms r 2 b 8
+         * 50ms r 27 b 23
+         * 500ms r 2 b 3
+         * 1000ms r 1 b 2
+         * 2000ms
+         * */
+
         //game.playVsBot();
-        game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true,true);
+        //game.playVsBot();
+        //game.botWorldChampionship(b(DEFAULT_BOARD),200,1,true,true);
         //game.manipulateAndTestBoard(b("br4b0/5b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0"),false);
 
         // error: b0b03b0/2r02b01b0/5bb2/3b01r02/6b01/8/1r0r05/r0r0r01r0r0
