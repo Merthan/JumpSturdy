@@ -1,5 +1,9 @@
 package ai.transpotest;
 
+import misc.Tools;
+import model.BitBoard;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,12 +70,19 @@ public class FastTranspo {
         return String.format("Entry: [Eval: %d, FromPos: %d, ToPos: %d, Depth: %d, Type: %d]", eval, fromPos, toPos, depth, type);
     }
 
-
+    @Deprecated//TEMP
     public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
         long packedEntry = packEntry(eval, fromPos, toPos, depth, type);
         transpositionTable.put(zobristKey, packedEntry);
     }
 
+    public Map<Long, String> fenTableDebug = new HashMap<>();
+
+    public void debugStoreEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type, BitBoard board) {
+        long packedEntry = packEntry(eval, fromPos, toPos, depth, type);
+        transpositionTable.put(zobristKey, packedEntry);
+        //fenTableDebug.put(zobristKey,board.toFEN()+">>"+ board.previousMoves()+ " -- "+ Arrays.toString(board.previousMove));
+    }
 
     static int unpackEval(long packedEntry) {
         return (int) (packedEntry >> 32);

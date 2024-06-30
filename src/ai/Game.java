@@ -1,6 +1,7 @@
 package ai;
 
 import ai.transpotest.TemporaryTranspositionDisabledAlphaBeta;
+import ai.transpotest.Zobrist;
 import model.BitBoard;
 import misc.Tools;
 import model.BoardException;
@@ -154,7 +155,7 @@ public class Game {
     }
 
     public void playVsBot(BitBoard board, boolean smartBot) {
-
+        MerthanAlphaBetaExperiment alphaBeta = new MerthanAlphaBetaExperiment();
 
         Scanner scanner = new Scanner(System.in);
         byte winner = BitBoard.WINNER_ONGOING;
@@ -227,7 +228,7 @@ public class Game {
                         if(!smartBot){
                             botMove = possibleMoves.get(new Random().nextInt(possibleMoves.size()));
                         }else{
-                            List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMove(board, isRedTurn, 2000);
+                            List<byte[]> moveSequence = alphaBeta.findBestMove(board, isRedTurn, 20000);
                             //List<byte[]> moveSequence = new MerthanAlphaBetaExperiment().findBestMoveNoObjects(isRedTurn, 2000,board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
                             Tools.printInColor("MoveSequence: " + Tools.byteListToMoveSequence(moveSequence), Tools.YELLOW);
                             botMove = Tools.parseMoveToString(moveSequence.get(0));//SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, false);
@@ -320,14 +321,20 @@ public class Game {
 
     public void analyzeMoveSequence(BitBoard board, boolean isRedTurn, String... sequence) { //Analyze how much sense alphabeta sequence makes or in general a play
         Tools.printDivider();
-        int previousEval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+        int previousEval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                 board.red_on_blue, board.blue_on_red);
         board.printCommented("Original eval:" + previousEval);
+        MerthanAlphaBetaExperiment alpha = new MerthanAlphaBetaExperiment();
+        long key = alpha.zobrist.initializeCorrectBoardKey(board);
+        System.out.println("Key Start: "+key);
         for (String move : sequence) {
+            byte[] moveParsed = Tools.parseMove(move);
+            key = Zobrist.applyMove(key,moveParsed[0],moveParsed[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+                    board.red_on_blue, board.blue_on_red );
             board.doMove(move, isRedTurn, true);
-            int newEval = Evaluate.evaluateComplex(true, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
+            int newEval = Evaluate.evaluateComplex( board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
                     board.red_on_blue, board.blue_on_red);
-            board.printCommented("Move: " + move + " new eval:" + newEval + " change:" + (newEval - previousEval));
+            board.printCommented("Move: " + move + " new eval:" + newEval + " change:" + (newEval - previousEval) + " Zobrist: "+key);
             isRedTurn = !isRedTurn;
         }
         Tools.printDivider();
@@ -763,14 +770,19 @@ public class Game {
          *
          *
          * */
-
-        game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
+        //game.playVsBot();
+        //game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
         //game.advancedBotGame(b(DEFAULT_BOARD),300,true,false,true);
 
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4
          AlphaBetaStart: move: C1-D1 has value:3*/
+
+        //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-E5, E2-D4, E5-D4".split(", "));
+        //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-D4, E2-D4".split(", "));
+        game.playVsBot();
+
     }
 }
 
