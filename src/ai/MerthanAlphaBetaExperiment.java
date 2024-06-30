@@ -85,7 +85,7 @@ public class MerthanAlphaBetaExperiment {
 
 
     static final boolean sortMovesBeforeEach = true;
-    static final boolean useTranspositionTable = true; //switch Transposition Table
+    static final boolean useTranspositionTable = false; //switch Transposition Table
     public final static boolean saveSequence = true;
 
     public final static boolean log = false; //CHANGE WHEN NEEDED
