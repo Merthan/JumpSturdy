@@ -20,11 +20,11 @@ public class MerthanAlphaBetaExperiment {
     public static int DELETE_UPPER_DEPTH_LIMIT = 207;
     public long endTime;
     public int bestDepthReached;
-    private final ZobristHashing zobristHashing;
-    private final TranspositionTable transpositionTable;
+    private ZobristHashing zobristHashing;
+    private TranspositionTable transpositionTable;
 
-    public final FastTranspo fastTranspo;
-    public final Zobrist zobrist;
+    public FastTranspo fastTranspo;
+    public Zobrist zobrist;
 
     public MerthanAlphaBetaExperiment() {
         if(useTranspositionTable){
@@ -226,7 +226,7 @@ public class MerthanAlphaBetaExperiment {
             timeoutReached=true;//So no overhead calling currenttimemillis, gets reset in findbestmove
             return maximizingPlayer ? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
         }
-        if(incrementalZobristKey == 1669353610709612026L){
+        if(incrementalZobristKey == 1669353610709612026L){//Test
             //System.out.println("hit");
         }
 
@@ -291,12 +291,12 @@ public class MerthanAlphaBetaExperiment {
                 int[] ruhesucheArray = (Math.abs(eval) < 2000000000) ? BitBoardManipulation.ruhesucheWithPositions(board, maximizingPlayer) : null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 ruhesucheTime += System.currentTimeMillis() - start;
                 int finalEval = (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
-                fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
+                if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
                 return finalEval;
             } else {//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
                 int finalEval = maximizingPlayer ? (eval + depth) : (eval - depth);
-                fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
+                if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
 
                 return finalEval;//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
@@ -467,7 +467,6 @@ public class MerthanAlphaBetaExperiment {
 
 
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
-        //System.out.println("isred"+isRed);
         timeoutReached = false;
         endTime = System.currentTimeMillis() + timeLimitMillis;
         bestDepthReached = 0;
@@ -579,7 +578,7 @@ public class MerthanAlphaBetaExperiment {
         counter=0;
         endReachedCounter =0;
         transpoCounter=0;
-        transpositionTable.clear();
+        if(useTranspositionTable)transpositionTable.clear();
 
         if(bestMoveSequence.isEmpty()){
             Tools.printDivider();
