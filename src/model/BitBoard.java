@@ -386,7 +386,8 @@ public class BitBoard {
             long possibleMoves = getPossibleMovesForIndividualPiece(move[0], isRedTurn);
 
             if ((possibleMoves & (1L << move[1])) == 0) { //Move not included, index conversion
-                throw new IllegalMoveException("Move is not possible:" + move);
+                printCommented("error");
+                throw new IllegalMoveException("Move is not possible:" + Arrays.toString(move)+" "+Tools.parseMoveToString(move));
             }
         }
         if (isRedTurn) {

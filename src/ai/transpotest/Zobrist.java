@@ -3,8 +3,6 @@ package ai.transpotest;
 import model.BitBoard;
 
 public class Zobrist {
-    private static final int BOARD_SIZE = 64; // 8x8 board
-    private static final int NUM_PIECE_TYPES = 6; // 6 piece types
 
     private static final long[][] zobristTable = {{ 0xc3ab7b1c3acbd8abL, 0xe856d7cd9a0f8c74L, 0x9be0668a7b316aabL, 0xa7ff3b218a29965bL, 0x3a3f91b6393909caL, 0xf29fc4f70c3ce62eL, 0x80abdf502be30e90L, 0x8ff3cfa5b916ad71L, 0x15725e85116763efL, 0x897cefccabf327fL, 0x378a2e7eaa81fe73L, 0x54a0c9696efebce2L, 0x2f0963173b312b7L, 0x37cfbf51405472e5L, 0x594854540ea7bf1aL, 0xb589a4becc04fc68L, 0xfcf6babf0171cb3L, 0xee22d1456feffef2L, 0xeb2eef8f4aaaeb81L, 0x6970a1dee38c70cL, 0xf7dc94a6c54a4de7L, 0x51b58a91f8bfb2ccL, 0x9afe09f675904756L, 0x505aae9ea02f31afL, 0x383a5e19ed9ef24bL, 0xabc723d50b386dacL, 0xece5f4d23a1ba17cL, 0x93bec4817fc8f185L, 0xdcb9d0c0312f604dL, 0xd817810c8ac3e05fL, 0x180f356fe12a8689L, 0x3d02fba5b85e9295L, 0xbba4e597ac21534dL, 0x60e3ba1eb0e9abc8L, 0x8e8381a148c2c347L, 0xac291214d8ccfe3aL, 0xd7eaca64870a1620L, 0x2dbb3351880dcf5cL, 0x3589cc3a1c7eb736L, 0x9b32f476231c51a5L, 0xede0362e96bd7d8eL, 0x71af45d47d1e67a4L, 0x23c76194cf417709L, 0x14d46e98f0bb0458L, 0xc305cdc03811b2d4L, 0xd39f783318cabcbfL, 0x52b8140f295cbf25L, 0xa07a6bef6b875eacL, 0xad8698280361ce23L, 0xa1a446e3aa1da0ddL, 0x114f7887b992b625L, 0x42c9c80ee921404cL, 0xec608339e2d9411fL, 0x3eda7cbf4d951ec5L, 0x2dd532e61a9d7f58L, 0xf3f7af32ab3e36b8L, 0xd568f80cadd21160L, 0xe1111b8045117850L, 0xbd4e5291ca269d41L, 0x379d8eb7a4f9e3c3L, 0x929f7f7aaacfe2f4L, 0x221bd448063574ebL, 0x1f05bef841582416L, 0x93ea95a22a5cb416L },
             { 0x248076a540e1d2dbL, 0xdecc101abe120019L, 0x5b05b40c1a71bc42L, 0xc054c5151c92e5abL, 0xa349d36cb075218aL, 0x5bd288604a3717efL, 0x42944ec0520b74e4L, 0x862b90dd3a8dde52L, 0x4563f8f9e2e2ad69L, 0xaf0b6f63d0840b97L, 0xca05298f1df0664eL, 0x77ae0fe6bb09d22fL, 0x85609c383f413d55L, 0xf9f728d7305109cdL, 0xeb7208f666bb2486L, 0xd486bcc63a31ba3aL, 0xde41b854fa469b1fL, 0x1861924c80cbff65L, 0x22c97f4ac9e01c8L, 0x2ccec62f525b9abdL, 0xf8fa934486417e0aL, 0x479dbbdb1a2c5c3L, 0xf6fb349203012102L, 0x95faef7cec9719daL, 0xd25cd23f9f764551L, 0x57dcf0062c54a161L, 0xc572cc55d9e05856L, 0x8f54012d73086603L, 0x54e39e3ef068829fL, 0xff546d6605c5104dL, 0xdaffc8ce7f12e39bL, 0x5dcc96294496c80L, 0x1e0ed88270db5495L, 0x6d4c2e00e8e9e8a8L, 0x90700c0a9ce6e6ddL, 0x41c7ac64344b5fecL, 0xab405f0c71929147L, 0x5540606064aec728L, 0x870ffd227ebac0d9L, 0xe9ddc51a7c728eb8L, 0xf64d6124be1ec0bfL, 0x40a62feeb067cd96L, 0x2aca4ac8f7e2d82L, 0xb3799592b9e689a7L, 0x9e35c3d75d3de779L, 0x1c10fd7d4b6db151L, 0x720cd9495945387fL, 0xc7f74781de509a50L, 0x14b396723f9b20e5L, 0x319627c015bd19caL, 0x37b37c164856ffaaL, 0x62bc7cbd048289a0L, 0xed9497089bf709e9L, 0xe3b163cea0b34f06L, 0x6cfcc53997624592L, 0xad39afbd4fbfb655L, 0x590fc6f2cf02fb5cL, 0xe22ba5a58042381fL, 0xc9e8a05e15c1d3faL, 0x68872420d9a27b84L, 0x6890f4a5479148cL, 0x80c698a55635a9c3L, 0x1424192eebfaae58L, 0x867f672b27d7e713L },
@@ -35,15 +33,15 @@ public class Zobrist {
 
     private long calculateInitialZobristKeyBeforeBoard() {
         long zobristKey = 0L;
-        for (int pieceType = 0; pieceType < NUM_PIECE_TYPES; pieceType++) {
-            for (int position = 0; position < BOARD_SIZE; position++) {
+        for (int pieceType = 0; pieceType < 6; pieceType++) {
+            for (int position = 0; position < 64; position++) {
                 zobristKey ^= zobristTable[pieceType][position];
             }
         }
         return zobristKey;
     }
 
-    public long applyMove(long currentZobristKey,byte fromIndex, byte toIndex, long r, long b, long rr, long bb, long br, long rb) {
+    public static long applyMove(long currentZobristKey,byte fromIndex, byte toIndex, long r, long b, long rr, long bb, long br, long rb) {
         byte fromType = -1;
         long tempIndexed = (1L << fromIndex); // For performance, save here
         if((r & tempIndexed) != 0) fromType=0;
@@ -72,11 +70,11 @@ public class Zobrist {
 
 /*        // Update Zobrist key for moving piece from 'fromPosition' to 'toPosition'
         currentZobristKey ^= zobristTable[fromType][fromIndex];*/
-        if(fromIndex<2){//All single moves:
+        if(fromType<2){//All single moves: //TODO: Fixed, was fromIndex <2 before now fromType instead
 
             currentZobristKey ^= zobristTable[fromType][fromIndex];//Here we can remove the single from the start, no
             //Complex logic like double leaving a piece required.
-            boolean isRedSingle = fromIndex==0;
+            boolean isRedSingle = fromType==0;//FIXED, was FROMINDEX
             switch (toType){
 
                 case -1 -> {
@@ -121,9 +119,10 @@ public class Zobrist {
         //int remainingSingle = ((fromType==2||fromType==5)?0:1);
         int remainingSingle = ((fromType==2||fromType==5)?0:1);
         int movingSingle = (fromType==2||fromType==4)?0:1;//Not same as above, same as belongs to team
-        currentZobristKey ^= zobristTable[remainingSingle][fromIndex]; //reddouble,redOnBlue leave red etc and we know
 
-        currentZobristKey ^= zobristTable[fromType][fromIndex];//REmove original double, it never stays
+        currentZobristKey ^= zobristTable[fromType][fromIndex];//REmove original double, it never stay
+        // s
+        currentZobristKey ^= zobristTable[remainingSingle][fromIndex]; //reddouble,redOnBlue leave red etc and we know
 
         switch (toType){
 

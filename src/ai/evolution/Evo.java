@@ -8,7 +8,7 @@ public class Evo {
     public static int populationSize = 10;
     public static int generations = 10;//100 previously
 
-    public static int opponentsPerCandidate = 3; // Less than 20/19 because too much time
+    public static int opponentsPerCandidate = 5; // Less than 20/19 because too much time
 
 
     /**
@@ -20,7 +20,14 @@ public class Evo {
      * Weight4 range: 12.552360791240071 to 13.654308665935384
      *
      *
+     *Tried again, pop10 gen10 opp3 after 300 normalized change:
+     * Generation 9:
+     * Weight1 range: 0.06978540619062605 to 0.3529705567216121
+     * Weight2 range: -0.023442314766092813 to 0.14194012416251653
+     * Weight3 range: 0.3584529611342397 to 0.4638815847194541
+     * Weight4 range: 0.2516543343923714 to 0.4581839821098716
      *
+     * guessing good values: 1-2, 0.5, 3, 3
      *
      * **/
 
@@ -111,8 +118,8 @@ public class Evo {
         List<Candidate> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {//Was without 20 before for 0..1
             //population.add(new Candidate(rand.nextDouble()*20, rand.nextDouble()*20, rand.nextDouble()*20,rand.nextDouble()*20));
-            population.add(new Candidate(rand.nextDouble()*20, rand.nextDouble()*20, rand.nextDouble()*20,rand.nextDouble()*20));
-
+            population.add(new Candidate(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(),rand.nextDouble()));
+            //Should be normalized?
         }
         return population;
     }
@@ -150,21 +157,35 @@ public class Evo {
 
     // Mutate the offspring parameters
     private static void mutate(Candidate offspring) {
-        if (rand.nextDouble() < 0.1) { // 10% mutation rate PREVIOUS 0.1, NOW 2
-            offspring.pieceWeight += rand.nextGaussian() * 2;
-            offspring.pieceWeight = Math.max(0, Math.min(20, offspring.pieceWeight));
+        double range = 0.1;
+        double rate = 0.1;
+        if (rand.nextDouble() < rate) { // 10% mutation rate PREVIOUS 0.1, NOW 2
+            offspring.pieceWeight += rand.nextGaussian() * range;
+            //offspring.pieceWeight = Math.max(0, Math.min(20, offspring.pieceWeight));
         }
-        if (rand.nextDouble() < 0.1) {
-            offspring.attackedMoreWeight += rand.nextGaussian() * 2;
-            offspring.attackedMoreWeight= Math.max(0, Math.min(20, offspring.attackedMoreWeight));
+        if (rand.nextDouble() < rate) {
+            offspring.attackedMoreWeight += rand.nextGaussian() * range;
+            //offspring.attackedMoreWeight= Math.max(0, Math.min(20, offspring.attackedMoreWeight));
         }
-        if (rand.nextDouble() < 0.1) {
-            offspring.distanceWeight += rand.nextGaussian() * 2;
-            offspring.distanceWeight = Math.max(0, Math.min(20, offspring.distanceWeight));
+        if (rand.nextDouble() < rate) {
+            offspring.distanceWeight += rand.nextGaussian() * range;
+            //offspring.distanceWeight = Math.max(0, Math.min(20, offspring.distanceWeight));
         }
-        if (rand.nextDouble() < 0.1) {
-            offspring.thirdLastRowMoreWeight += rand.nextGaussian() * 2;
-            offspring.thirdLastRowMoreWeight= Math.max(0, Math.min(20, offspring.thirdLastRowMoreWeight));
+        if (rand.nextDouble() < rate) {
+            offspring.thirdLastRowMoreWeight += rand.nextGaussian() * range;
+            //offspring.thirdLastRowMoreWeight= Math.max(0, Math.min(20, offspring.thirdLastRowMoreWeight));
+        }
+        normalizeWeights(offspring);
+
+    }
+
+    private static void normalizeWeights(Candidate candidate) {
+        double totalWeight = candidate.pieceWeight + candidate.attackedMoreWeight + candidate.distanceWeight + candidate.thirdLastRowMoreWeight;
+        if (totalWeight != 0) { // Avoid division by zero
+            candidate.pieceWeight /= totalWeight;
+            candidate.attackedMoreWeight /= totalWeight;
+            candidate.distanceWeight /= totalWeight;
+            candidate.thirdLastRowMoreWeight /= totalWeight;
         }
     }
 }

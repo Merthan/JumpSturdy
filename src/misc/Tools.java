@@ -1,6 +1,7 @@
 package misc;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -241,6 +242,12 @@ public class Tools {
         displayBitboard(bits);
     }
 
+    public static String doubleFormatted(double d){
+        //DecimalFormat df = new DecimalFormat("#.##");
+        //return df.format(d);
+        return String.format("%.2f", d);
+    }
+
     public static void sortList(List<?> objectsToOrder, List<?> orderedObjects) {
 
         HashMap<Object, Integer> indexMap = new HashMap<>();
@@ -431,6 +438,8 @@ class BitPackingComparison {
         byteArray[1] = byte2;
         return byteArray;
     }
+
+
 }
 
 class ZobristTableGenerator {
