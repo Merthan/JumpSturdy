@@ -59,7 +59,8 @@ public class ServerConnection {
         boolean isRed = false;  // You would set this according to your game logic
 
         BitBoard board = new BitBoard(fen); // Assuming constructor from FEN
-        //String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
+        String bestMove = SturdyJumpersAI.findBestMove(SearchType.ALPHABETA, board, isRed);
+
         return bestMove;
     }
 }

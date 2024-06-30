@@ -24,6 +24,48 @@ public class FastTranspo {
         return packedEntry;
     }
 
+    public String transpositionTableToStringNormal() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Long, Long> entry : transpositionTable.entrySet()) {
+            long key = entry.getKey();
+            long value = entry.getValue();
+            sb.append("Key: ").append(key).append(", Value: ").append(entryToString(value)).append("\n");
+        }
+        return sb.toString();
+    }
+    public String transpositionTableToString(boolean sortByDepth) {
+        StringBuilder sb = new StringBuilder();
+
+        // Stream the entries, optionally sort by depth
+        transpositionTable.entrySet().stream()
+                .sorted((e1, e2) -> {
+                    if (sortByDepth) {
+                        byte depth1 = (byte) ((e1.getValue() >> 8) & 0xFFL);
+                        byte depth2 = (byte) ((e2.getValue() >> 8) & 0xFFL);
+                        return Byte.compare(depth2, depth1); // Sort descending by depth
+                    } else {
+                        return Long.compare(e1.getKey(), e2.getKey()); // Sort by key
+                    }
+                })
+                .forEach(entry -> {
+                    long key = entry.getKey();
+                    long value = entry.getValue();
+                    sb.append(key).append(", Value: ").append(entryToString(value)).append("\n");
+                });
+
+        return sb.toString();
+    }
+
+    public static String entryToString(long packedEntry) {
+        int eval = (int) ((packedEntry >> 32) & 0xFFFFFFFFL);
+        byte fromPos = (byte) ((packedEntry >> 24) & 0xFFL);
+        byte toPos = (byte) ((packedEntry >> 16) & 0xFFL);
+        byte depth = (byte) ((packedEntry >> 8) & 0xFFL);
+        byte type = (byte) (packedEntry & 0xFFL);
+
+        return String.format("Entry: [Eval: %d, FromPos: %d, ToPos: %d, Depth: %d, Type: %d]", eval, fromPos, toPos, depth, type);
+    }
+
 
     public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
         long packedEntry = packEntry(eval, fromPos, toPos, depth, type);

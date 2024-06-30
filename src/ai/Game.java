@@ -274,6 +274,9 @@ public class Game {
     public void buildBoardFromEmpty() {
         buildBoard(b("6/8/8/8/8/8/8/6")); // Helper, does it with empty bitboard
     }
+    public void buildBoardFromDefault(){
+        buildBoard(b(DEFAULT_BOARD));
+    }
 
     /**
      * Different than the other methods, add is optional e.g. "e5" -> r on e5 "e6 bb" -> bb on e6
@@ -530,7 +533,7 @@ public class Game {
         return new BitBoard(fen);
     }
 
-    final static String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
+    public final static String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
 
     public static void main(String[] args) {
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/6r01/2bb5/8/8/8/8/r05", "1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/3r01r0",
@@ -723,8 +726,13 @@ public class Game {
         //game.playVsBot();
         BitBoard random = b(DEFAULT_BOARD);
         //random.deleteRandomFigure(new Random().nextBoolean());
-        game.botWorldChampionship(random,200,3,false,true);
+        //game.botWorldChampionship(random,200,3,false,true);
 
+        //game.buildBoardFromDefault();
+        System.out.println(b(DEFAULT_BOARD+" r").redSingles);
+        System.out.println(b(DEFAULT_BOARD+" ").redSingles);
+
+        //game.playVsBot();
         /**
          * 100ms r 2 b 8
          * 50ms r 27 b 23
@@ -755,6 +763,8 @@ public class Game {
          *
          * */
 
+        game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
+        //game.advancedBotGame(b(DEFAULT_BOARD),300,true,false,true);
 
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4

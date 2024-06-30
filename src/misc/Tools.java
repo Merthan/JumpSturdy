@@ -433,3 +433,25 @@ class BitPackingComparison {
     }
 }
 
+class ZobristTableGenerator {
+    public static void main(String[] args) {
+        Random random = new Random();
+        long[][] zobristTable = new long[6][64];
+
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 64; j++) {
+                zobristTable[i][j] = random.nextLong();
+            }
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.print("{ ");
+            for (int j = 0; j < 64; j++) {
+                System.out.print("0x" + Long.toHexString(zobristTable[i][j]) + "L");
+                if (j < 63) System.out.print(", ");
+            }
+            System.out.println(" },");
+        }
+    }
+}
+

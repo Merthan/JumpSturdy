@@ -243,12 +243,17 @@ public class Evaluate {
         System.out.println("thirdLastRowMoreFiguresThanEnemy: " + thirdLastRowMoreFiguresThanEnemy);*/
         //if(true) return 0;
 
-        return (pieceWorthValue - enemyPieceWorthValue) +
-                (attackedMoreThanEnemy) +
-                //(8-distanceToEnd) +
-                (enemyDistanceToEnd-redDistanceToEnd)+
-                (thirdLastRowMoreFiguresThanEnemy);
+        //Now with weights, simple cast no rounding for performance
+        return (int) (pieceWeight*(pieceWorthValue - enemyPieceWorthValue) +
+                attackedMoreWeight*(attackedMoreThanEnemy) +
+                distanceWeight*(enemyDistanceToEnd-redDistanceToEnd)+
+                thirdLastMoreWeight*(thirdLastRowMoreFiguresThanEnemy));
     }
+
+    public static double pieceWeight= 1.0;
+    public static double attackedMoreWeight= 1.0;
+    public static double distanceWeight= 1.0;
+    public static double thirdLastMoreWeight= 1.0;
 
     //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
     // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
