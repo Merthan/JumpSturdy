@@ -1,9 +1,6 @@
 package ai.transpotest;
 
-import ai.BitBoardManipulation;
-import ai.Evaluate;
-import ai.TranspositionTable;
-import ai.ZobristHashing;
+import ai.*;
 import ai.transpotest.FastTranspo;
 import ai.transpotest.Zobrist;
 import misc.Tools;
@@ -422,7 +419,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
         if(detailedLog)System.out.println("Sorting took: "+(System.nanoTime()-start));
         //if(true)System.exit(0);
         int lastIndexReached=0;
-        for (int depth = 1; ; depth++) {
+        for (int depth = 1; depth < MerthanAlphaBetaExperiment.DELETE_UPPER_DEPTH_LIMIT; depth++) {
 
 
             if(log)Tools.printInColor("New Depth reached: "+depth+" currentbest:"+currentBestValue,true);
@@ -449,7 +446,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
                 //List<String> childBestMoves = new ArrayList<>();
                 List<byte[]> childBestMoves = null;
                 if(saveSequence)childBestMoves = new ArrayList<>();
-                long updatedZobrist = zobrist.applyMove(zobrist.startZobristKey,move[0],move[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+                long updatedZobrist = useTranspositionTable?zobrist.applyMove(zobrist.currentBoardKey,move[0],move[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red):0;
                 int moveValue = alphaBeta(executedMoveBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, childBestMoves, updatedZobrist);
                 if(detailedLog) System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+ (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
                 if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
