@@ -86,7 +86,9 @@ public class Zobrist {
                 }
                 case 1 -> {
                     currentZobristKey ^= zobristTable[1][toIndex];
-                    currentZobristKey ^= zobristTable[isRedSingle?1:3][toIndex];//redsingle or bluedouble
+                    //0 if red=true doubleBlue else
+                    //TODO: CAUSED ERROR : currentZobristKey ^= zobristTable[isRedSingle?1:3][toIndex];//redsingle or bluedouble
+                    currentZobristKey ^= zobristTable[isRedSingle?0:3][toIndex];
                 }
                 case 2 -> {// ALL OF THE NEXT ONES ASSUME NO WRONG MOVES AKA NO THIRD RED PIECE CAN GO ONTOP REDDOUBLE
                     currentZobristKey ^= zobristTable[2][toIndex];
@@ -168,8 +170,9 @@ public class Zobrist {
         return currentZobristKey;
     }
 
-    public void initializeCorrectBoardKey(BitBoard board){
+    public long initializeCorrectBoardKey(BitBoard board){
         currentBoardKey = computeInitialZobristKey(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+        return currentBoardKey;
     }
 
 
