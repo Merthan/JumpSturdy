@@ -5,6 +5,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import ai.MerthanAlphaBetaExperiment;
 import ai.SearchType;
 import ai.SturdyJumpersAI;
 import misc.Tools;
@@ -12,13 +13,13 @@ import model.BitBoard;
 
 public class ServerConnection {
 
-    public static long ZEIT = 2000L;
+    public static int ZEIT = 2000;
 
 
     public static void main(String[] args) {
         System.out.println("-------Starting Server Connection------\n\n\n");
         String serverAddress = "localhost";
-        int port = 5060; // The port on which the Python server is listening
+        int port = 5065; // The port on which the Python server is listening
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             System.out.println("Server started on port " + port);
@@ -56,12 +57,28 @@ public class ServerConnection {
     }
 
     private static String processFEN(String fen) {
-        // Assuming you have a method in SturdyJumpersAI to handle just FEN
-        // Simulating that we're still playing as 'red' for simplicity
-        boolean isRed = false;  // You would set this according to your game logic
 
-        BitBoard board = new BitBoard(fen); // Assuming constructor from FEN
-        String bestMove = Tools.parseMoveToString( new ai.MerthanAlphaBetaExperiment().findBestMove(board,isRed, (int) ZEIT).get(0));
+        boolean isRed = decide_player(fen);
+        String cleanFEN = fen.substring(0, fen.length() - 2);
+
+        BitBoard board = new BitBoard(cleanFEN);
+        String bestMove = Tools.parseMoveToString(new MerthanAlphaBetaExperiment().findBestMove(board, isRed, ZEIT).get(0));
         return bestMove;
+    }
+
+    private static boolean decide_player(String fen) {
+        if (fen == null || fen.isEmpty()) {
+            throw new IllegalArgumentException("Invalid FEN string");
+        }
+
+        char lastChar = fen.charAt(fen.length() - 1);
+
+        if (lastChar == 'r') {
+            return true;
+        } else if (lastChar == 'b') {
+            return false;
+        } else {
+            throw new IllegalArgumentException("FEN string ungültig");
+        }
     }
 }
