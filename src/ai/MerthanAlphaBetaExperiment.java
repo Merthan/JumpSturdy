@@ -107,7 +107,7 @@ public class MerthanAlphaBetaExperiment {
 
 
     public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer, List<byte[]> bestMoves, long incrementalZobristKey) {
-        if (System.currentTimeMillis() > endTime || timeoutReached) {//Deactivated for debugging with  && false
+        if (timeoutReached||System.currentTimeMillis() > endTime) {//Deactivated for debugging with  && false
             //return 0; // Return a neutral value if time limit is reached
             timeoutReached = true;//So no overhead calling currenttimemillis, gets reset in findbestmove
             return maximizingPlayer ? -MAXIMUM_WITH_BUFFER_POSITIVE : MAXIMUM_WITH_BUFFER_POSITIVE; // Return worst value when time limit reached to not pick these
@@ -528,12 +528,9 @@ public class MerthanAlphaBetaExperiment {
 
             if (log) System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
             if (log) System.out.println("Current best valuee: " + confirmedBestValue);
-            if (log)
-                System.out.println("Depth Reached: " + bestDepthReached + " and last index was " + lastIndexReached + "/" + moves.length);
-            if (log)
-                System.out.println("AlphaBeta called: " + counter + " End Evaluated: " + endReachedCounter + " Cuts: " + cutoffCounter + " Depth Reached: " + bestDepthReached + " and last index was " + lastIndexReached + "/" + moves.length + " misc: depth" + bestDepthReached + ": " + miscCounter + "% TranspoCounter: " + transpoCounter);
-            if (log)
-                System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:" + ruhesucheTime);
+            if (log) System.out.println("Depth Reached: " + bestDepthReached + " and last index was " + lastIndexReached + "/" + moves.length);
+            if (log) System.out.println("AlphaBeta called: " + counter + " End Evaluated: " + endReachedCounter + " Cuts: " + cutoffCounter + " Depth Reached: " + bestDepthReached + " and last index was " + lastIndexReached + "/" + moves.length + " misc: depth" + bestDepthReached + ": " + miscCounter + "% TranspoCounter: " + transpoCounter);
+            if (log) System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:" + ruhesucheTime);
 
             if (dynamicTimeManagement) {
                 adjustTimeLimit(moves.length, board);
