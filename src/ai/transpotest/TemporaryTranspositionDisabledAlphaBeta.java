@@ -364,7 +364,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
                 type = 1;//lower
             }
             //if(detailedLog) Tools.printBlue("TranspoEval:"+type+" evalbound:"+evalBound+" a:"+alpha+" b:"+beta);
-            fastTranspo.storeEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type);
+            fastTranspo.debugStoreEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type,board);
         }
         return evalBound;
     }
@@ -487,11 +487,11 @@ public class TemporaryTranspositionDisabledAlphaBeta {
         }
         miscCounter = ((lastIndexReached+1) * 100) / moves.length;
 
-        if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
-        if(log)System.out.println("Current best valuee: " + confirmedBestValue);
-        if(log)System.out.println("Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
-        if(log)System.out.println("AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"% TranspoCounter: "+ transpoCounter);
-        if(log)System.out.println("Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
+        if(log)System.out.println("-Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
+        if(log)System.out.println("-Current best valuee: " + confirmedBestValue);
+        if(log)System.out.println("-Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length);
+        if(log)System.out.println("-AlphaBeta called: " + counter+" End Evaluated: "+endReachedCounter+ " Cuts: "+cutoffCounter+" Depth Reached: " + bestDepthReached+" and last index was "+lastIndexReached+"/"+moves.length+" misc: depth"+bestDepthReached+": "+miscCounter+"% TranspoCounter: "+ transpoCounter);
+        if(log)System.out.println("-Time Elapsed: " + (System.currentTimeMillis() - (endTime - timeLimitMillis)) + " ms Ruhesuche took:"+ ruhesucheTime);
         ruhesucheTime=0;
         counter=0;
         endReachedCounter =0;

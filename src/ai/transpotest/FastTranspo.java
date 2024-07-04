@@ -81,7 +81,7 @@ public class FastTranspo {
     public void debugStoreEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type, BitBoard board) {
         long packedEntry = packEntry(eval, fromPos, toPos, depth, type);
         transpositionTable.put(zobristKey, packedEntry);
-        //fenTableDebug.put(zobristKey,board.toFEN()+">>"+ board.previousMoves()+ " -- "+ Arrays.toString(board.previousMove));
+        fenTableDebug.put(zobristKey,board.toFEN()+">>"+ board.previousMoves()+ " -- "+ Arrays.toString(board.previousMove));
     }
 
     static int unpackEval(long packedEntry) {

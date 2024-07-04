@@ -149,7 +149,9 @@ class Candidate {
             //playGameVsDefault(2,1,3,3);
             //
             // playGameVsDefault(2,1,3,3);
-            playGameVsDefault(0.5,0.34,0.10,0.05,2000);
+            playGameVsDefault(0.5,0.34,0.10,0.05,50);
+            //TODO: NEW mostly wins here against default, however 2000ms again causes the results to not be that pretty
+            //TODO: 2000 needs to be tested over a long amount of time to get representative results for that
         }
 
         /**

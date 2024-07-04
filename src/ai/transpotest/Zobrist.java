@@ -1,6 +1,8 @@
 package ai.transpotest;
 
+import misc.Tools;
 import model.BitBoard;
+import model.BoardException;
 
 public class Zobrist {
 
@@ -41,6 +43,12 @@ public class Zobrist {
         return zobristKey;
     }
 
+    /**
+     * Very complex movement logic, error prone :/
+     * red beats blue single = -redF -blueT +redT -0 -1 +0
+     * red moves forward: from-0 to+0
+     * **/
+
     public static long applyMove(long currentZobristKey,byte fromIndex, byte toIndex, long r, long b, long rr, long bb, long br, long rb) {
         byte fromType = -1;
         long tempIndexed = (1L << fromIndex); // For performance, save here
@@ -71,6 +79,13 @@ public class Zobrist {
 /*        // Update Zobrist key for moving piece from 'fromPosition' to 'toPosition'
         currentZobristKey ^= zobristTable[fromType][fromIndex];*/
         if(fromType<2){//All single moves: //TODO: Fixed, was fromIndex <2 before now fromType instead
+
+            if(fromType == -1){
+                Tools.printDivider();
+                BitBoard board = BitBoard.fromLongs(r,b,rr,bb,br,rb);
+                board.printCommented("ZOBRIST EXCEPTION");
+                throw new BoardException(board,"ZOBRIST EXCEPTION, FROMTYPE -1, nothing at start index:"+ Tools.parseMoveToString(new byte[]{fromIndex,toIndex}));
+            }
 
             currentZobristKey ^= zobristTable[fromType][fromIndex];//Here we can remove the single from the start, no
             //Complex logic like double leaving a piece required.

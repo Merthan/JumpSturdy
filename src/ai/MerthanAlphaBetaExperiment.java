@@ -6,6 +6,7 @@ import misc.Tools;
 import misc.deprecated.TranspositionTable;
 import misc.deprecated.ZobristHashing;
 import model.BitBoard;
+import model.BoardException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -86,7 +87,7 @@ public class MerthanAlphaBetaExperiment {
 
 
     static final boolean sortMovesBeforeEach = true;
-    static final boolean useTranspositionTable = true; //switch Transposition Table
+    static final boolean useTranspositionTable = false; //switch Transposition Table
     public final static boolean saveSequence = true;
     public final static boolean dynamicTimeManagement = false;
 
@@ -245,14 +246,16 @@ public class MerthanAlphaBetaExperiment {
         //System.out.println("depth"+(currentStartDepth-depth));
         byte[] bestMoveFromTransposition = null;
 
+        byte[][] moves=null; // Already declared here now, might need to be initialized and checked when seeing if bestSavedMove contained
+
         if (useTranspositionTable) {
             Long boxedResult = fastTranspo.transpositionTable.get(incrementalZobristKey);
             long entry = boxedResult==null?0:boxedResult;
 
             if(entry!=0){
                 //NEW; TEST; DELETE
-                //String s =fastTranspo.fenTableDebug.get(incrementalZobristKey);
-/*                if(!(s.split(">>")[0]).equals(board.toFEN())){
+/*                String s =fastTranspo.fenTableDebug.get(incrementalZobristKey);
+                if(!(s.split(">>")[0]).equals(board.toFEN())){
                     Tools.printDivider();
                     System.out.println("Board mismatch");
 
@@ -272,13 +275,24 @@ public class MerthanAlphaBetaExperiment {
                         return (int) (entry >> 32);//Return eval
                     } else if (type==1) {//Lower
                         alpha = Math.max(alpha,(int) (entry >> 32));
-                        bestMoveFromTransposition = new byte[]{(byte) ((entry >> 24) & 0xFFL),(byte) ((entry >> 16) & 0xFFL) };
                         //evalBound = alpha;//maximizingPlayer? alpha: Integer.MAX_VALUE;//TODO: both of these are new, evalBound set here. Might be wrong
                     }else{//2 upper
                         beta = Math.min(beta,(int) (entry >> 32) );
-                        bestMoveFromTransposition = new byte[]{(byte) ((entry >> 24) & 0xFFL),(byte) ((entry >> 16) & 0xFFL) };
-
                         //evalBound = //maximizingPlayer? Integer.MIN_VALUE: beta;//TODO: these didnt work, other team won more
+                    }
+                    bestMoveFromTransposition = new byte[]{(byte) ((entry >> 24) & 0xFFL),(byte) ((entry >> 16) & 0xFFL) };
+                    moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+                    byte fromPos = bestMoveFromTransposition[0];
+                    boolean containsMove = false;
+                    for (int i = 0; i < moves.length; i++) {
+                        if(moves[i][0]==fromPos){//Frompos saved for performance
+                            if(moves[i][1]==bestMoveFromTransposition[1]){
+                                containsMove=true;
+                            }
+                        }
+                    }
+                    if(!containsMove){
+                        bestMoveFromTransposition=null; // IF MOVE NOT CONTAINED; DONT PASS A WRONG MOVE TO TRY IN ALPHABETA (HASH COLLISION;LOGIC ERROR ETC COULD CAUSE THIS)
                     }
 
                     if (alpha >= beta) {
@@ -306,27 +320,28 @@ public class MerthanAlphaBetaExperiment {
             int eval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
             endReachedCounter++;
             //Depth 0, to account for attacked pieces afterwards
+            int finalEval;
             if (depthZero) {//If ruhesuche gets a value, return ruhesuche (doesnt take long)
 
                 //Only do Ruhesuche if canwin not set to "winning soon" aka fusion or on winning spot already to not return a false (after FORCED ruhesuche/attacking) value
                 long start = System.currentTimeMillis();
                 int[] ruhesucheArray = (Math.abs(eval) < 2000000000) ? BitBoardManipulation.ruhesucheWithPositions(board, maximizingPlayer) : null; // If not winning/canwin next move, do ruhesuche. else it doesnt matter
                 ruhesucheTime += System.currentTimeMillis() - start;
-                int finalEval = (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
+                finalEval = (ruhesucheArray == null) ? eval : ruhesucheArray[ruhesucheArray.length - 1];
                 //if(useTranspositionTable)fastTranspo.debugStoreEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z,board);//EXACT
-                if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
-
-                return finalEval;
+                //if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z,board);//EXACT
             } else {//Aka canWin || gameEnded
                 //MODIFIED: previously only for canWin, Now its either canWin or gameEnded that shows a preference for higher depth/less moves
-                int finalEval = maximizingPlayer ? (eval + depth) : (eval - depth);
+                finalEval = maximizingPlayer ? (eval + depth) : (eval - depth);
                 //if(useTranspositionTable)fastTranspo.debugStoreEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z,board);//EXACT
-                if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
-
-                return finalEval;//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
+                //return finalEval;//Prefer moves with higher depth, needs buffer so changed Integer.MAX_VALUE
             }
+            if(useTranspositionTable)fastTranspo.storeEntry(incrementalZobristKey,finalEval,z,z,(byte) depth,z);//EXACT
+            return finalEval;
         }
-        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+        if(moves==null){ // If not already initialized because we needed to check if transpo move is actually a valid move here (just in case); init only happening once for performance
+            moves= sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+        }
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves;
         if (saveSequence) {
@@ -354,7 +369,14 @@ public class MerthanAlphaBetaExperiment {
 
             long newZobristKeyAfterMove = 0;
             if(useTranspositionTable){
-                newZobristKeyAfterMove =Zobrist.applyMove(incrementalZobristKey,move[0],move[1],board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+                try {
+                    newZobristKeyAfterMove =Zobrist.applyMove(incrementalZobristKey,move[0],move[1],board.redSingles,board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
+                }catch (BoardException E){
+                    E.printStackTrace();
+                    board.printCommented("ZOBRIST EXCEPTION move:"+Tools.parseMoveToString(move));
+                    Tools.printDivider();
+                    throw new BoardException(board,"ZOBRIST EXCEPTION CAUGHT, debug:i="+i+">"+(Arrays.toString(bestMoveFromTransposition))+ " history:"+board.previousMoves());
+                }
             }
             BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, maximizingPlayer);
             List<byte[]> childBestMoves;
