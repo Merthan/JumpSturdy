@@ -1,4 +1,4 @@
-package ai;
+package misc.deprecated;
 
 public class TestWrapper {
     // wie viele Zustaende wurden untersucht

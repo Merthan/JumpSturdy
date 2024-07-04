@@ -3,9 +3,10 @@ package ai;
 import ai.transpotest.FastTranspo;
 import ai.transpotest.Zobrist;
 import misc.Tools;
+import misc.deprecated.TranspositionTable;
+import misc.deprecated.ZobristHashing;
 import model.BitBoard;
 
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -225,6 +226,8 @@ public class MerthanAlphaBetaExperiment {
     public void debugPutTranspo(long key, BitBoard board){
 
     }
+
+
 
     public int alphaBeta(BitBoard board, int depth, int alpha, int beta, boolean maximizingPlayer, List<byte[]> bestMoves, long incrementalZobristKey) {
         if (System.currentTimeMillis() > endTime||timeoutReached) {//Deactivated for debugging with  && false
@@ -513,7 +516,7 @@ public class MerthanAlphaBetaExperiment {
 
 
 
-
+    List<byte[]> allReturnedMovesForRemisDetection = new ArrayList<>();//TODO: paused, currently not used
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
         timeoutReached = false;
         endTime = System.currentTimeMillis() + timeLimitMillis;
@@ -522,7 +525,7 @@ public class MerthanAlphaBetaExperiment {
         bestDepthReached = 0;
         ArrayList<byte[]> bestMoveSequence = new ArrayList<>();
 
-        if(useTranspositionTable){
+        if (useTranspositionTable) {
             zobrist.initializeCorrectBoardKey(board);//Sets the initial one, from here
         }
 
@@ -530,94 +533,98 @@ public class MerthanAlphaBetaExperiment {
 
         int confirmedBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Only after all options have gone through
         byte[] winningMoves = BitBoardManipulation.canWinWithMovesFusioned(isRed, board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red);
-        if(winningMoves!=null){ // If we can win, dont do alphabeta search, just do the moves to win
-            if(winningMoves.length==2){
+        if (winningMoves != null) { // If we can win, dont do alphabeta search, just do the moves to win
+            if (winningMoves.length == 2) {
                 return List.of(winningMoves);//new ArrayList<>(new byte[]{(byte)2});
             }
-            if(winningMoves.length==3){
+            if (winningMoves.length == 3) {
                 return List.of(new byte[]{winningMoves[0], winningMoves[1]});
             }
         }
 
-        byte[][] moves = sortMovesBeforeEach? board.getAllPossibleMovesByteSorted(isRed): board.getAllPossibleMovesByte(isRed);
-        //without streams: 2061100n with streams: 2317900
-        long start = System.nanoTime();
-        //if(log) Tools.printRed("Before sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
-        //TODO: can be removed, no benefit I guess
-        Arrays.sort(moves, Comparator.comparingInt(e -> (isRed?-1:1)* Evaluate.evaluateMoveComplex(isRed,e[0],e[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
-        //if(log) Tools.printBlue("After sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
-        if(detailedLog)System.out.println("Sorting took: "+(System.nanoTime()-start));
-        //if(true)System.exit(0);
-        int lastIndexReached=0;
-        for (int depth = 1; depth<DELETE_UPPER_DEPTH_LIMIT; depth++) {
-            currentStartDepth=depth;
+        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(isRed) : board.getAllPossibleMovesByte(isRed);
+        try {
 
-            if(log)Tools.printInColor("New Depth reached: "+depth+" currentbest:"+currentBestValue,true);
+            //without streams: 2061100n with streams: 2317900
+            long start = System.nanoTime();
+            //if(log) Tools.printRed("Before sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
+            //TODO: can be removed, no benefit I guess
+            Arrays.sort(moves, Comparator.comparingInt(e -> (isRed ? -1 : 1) * Evaluate.evaluateMoveComplex(isRed, e[0], e[1], board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red)));
+            //if(log) Tools.printBlue("After sort:"+Arrays.stream(moves).map(Tools::parseMoveToString).toList());
+            if (detailedLog) System.out.println("Sorting took: " + (System.nanoTime() - start));
+            //if(true)System.exit(0);
+            int lastIndexReached = 0;
+            for (int depth = 1; depth < DELETE_UPPER_DEPTH_LIMIT; depth++) {
+                currentStartDepth = depth;
 
-            currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
-            //if(depth==6)break; //TODO REMOVE
-            ArrayList<byte[]> currentBestMoveSequence = new ArrayList<>();
-            //byte[][] moves = board.getAllPossibleMovesByte(isRed);
-            //System.out.println("Moves here:" + legalMoves);
-            //System.out.println("isRedTurn:" + isRed);
+                if (log) Tools.printInColor("New Depth reached: " + depth + " currentbest:" + currentBestValue, true);
 
-            boolean didCompleteAndResultsAreValid = true;
+                currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
+                //if(depth==6)break; //TODO REMOVE
+                ArrayList<byte[]> currentBestMoveSequence = new ArrayList<>();
+                //byte[][] moves = board.getAllPossibleMovesByte(isRed);
+                //System.out.println("Moves here:" + legalMoves);
+                //System.out.println("isRedTurn:" + isRed);
 
-            for (int i=0;i<moves.length;i++) {
+                boolean didCompleteAndResultsAreValid = true;
 
-                byte[] move = moves[i];
-                long updatedZobrist = useTranspositionTable?zobrist.applyMove(zobrist.currentBoardKey,move[0],move[1],board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red):0;
+                for (int i = 0; i < moves.length; i++) {
 
-                BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move,isRed);
-                byte winState =executedMoveBoard.currentWinningState();
-                if(winState == (isRed?WINNER_RED:WINNER_BLUE)){ // If found winning move first move, just do it
-                    if(log) System.out.println("WON, NO ALPHABETA");
-                    return List.of(move);
+                    byte[] move = moves[i];
+                    long updatedZobrist = useTranspositionTable ? zobrist.applyMove(zobrist.currentBoardKey, move[0], move[1], board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles, board.red_on_blue, board.blue_on_red) : 0;
+
+                    BitBoard executedMoveBoard = board.doMoveAndReturnBitboard(move, isRed);
+                    byte winState = executedMoveBoard.currentWinningState();
+                    if (winState == (isRed ? WINNER_RED : WINNER_BLUE)) { // If found winning move first move, just do it
+                        if (log) System.out.println("WON, NO ALPHABETA");
+                        return List.of(move);
+                    }
+                    //System.out.println("Prev:"+executedMoveBoard.previousMoves());
+
+                    //List<String> childBestMoves = new ArrayList<>();
+                    List<byte[]> childBestMoves = null;
+                    if (saveSequence) childBestMoves = new ArrayList<>();
+                    int moveValue = alphaBeta(executedMoveBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, childBestMoves, updatedZobrist);
+                    if (detailedLog)
+                        System.out.println("AlphaBetaStart: move: " + Tools.parseMoveToString(move) + " has value:" + moveValue + " \tsequence:" + (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
+                    if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
+                        currentBestValue = moveValue;
+                        currentBestMoveSequence.clear();
+                        currentBestMoveSequence.add(move);
+                        //childBestMoves.stream().map(Tools::parseMove).toList()
+                        if (saveSequence) currentBestMoveSequence.addAll(childBestMoves);//Else we just add the move
+                    }
+
+                    if (System.currentTimeMillis() > endTime) {
+                        didCompleteAndResultsAreValid = false;
+                        if (log) {
+                            Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: " + Tools.byteListToMoveSequence(currentBestMoveSequence) + " depth " + depth + ", only completed " + i + "/" + moves.length + " last: " + Tools.parseMoveToString(move));
+                            lastIndexReached = i;
+                        }
+                        break; // Time limit reached
+                    }
                 }
-                //System.out.println("Prev:"+executedMoveBoard.previousMoves());
 
-                //List<String> childBestMoves = new ArrayList<>();
-                List<byte[]> childBestMoves = null;
-                if(saveSequence)childBestMoves = new ArrayList<>();
-                int moveValue = alphaBeta(executedMoveBoard, depth, Integer.MIN_VALUE, Integer.MAX_VALUE, !isRed, childBestMoves, updatedZobrist);
-                if(detailedLog) System.out.println("AlphaBetaStart: move: "+Tools.parseMoveToString(move)+" has value:"+moveValue+" \tsequence:"+ (childBestMoves != null ? childBestMoves.stream().map(Tools::parseMoveToString).toList() : "empty"));
-                if (isRed ? moveValue > currentBestValue : moveValue < currentBestValue) { // Compare based on the starting player
-                    currentBestValue = moveValue;
-                    currentBestMoveSequence.clear();
-                    currentBestMoveSequence.add(move);
-                    //childBestMoves.stream().map(Tools::parseMove).toList()
-                    if(saveSequence)currentBestMoveSequence.addAll(childBestMoves);//Else we just add the move
+                if (didCompleteAndResultsAreValid) {
+                    bestMoveSequence = currentBestMoveSequence;
+                    confirmedBestValue = currentBestValue;
                 }
+
+
+                bestDepthReached = depth;
+
+                if (detailedLog)
+                    System.out.println("AlphaBetaStart for DEPTH: " + depth + " bestmoveValue " + confirmedBestValue + " sequence:" + Tools.byteListToMoveSequence(bestMoveSequence));
+
 
                 if (System.currentTimeMillis() > endTime) {
-                    didCompleteAndResultsAreValid = false;
-                    if(log){
-                        Tools.printRed("Time limit reached in findBest Moves, discarded dumb best move sequence: "+Tools.byteListToMoveSequence(currentBestMoveSequence)+" depth "+depth+", only completed "+i+"/"+moves.length+" last: "+Tools.parseMoveToString(move));
-                        lastIndexReached=i;
-                    }
+                    if (log) System.out.println("time limit reached in going through depths");
                     break; // Time limit reached
                 }
+
+
             }
-
-            if(didCompleteAndResultsAreValid){
-                bestMoveSequence = currentBestMoveSequence;
-                confirmedBestValue = currentBestValue;
-            }
-
-
-            bestDepthReached = depth;
-
-            if(detailedLog)System.out.println("AlphaBetaStart for DEPTH: "+depth +" bestmoveValue " +confirmedBestValue+ " sequence:"+Tools.byteListToMoveSequence(bestMoveSequence));
-
-
-            if (System.currentTimeMillis() > endTime) {
-                if(log)System.out.println("time limit reached in going through depths");
-                break; // Time limit reached
-            }
-
-
-        }
-        miscCounter = ((lastIndexReached+1) * 100) / moves.length;
+            miscCounter = ((lastIndexReached + 1) * 100) / moves.length;
 
         if(log)System.out.println("Best Move Sequence: " + Tools.byteListToMoveSequence(bestMoveSequence));
         if(log)System.out.println("Current best valuee: " + confirmedBestValue);
@@ -635,14 +642,24 @@ public class MerthanAlphaBetaExperiment {
         transpoCounter=0;
         if(useTranspositionTable)transpositionTable.clear();
 
-        if(bestMoveSequence.isEmpty()){
+            if (bestMoveSequence.isEmpty()) {
+                Tools.printDivider();
+                Tools.printRed("Error, move sequence empty, probably due to too little time e.g. 50ms? returning default value:" + Tools.parseMoveToString(moves[0]));
+                allReturnedMovesForRemisDetection.add(moves[0]);
+                return List.of(moves[0]);
+            }
+
+            allReturnedMovesForRemisDetection.add(bestMoveSequence.get(0));
+            return bestMoveSequence;
+
+        }catch (Exception E){
+            //IF any error occurs, return first move just in case. also print error
             Tools.printDivider();
-            Tools.printRed("Error, move sequence empty, probably due to too little time e.g. 50ms? returning default value:"+Tools.parseMoveToString(moves[0]));
+            E.printStackTrace();
+            board.print();
+            allReturnedMovesForRemisDetection.add(moves[0]);
             return List.of(moves[0]);
         }
-
-
-        return bestMoveSequence;
     }
 
 

@@ -18,18 +18,27 @@ public class Evo {
      * Weight2 range: 18.764625372004623 to 18.764625372004623
      * Weight3 range: 5.312987341680916 to 9.93851777583728
      * Weight4 range: 12.552360791240071 to 13.654308665935384
-     *
-     *
-     *Tried again, pop10 gen10 opp3 after 300 normalized change:
+     * <p>
+     * <p>
+     * Tried again, pop10 gen10 opp3 after 300 normalized change:
      * Generation 9:
      * Weight1 range: 0.06978540619062605 to 0.3529705567216121
      * Weight2 range: -0.023442314766092813 to 0.14194012416251653
      * Weight3 range: 0.3584529611342397 to 0.4638815847194541
      * Weight4 range: 0.2516543343923714 to 0.4581839821098716
-     *
+     * <p>
      * guessing good values: 1-2, 0.5, 3, 3
      *
-     * **/
+     *
+     * NEWEST, EVAL CLASS MULTIPLIED BY 100
+     * Generation 9:
+     * Weight1 range: 0.4089442455567967 to 0.6369416615253265
+     * Weight2 range: 0.24914283520083721 to 0.48619588597155455
+     * Weight3 range: 0.028100045920363886 to 0.28984455384289753
+     * Weight4 range: -0.07434226521603135 to 0.1540912407193666
+     *
+     *
+     **/
 
     public static void main(String[] args) {
 
@@ -75,7 +84,6 @@ public class Evo {
             System.out.println("Weight4 range: " + minWeight4 + " to " + maxWeight4);
 
 
-
             List<Candidate> matingPool = selectMatingPool(population);
 
             population = createNewPopulation(matingPool, populationSize);
@@ -118,7 +126,7 @@ public class Evo {
         List<Candidate> population = new ArrayList<>();
         for (int i = 0; i < size; i++) {//Was without 20 before for 0..1
             //population.add(new Candidate(rand.nextDouble()*20, rand.nextDouble()*20, rand.nextDouble()*20,rand.nextDouble()*20));
-            population.add(new Candidate(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(),rand.nextDouble()));
+            population.add(new Candidate(rand.nextDouble(), rand.nextDouble(), rand.nextDouble(), rand.nextDouble()));
             //Should be normalized?
         }
         return population;
@@ -145,14 +153,30 @@ public class Evo {
         return newPopulation;
     }
 
-    // Crossover two parents to create child
-    private static Candidate crossover(Candidate parent1, Candidate parent2) {
-        double weight1 = rand.nextBoolean() ? parent1.pieceWeight : parent2.pieceWeight;
-        double weight2 = rand.nextBoolean() ? parent1.attackedMoreWeight : parent2.attackedMoreWeight;
-        double weight3 = rand.nextBoolean() ? parent1.distanceWeight : parent2.distanceWeight;
-        double weight4 = rand.nextBoolean() ? parent1.thirdLastRowMoreWeight : parent2.thirdLastRowMoreWeight;
 
-        return new Candidate(weight1, weight2, weight3,weight4);
+    /*    private static Candidate crossover(Candidate parent1, Candidate parent2) {
+            double weight1 = rand.nextBoolean() ? parent1.pieceWeight : parent2.pieceWeight;
+            double weight2 = rand.nextBoolean() ? parent1.attackedMoreWeight : parent2.attackedMoreWeight;
+            double weight3 = rand.nextBoolean() ? parent1.distanceWeight : parent2.distanceWeight;
+            double weight4 = rand.nextBoolean() ? parent1.thirdLastRowMoreWeight : parent2.thirdLastRowMoreWeight;
+
+            return new Candidate(weight1, weight2, weight3,weight4);
+        }*/
+    private static Candidate crossover(Candidate parent1, Candidate parent2) {
+        double alpha = 0.5;
+        double weight1 = blxAlphaCrossover(parent1.pieceWeight, parent2.pieceWeight, alpha);
+        double weight2 = blxAlphaCrossover(parent1.attackedMoreWeight, parent2.attackedMoreWeight, alpha);
+        double weight3 = blxAlphaCrossover(parent1.distanceWeight, parent2.distanceWeight, alpha);
+        double weight4 = blxAlphaCrossover(parent1.thirdLastRowMoreWeight, parent2.thirdLastRowMoreWeight, alpha);
+
+        return new Candidate(weight1, weight2, weight3, weight4);
+    }
+
+    private static double blxAlphaCrossover(double w1, double w2, double alpha) {
+        double min = Math.min(w1, w2);
+        double max = Math.max(w1, w2);
+        double range = max - min;
+        return min - range * alpha + rand.nextDouble() * range * (1 + 2 * alpha);
     }
 
     // Mutate the offspring parameters

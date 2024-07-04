@@ -1,5 +1,7 @@
-package ai;
+package misc.deprecated;
 
+import ai.BitBoardManipulation;
+import ai.Evaluate;
 import misc.Tools;
 import model.*;
 

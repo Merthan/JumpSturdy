@@ -65,6 +65,7 @@ class Candidate {
         MerthanAlphaBetaExperiment alpha = new MerthanAlphaBetaExperiment();
         BitBoard board = new BitBoard(Game.DEFAULT_BOARD);
         byte winningState = BitBoard.WINNER_ONGOING;
+        long start = System.currentTimeMillis();
         while(true){
             Evaluate.pieceWeight = c1Starts?c1.pieceWeight:c2.pieceWeight;
             Evaluate.attackedMoreWeight = c1Starts?c1.attackedMoreWeight:c2.attackedMoreWeight;
@@ -72,7 +73,7 @@ class Candidate {
             Evaluate.thirdLastMoreWeight= c1Starts?c1.thirdLastRowMoreWeight:c2.thirdLastRowMoreWeight;
 
 
-            byte[] move = alpha.findBestMove(board,redStarts,50).get(0);
+            byte[] move = alpha.findBestMove(board,redStarts,20).get(0);
             board.doMoveNoParse(move,redStarts,false);
 
             winningState = board.currentWinningState();
@@ -85,16 +86,24 @@ class Candidate {
             }
             redStarts = !redStarts;
             c1Starts = !c1Starts;//Flip, now other c2
+
+            if(System.currentTimeMillis()-start > 10000){//If this takes longer than 10 seconds, draw
+                System.out.println("Draw, history too long:"+board.previousMoves());
+                return 0;
+            }
         }
     }
 
-    private static int playGameVsDefault(double w1,double w2,double w3,double w4) {
+    private static int playGameVsDefault(double w1,double w2,double w3,double w4,int millis) {
         boolean c1Starts = Evo.rand.nextBoolean();//Not just start but also keeps track of current c1c2
         boolean redStarts = Evo.rand.nextBoolean();
+
+        long start = System.currentTimeMillis();
 
         MerthanAlphaBetaExperiment alpha = new MerthanAlphaBetaExperiment();
         BitBoard board = new BitBoard(Game.DEFAULT_BOARD);
         byte winningState = BitBoard.WINNER_ONGOING;
+        System.out.println();
         while(true){
             Evaluate.pieceWeight = c1Starts?w1:1;
             Evaluate.attackedMoreWeight = c1Starts?w2:1;
@@ -102,17 +111,28 @@ class Candidate {
             Evaluate.thirdLastMoreWeight= c1Starts?w4:1;
 
 
-            byte[] move = alpha.findBestMove(board,redStarts,100).get(0);
-            //System.out.println(((Evaluate.pieceWeight==1)?"DEFAULT: ":"Cand: ")+ (Tools.parseMoveToString(move))+" red:"+redStarts+ " c1:"+c1Starts);
-            board.doMoveNoParse(move,redStarts,true);
+            byte[] move = alpha.findBestMove(board,redStarts,millis).get(0);
 
+            if(board.previousMove.length>80 && board.previousMove.length % 20 == 0){
+                move = board.getAllPossibleMovesByteSorted(redStarts)[0];//If lots of previous moves, every 20.th turn do mostly random move
+                Tools.printRed("Too many moves, doing mostly random, length:"+board.previousMove.length);
+            }
+            //System.out.println(((Evaluate.pieceWeight==1)?"DEFAULT: ":"Cand: ")+ (Tools.parseMoveToString(move))+" red:"+redStarts+ " c1:"+c1Starts);
+            //System.out.println("winningstate:"+board.currentWinningState()+" before move: "+Tools.parseMoveToString(move)+" for:red="+redStarts+ " fen: "+board.toFEN());
+            board.doMoveNoParse(move,redStarts,true);
+            System.out.print("["+Tools.parseMoveToString(move)+"] ");
             winningState = board.currentWinningState();
             if(winningState!=BitBoard.WINNER_ONGOING){
-                System.out.println("c1Starts: "+c1Starts+ " won");
+                System.out.println("\nc1Starts: "+c1Starts+ " won");
                 //TODO: assuming c1Starts has correct state here as the move that c1Starts did lead to win
-                board.printCommented("Game:"+matchesPlayedCounter++ +"/"+(Evo.populationSize*Evo.opponentsPerCandidate)+" c1: "+c1Starts+ " red: "+redStarts +"\n|"+
+                board.printCommented("Game:"+matchesPlayedCounter++ +"/"+(Evo.populationSize*Evo.opponentsPerCandidate)+" c1: "+c1Starts+ " red: "+redStarts +" time taken:"+((System.currentTimeMillis()-start)/1000)+ "\n|"+
                         (c1Starts?"NEW":"DEFAULT")+"| won against |\n|"+ (!c1Starts?"NEW":"DEFAULT"));
                 return c1Starts? 1: -1; //-1= opponent won
+            }
+            //10 minutes currently upper limit per game
+            if(System.currentTimeMillis()-start > 600000){//If this takes longer than 10 seconds, draw
+                System.out.println("Draw, history too long:"+board.previousMoves());
+                return 0;
             }
             redStarts = !redStarts;
             c1Starts = !c1Starts;//Flip, now other c2
@@ -127,8 +147,16 @@ class Candidate {
         //playGame(new Candidate(1,1,1,1),new Candidate(2,1,3,3));
         for (int i = 0; i < 10; i++) {
             //playGameVsDefault(2,1,3,3);
-            playGameVsDefault(2,1,3,3);
+            //
+            // playGameVsDefault(2,1,3,3);
+            playGameVsDefault(0.5,0.34,0.10,0.05,2000);
         }
+
+        /**
+         * 10/10 won with 0.5,0.34,0.10,0.05 at 100ms
+         * 9/10 won with 0.5,0.34,0.10,0.05 at 200ms
+         * 4/10 won with 0.5,0.34,0.10,0.05 at 2000ms - each game took 2 minutes, around 20 total
+         * **/
     }
 
 }
