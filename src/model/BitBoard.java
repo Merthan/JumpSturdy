@@ -1067,7 +1067,8 @@ public class BitBoard {
         return isRed ? new long[]{redSingles, redDoubles, red_on_blue} : new long[]{blueSingles, blueDoubles, blue_on_red};
     }
 
-    public int countTotalPieces() {
+    public int countTotalPieces() {//TODO dont do this, | first and then bitcount is way faster
+        System.out.println("countTotalPieces() dont do this, | first and then bitcount is way faster");
         return Long.bitCount(redSingles) +
                 Long.bitCount(blueSingles) +
                 Long.bitCount(redDoubles) +

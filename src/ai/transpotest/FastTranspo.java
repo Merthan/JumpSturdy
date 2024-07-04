@@ -70,7 +70,7 @@ public class FastTranspo {
         return String.format("Entry: [Eval: %d, FromPos: %d, ToPos: %d, Depth: %d, Type: %d]", eval, fromPos, toPos, depth, type);
     }
 
-    @Deprecated//TEMP
+    //@Deprecated//TEMP
     public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
         long packedEntry = packEntry(eval, fromPos, toPos, depth, type);
         transpositionTable.put(zobristKey, packedEntry);

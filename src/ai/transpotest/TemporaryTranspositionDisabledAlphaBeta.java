@@ -84,7 +84,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
     static final boolean useTranspositionTable = false; //switch Transposition Table
     public final static boolean saveSequence = true;
 
-    public final static boolean log = false; //CHANGE WHEN NEEDED
+    public final static boolean log = true; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
 
     public static long ruhesucheTime=0;
