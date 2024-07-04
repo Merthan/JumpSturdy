@@ -179,8 +179,10 @@ public class BitBoardManipulation {
             System.out.println("lol");
             System.out.println();
         }*/
+        //TODO: added, new to prevent bug where single wants to go forward into enemy
+        long forwardMoveableDestinations = isRed? (~(blueSingles|redDoubles|blueDoubles|red_on_blue|blue_on_red)):(~(redSingles|redDoubles|blueDoubles|red_on_blue|blue_on_red));
 
-        long forwardMoves = shift(indexMask, -direction); //& jumpableBeforeMask;
+        long forwardMoves = shift(indexMask &(forwardMoveableDestinations), -direction); //& jumpableBeforeMask;
         tempCompared = (forwardMoves & singles);
         if (tempCompared != 0) return (byte) Long.numberOfTrailingZeros(tempCompared);
 

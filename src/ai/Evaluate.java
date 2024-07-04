@@ -244,10 +244,11 @@ public class Evaluate {
         //if(true) return 0;
 
         //Now with weights, simple cast no rounding for performance
-        return (int) (pieceWeight*(pieceWorthValue - enemyPieceWorthValue) +
+        //Now 100x so 0.3 values might not be ignored?
+        return (int) (100*(pieceWeight*(pieceWorthValue - enemyPieceWorthValue) +
                 attackedMoreWeight*(attackedMoreThanEnemy) +
                 distanceWeight*(enemyDistanceToEnd-redDistanceToEnd)+
-                thirdLastMoreWeight*(thirdLastRowMoreFiguresThanEnemy));
+                thirdLastMoreWeight*(thirdLastRowMoreFiguresThanEnemy)));
     }
 
     public static double pieceWeight= 1.0;

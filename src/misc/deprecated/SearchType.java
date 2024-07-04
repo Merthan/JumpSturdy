@@ -1,4 +1,4 @@
-package ai;
+package misc.deprecated;
 
 public enum SearchType {
     MINIMAX,

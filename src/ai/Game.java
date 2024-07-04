@@ -2,6 +2,8 @@ package ai;
 
 import ai.transpotest.TemporaryTranspositionDisabledAlphaBeta;
 import ai.transpotest.Zobrist;
+import misc.deprecated.SearchType;
+import misc.deprecated.SturdyJumpersAI;
 import model.BitBoard;
 import misc.Tools;
 import model.BoardException;
@@ -773,6 +775,17 @@ public class Game {
         //game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
         //game.advancedBotGame(b(DEFAULT_BOARD),300,true,false,true);
 
+/*        BitBoard b2 = b("5b0/1b0b0b01r02/6rr1/8/8/8/2r05/r01rr3");
+        b2.print();
+
+        BitBoard b3=b("4b01/1b0b0b01r02/6rr1/8/8/8/2r05/r01rr3");
+        b3.print();
+        System.out.println(b3.getAllPossibleMoveStrings(true));
+        List<byte[]> arr =new MerthanAlphaBetaExperiment().findBestMove(b3,true,2000);
+        System.out.println(arr);
+        Fixed a new bug here, related to possiblefrom
+
+        */
         /**AlphaBetaStart: move: C1-B2 has value:5
          AlphaBetaStart: move: C1-C2 has value:4
          AlphaBetaStart: move: C1-B1 has value:4
@@ -780,7 +793,7 @@ public class Game {
 
         //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-E5, E2-D4, E5-D4".split(", "));
         //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-D4, E2-D4".split(", "));
-        game.playVsBot();
+        //game.playVsBot();
 
     }
 }

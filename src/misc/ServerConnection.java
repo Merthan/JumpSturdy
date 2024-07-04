@@ -3,11 +3,10 @@ package misc;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 import ai.MerthanAlphaBetaExperiment;
-import ai.SearchType;
-import ai.SturdyJumpersAI;
+import misc.deprecated.SearchType;
+import misc.deprecated.SturdyJumpersAI;
 import model.BitBoard;
 
 public class ServerConnection {

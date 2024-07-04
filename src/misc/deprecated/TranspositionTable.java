@@ -1,4 +1,4 @@
-package ai;
+package misc.deprecated;
 
 import java.util.HashMap;
 import java.util.Map;

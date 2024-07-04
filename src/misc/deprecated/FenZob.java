@@ -1,4 +1,4 @@
-package ai.transpotest;
+package misc.deprecated;
 
 public class FenZob {
     public String fen;
