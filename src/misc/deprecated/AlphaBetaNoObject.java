@@ -1,5 +1,7 @@
-package ai;
+package misc.deprecated;
 
+import ai.BitBoardManipulation;
+import ai.Evaluate;
 import ai.transpotest.FastTranspo;
 import ai.transpotest.Zobrist;
 import misc.Tools;

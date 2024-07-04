@@ -458,6 +458,14 @@ public class Game {
     static int botGameBlueCounter =0;
     long timeLimitStuckSearchMillis = 1000;
 
+    /**
+     *
+     *
+     *
+     *
+     *
+     * */
+
     public void advancedBotGame(BitBoard board, int millis, boolean onlyNewAlphaBeta,boolean onlyPrintFinishedBoards,boolean newVsNewNoObjects) {
         byte winner = BitBoard.WINNER_ONGOING;
         int oldEval = Evaluate.evaluateComplex(board.redSingles, board.blueSingles, board.redDoubles, board.blueDoubles,
@@ -738,8 +746,6 @@ public class Game {
         //game.botWorldChampionship(random,200,3,false,true);
 
         //game.buildBoardFromDefault();
-        System.out.println(b(DEFAULT_BOARD+" r").redSingles);
-        System.out.println(b(DEFAULT_BOARD+" ").redSingles);
 
         //game.playVsBot();
         /**
@@ -794,6 +800,21 @@ public class Game {
         //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-E5, E2-D4, E5-D4".split(", "));
         //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"D7-D6, G2-G3, D6-D5, E1-E2, D5-D4, E2-D4".split(", "));
         //game.playVsBot();
+
+        //game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
+
+        //BitBoard.fromFen("b0b01b01b0/1b0b01b03/3b01b02/7b0/3r02b0r0/8/1r0r0r04/r0r0r0r0r0r0").print();
+
+        //BitBoard.fromFen("b0b01b01b0/1b0b01b03/3b01b02/7r0/3r02b01/8/1r0r0r04/r0r0r0r0r0r0").print();
+        Tools.printDivider();
+        //game.analyzeMoveSequence(b(DEFAULT_BOARD),true,"G7-G6, G2-G3, F7-E7, G3-G4, G6-G5, F1-G1, E7-D5, G1-F3, E7-E6, F2-F3, E6-F6, D2-D3, G5-H5, G4-H5, F6-G6, F3-G5, G6-H5, H5-H4".split(", "));
+        //game.botWorldChampionship(b(DEFAULT_BOARD),200,5,true,true);
+
+        //game.advancedBotGame(random,200,true,true,true);
+        MerthanAlphaBetaExperiment preserved = new MerthanAlphaBetaExperiment();
+        preserved.findBestMove(random,true,2000);
+
+        new TemporaryTranspositionDisabledAlphaBeta().findBestMove(random,true,2000);
 
     }
 }

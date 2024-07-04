@@ -219,7 +219,7 @@ public class BitBoard {
         boolean redOnBlueBitSet = (red_on_blue & (1L << position)) != 0;
         boolean blueOnRedBitSet = (blue_on_red & (1L << position)) != 0;
         if (!redSingleBitSet && !blueSingleBitSet && !redDoubleBitSet && !blueDoubleBitSet && !redOnBlueBitSet && !blueOnRedBitSet) {
-            printCommented("ERROR");
+            //printCommented("ERROR");
             throw new RuntimeException("Invalid position, either empty or corner" + position + " " + Tools.indexToStringPosition(position));
         }
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
@@ -742,6 +742,10 @@ public class BitBoard {
         return asText;
     }
 
+    public static BitBoard fromFen(String fen){
+        return new BitBoard(fen);
+    }
+
     public List<String> getAllPossibleMoveStringsSorted(boolean isRed){
         return getAllPossibleMoveStrings(isRed).stream().sorted().collect(Collectors.toList());
     }
@@ -1168,7 +1172,15 @@ public class BitBoard {
                 }
                 sb.append(" ");//now moved here after reset so it doesnt include the s
             }
-            boolean redDidLastMove = previousMove.length > 0 && isItRedsTurnByPositionOfPieces(previousMove[previousMove.length - 1]); //All complex code to show the previous moves in rows in colors
+            boolean redsTurn = true;
+            try {
+                redsTurn = isItRedsTurnByPositionOfPieces(previousMove[previousMove.length - 1]);
+            }catch (RuntimeException E){
+                E.printStackTrace();
+                System.out.println("isItRedsTurnByPositionOfPieces exception, Continuing");
+            }
+
+            boolean redDidLastMove = previousMove.length > 0 && redsTurn; //All complex code to show the previous moves in rows in colors
             String rowMove = (previousMove.length>= ((8-row)*2))? Tools.parseMoveToString(new byte[]{previousMove[ previousMove.length-1- ((7-row)*2+1)  ],previousMove[ previousMove.length-1- (7-row)*2 ]}) : "";
 
             //rowMove = (row % (redDidLastMove?2:1) == 0)? "\u001B[31m"+rowMove+ RESET : Tools.BLUE + rowMove+RESET;
