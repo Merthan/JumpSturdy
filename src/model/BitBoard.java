@@ -1039,7 +1039,7 @@ public class BitBoard {
         return b.toString()+" length: "+previousMove.length;
     }
 
-    public static final boolean preserveAllMoves = true; //TODO: Probably quite a performance impact, remove when not debugging; false means only has last move, true means every move
+    public static final boolean preserveAllMoves = false; //TODO: Probably quite a performance impact, remove when not debugging; false means only has last move, true means every move
 
 
 

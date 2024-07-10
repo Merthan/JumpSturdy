@@ -32,6 +32,12 @@
             <version>5.8.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil-core</artifactId>
+            <version>8.5.13</version>
+        </dependency>
+
     </dependencies>
     <build>
         <plugins>

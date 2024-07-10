@@ -814,6 +814,17 @@ public class Game {
         //game.advancedBotGame(random,200,true,true,true);
 
 
+        /**
+         * transpo disabled: 6 11/34
+         * enabled: 6 21/34
+         * enabled again: 7 1/34
+         *
+         * WITH LIBRARY-----
+         * disabled:6 13/34
+         * enabled: 28/34
+         * enabled again: 7 2/34
+         * */
+
         new TemporaryTranspositionDisabledAlphaBeta().findBestMove(random,true,2000);
 
         MerthanAlphaBetaExperiment preserved = new MerthanAlphaBetaExperiment(); // With transpo

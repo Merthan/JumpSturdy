@@ -364,7 +364,8 @@ public class TemporaryTranspositionDisabledAlphaBeta {
                 type = 1;//lower
             }
             //if(detailedLog) Tools.printBlue("TranspoEval:"+type+" evalbound:"+evalBound+" a:"+alpha+" b:"+beta);
-            fastTranspo.debugStoreEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type,board);
+            fastTranspo.storeEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type);
+            //fastTranspo.debugStoreEntry(incrementalZobristKey,evalBound,bestMove[0],bestMove[1],(byte) depth,type,board);
         }
         return evalBound;
     }

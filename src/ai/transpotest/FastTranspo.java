@@ -1,5 +1,7 @@
 package ai.transpotest;
 
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
 import misc.Tools;
 import model.BitBoard;
 
@@ -9,16 +11,18 @@ import java.util.Map;
 
 public class FastTranspo {
 
-    public Map<Long, Long> transpositionTable;
-
+    //public Map<Long, Long> transpositionTable;
+    //Now using primitive faster library
+    public Long2LongMap transpositionTable;
     public Zobrist zobrist;
     public FastTranspo() {
-        transpositionTable = new HashMap<>();
+        //transpositionTable = new HashMap<>();
+        transpositionTable = new Long2LongOpenHashMap();
         zobrist=new Zobrist();
     }
 
     // Pack evaluation, fromPos, toPos, depth, and type into a long
-    public long packEntry(int eval, byte fromPos, byte toPos, byte depth, byte type) {
+    public static long packEntry(int eval, byte fromPos, byte toPos, byte depth, byte type) {
         long packedEntry = 0L;
         packedEntry |= ((long) eval & 0xFFFFFFFFL) << 32;  // Evaluation 32 bits
         packedEntry |= ((long) fromPos & 0xFFL) << 24;     // fromPos 8 bits
@@ -71,9 +75,13 @@ public class FastTranspo {
     }
 
     //@Deprecated//TEMP
-    public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
+/*    public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
         long packedEntry = packEntry(eval, fromPos, toPos, depth, type);
         transpositionTable.put(zobristKey, packedEntry);
+    }*/
+
+    public void storeEntry(long zobristKey, int eval, byte fromPos, byte toPos, byte depth, byte type) {
+        transpositionTable.put(zobristKey, packEntry(eval, fromPos, toPos, depth, type));
     }
 
     public Map<Long, String> fenTableDebug = new HashMap<>();
