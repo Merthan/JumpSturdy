@@ -13,7 +13,7 @@ public class FastTranspo {
 
     //public Map<Long, Long> transpositionTable;
     //Now using primitive faster library
-    public Long2LongMap transpositionTable;
+    public Long2LongOpenHashMap transpositionTable;
     public Zobrist zobrist;
     public FastTranspo() {
         //transpositionTable = new HashMap<>();

@@ -418,16 +418,23 @@ public class MerthanAlphaBetaExperiment {
 
     List<byte[]> allReturnedMovesForRemisDetection = new ArrayList<>();//TODO: paused, currently not used, should be handled in server
 
+    int findBestMoveCounter =0;
+
     public List<byte[]> findBestMove(BitBoard board, boolean isRed, int timeLimitMillis) {
         timeoutReached = false;
         endTime = System.currentTimeMillis() + timeLimitMillis;
 
         endTime = dynamicTimeManagement ? (System.currentTimeMillis() + TIME_LIMIT) : (System.currentTimeMillis() + timeLimitMillis);
         bestDepthReached = 0;
+
         ArrayList<byte[]> bestMoveSequence = new ArrayList<>();
 
         if (useTranspositionTable) {
             zobrist.initializeCorrectBoardKey(board);//Sets the initial one, from here
+
+            if(findBestMoveCounter++ % 10 == 0 && false){//TODO: enable if outofmemory error, then test. Clears table every 10th move
+                fastTranspo.transpositionTable.clear();
+            }
         }
 
         int currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
