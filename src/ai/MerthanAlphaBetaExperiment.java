@@ -32,7 +32,7 @@ public class MerthanAlphaBetaExperiment {
     public static int cutoffCounter = 0;
 
 
-    static final boolean sortMovesBeforeEach = true;
+    static final boolean sortMovesBeforeEach = true; // deprecated now always true
     static final boolean useTranspositionTable = true; //switch Transposition Table
     public final static boolean saveSequence = false;
     public final static boolean dynamicTimeManagement = false;
@@ -126,8 +126,10 @@ public class MerthanAlphaBetaExperiment {
         byte[][] moves = null; // Already declared here now, might need to be initialized and checked when seeing if bestSavedMove contained
 
         if (useTranspositionTable) {
-            Long boxedResult = fastTranspo.transpositionTable.get(incrementalZobristKey);
-            long entry = boxedResult == null ? 0 : boxedResult;
+            //Long boxedResult = fastTranspo.transpositionTable.get(incrementalZobristKey);
+            //long entry = boxedResult == null ? 0 : boxedResult;
+
+            long entry = fastTranspo.transpositionTable.getOrDefault(incrementalZobristKey,0);
 
             if (entry != 0) {
                 //NEW; TEST; DELETE
@@ -158,7 +160,7 @@ public class MerthanAlphaBetaExperiment {
                         //evalBound = //maximizingPlayer? Integer.MIN_VALUE: beta;//TODO: these didnt work, other team won more
                     }
                     bestMoveFromTransposition = new byte[]{(byte) ((entry >> 24) & 0xFFL), (byte) ((entry >> 16) & 0xFFL)};
-                    moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+                    moves = board.getAllPossibleMovesByteSorted(maximizingPlayer); //: board.getAllPossibleMovesByte(maximizingPlayer);
                     byte fromPos = bestMoveFromTransposition[0];
                     boolean containsMove = false;
                     for (int i = 0; i < moves.length; i++) {
@@ -217,7 +219,7 @@ public class MerthanAlphaBetaExperiment {
             return finalEval;
         }
         if (moves == null) { // If not already initialized because we needed to check if transpo move is actually a valid move here (just in case); init only happening once for performance
-            moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(maximizingPlayer) : board.getAllPossibleMovesByte(maximizingPlayer);
+            moves = board.getAllPossibleMovesByteSorted(maximizingPlayer); //: board.getAllPossibleMovesByte(maximizingPlayer);
         }
         //Arrays.stream(moves).toList().stream().map(e->Tools.parseMoveToString(e)).collect(Collectors.joining(","))
         List<byte[]> currentBestMoves;
@@ -432,7 +434,7 @@ public class MerthanAlphaBetaExperiment {
         if (useTranspositionTable) {
             zobrist.initializeCorrectBoardKey(board);//Sets the initial one, from here
 
-            if(findBestMoveCounter++ % 20 == 0){//TODO: enable if outofmemory error, then test. Clears table every 10th move
+            if(findBestMoveCounter++ % 20 == 0){//TODO: enable if outofmemory error, then test. Clears table every 20th move
                 fastTranspo.transpositionTable.clear();
             }
         }
@@ -450,7 +452,7 @@ public class MerthanAlphaBetaExperiment {
             }
         }
 
-        byte[][] moves = sortMovesBeforeEach ? board.getAllPossibleMovesByteSorted(isRed) : board.getAllPossibleMovesByte(isRed);
+        byte[][] moves = board.getAllPossibleMovesByteSorted(isRed);// : board.getAllPossibleMovesByte(isRed);
         try {
 
             //without streams: 2061100n with streams: 2317900
