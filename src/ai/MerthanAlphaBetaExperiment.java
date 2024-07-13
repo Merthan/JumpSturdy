@@ -38,7 +38,7 @@ public class MerthanAlphaBetaExperiment {
     public final static boolean dynamicTimeManagement = false;
 
 
-    public final static boolean log = false; //CHANGE WHEN NEEDED
+    public final static boolean log = true; //CHANGE WHEN NEEDED
     public final static boolean detailedLog = false;
 
     public static long ruhesucheTime = 0;

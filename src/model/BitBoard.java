@@ -1039,7 +1039,7 @@ public class BitBoard {
         return b.toString()+" length: "+previousMove.length;
     }
 
-    public static final boolean preserveAllMoves = false; //TODO: Probably quite a performance impact, remove when not debugging; false means only has last move, true means every move
+    public static final boolean preserveAllMoves = true; //TODO: Probably quite a performance impact, remove when not debugging; false means only has last move, true means every move
 
 
 
@@ -1186,9 +1186,11 @@ public class BitBoard {
             boolean redsTurn = true;
             try {
                 redsTurn = isItRedsTurnByPositionOfPieces(previousMove[previousMove.length - 1]);
-            }catch (RuntimeException E){
-                E.printStackTrace();
-                System.out.println("isItRedsTurnByPositionOfPieces exception, Continuing");
+            }catch (ArrayIndexOutOfBoundsException E){
+                //E.printStackTrace();
+                //System.out.println("isItRedsTurnByPositionOfPieces exception, Continuing");
+
+                //Removed this, now arrayindex isnt a problem anymore if in a future state but without previous moves
             }
 
             boolean redDidLastMove = previousMove.length > 0 && redsTurn; //All complex code to show the previous moves in rows in colors

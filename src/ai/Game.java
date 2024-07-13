@@ -825,11 +825,18 @@ public class Game {
          * enabled again: 7 2/34
          * */
 
-        new TemporaryTranspositionDisabledAlphaBeta().findBestMove(random,true,2000);
+/*        new TemporaryTranspositionDisabledAlphaBeta().findBestMove(random,true,2000);
 
         MerthanAlphaBetaExperiment preserved = new MerthanAlphaBetaExperiment(); // With transpo
         preserved.findBestMove(random,true,2000);
         //calling again will lead to lots of transpo table use, resulting in depth 7
+        preserved.findBestMove(random,true,2000);*/
+
+        //game.advancedBotGame(random,1000,true,true,true);
+        //b("1b04/1b06/2b02bb2/2rr5/1r02r0b02/3r02b01/6r01/1r02r01").print();
+        //b("2b03/1b06/2b01r0bb2/2r01r03/1r04b01/3r02b01/6r01/1r02r01").print();
+        //b("2b03/1b06/2b01r0br2/2r05/1r06/3r02bb1/6r01/1r02r01").print();
+        MerthanAlphaBetaExperiment preserved = new MerthanAlphaBetaExperiment();
         preserved.findBestMove(random,true,2000);
     }
 }

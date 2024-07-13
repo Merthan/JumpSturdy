@@ -423,7 +423,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
         for (int depth = 1; depth < MerthanAlphaBetaExperiment.DELETE_UPPER_DEPTH_LIMIT; depth++) {
 
 
-            if(log)Tools.printInColor("New Depth reached: "+depth+" currentbest:"+currentBestValue,true);
+            if(log)Tools.printInColor("|New Depth reached: "+depth+" currentbest:"+currentBestValue,true);
 
             currentBestValue = isRed ? Integer.MIN_VALUE : Integer.MAX_VALUE; // Initialize based on the starting player, dont need the buffer variable
             //if(depth==6)break; //TODO REMOVE

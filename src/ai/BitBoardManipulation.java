@@ -276,46 +276,19 @@ public class BitBoardManipulation {
             //This gets a specific index thats attacked, IF there are multiple the first one is returned. This is basically the TO, the from we figure out
             byte mostForwardIndexOfAttacked = (byte) Long.numberOfTrailingZeros(attackedPositions);
 
-
             byte from = BitBoardManipulation.possibleFromPositionForToIndex(mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
             if(from == 0) throw new BoardException(board,"no valid from found in ruhesuche");
 
-            //For test:
-            //System.out.println("Attack played as: "+(isRed?"red ":"blue ") + Tools.indexToStringPosition(from)+"-"+Tools.indexToStringPosition(mostForwardIndexOfAttacked));
-
-/*            try {
-                TimeUnit.NANOSECONDS.sleep(1);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }*/
-            //System.out.print("'");
-
-
-/*            if(counter>maxTimesRuheSucheLooped){
-                maxTimesRuheSucheLooped = counter;
-                //maxLoopArray = bitboardAsLongArray.clone();
-                //System.out.println("Biggest Loop:");
-                //BitBoard.fromLongArray(bitboardAsLongArray)
-                //board.printWithBitboard("RuheMaxLooped: "+counter,attackedPositions);
-            }*/
             bitboardAsLongArray = BitBoardManipulation.doMoveAndReturnModifiedBitBoards(from, mostForwardIndexOfAttacked, isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
             //After playing move, switch sides I guess to see what they'd play
             isRed = !isRed;
             counter++;
 
             attackedPositions = BitBoardManipulation.calculateAttackedPositions(isRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-
-
         }
         maxTimeSingleRuheSucheExecuted = Math.max(maxTimeSingleRuheSucheExecuted,System.nanoTime()-startTime);
         totalTimeRuheSucheExecuted += System.nanoTime()-startTime;
         return Evaluate.evaluateComplex(bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-                //Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
-        //As soon as no attacks left anymore, calculate for starting party
-        //TODO: remove the minus if evaluate is fixed to account for both teams
-        //TODO: change return to what you guys might need, e.g. more than just evaluation int.
-        //return Evaluate.evaluateSimple(originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]) -
-        //        Evaluate.evaluateSimple(!originalIsRed, bitboardAsLongArray[0], bitboardAsLongArray[1], bitboardAsLongArray[2], bitboardAsLongArray[3], bitboardAsLongArray[4], bitboardAsLongArray[5]);
     }
 
     public static int[] ruhesucheWithPositions(BitBoard board, boolean isRed) {

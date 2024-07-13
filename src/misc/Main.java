@@ -1,6 +1,7 @@
 package misc;
 
 import ai.Game;
+import ai.MerthanAlphaBetaExperiment;
 import model.*;
 import misc.deprecated.JumpSturdyBoard;
 
@@ -12,28 +13,31 @@ public class Main {
     private static Random random = new Random();
 
     public static void main(String[] args) {
-        Game.main(args); //Only call Game misc.Main, then skip rest of this method
+        //Game.main(args); //Only call Game misc.Main, then skip rest of this method
 
-        if (true) return;
+        //if (true) return;
 
         String[] fens = new String[]{"b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0", "2bb3/5b02/1bb1bb2b0b0/2br3r01/2b0r04/5r0rr1/2rr2r02/3r02", "b05/8/2bb5/8/8/8/8/r05"};
 
-        String fen = fens[0];
-        System.out.println(fen);
-        JumpSturdyBoard temp = new JumpSturdyBoard(fen);
-        BitBoard b = new BitBoard();
+        String fen ="2b03/1b06/2b01r0br2/2r05/1r06/3r02bb1/6r01/1r02r01"; //fens[0];
+        //System.out.println(fen);
+        //JumpSturdyBoard temp = new JumpSturdyBoard(fen);
+        BitBoard b = new BitBoard(fen);
 
-        b.readBoard(temp.board);
-        System.out.println(b);
+        //b.readBoard(temp.board);
+        //System.out.println(b);
         //Benchmark.benchmark(b);
 
 
-        byte[] moves = Tools.parseMove("B8-B7");
-        b.moveSinglePiece(moves[0], moves[1], true);
+        //byte[] moves = Tools.parseMove("B8-B7");
+        //.moveSinglePiece(moves[0], moves[1], true);
         System.out.println(b);
+        b.print();
+        //System.out.println("-------------------------------------------");
+        System.out.println("-------------------------------------------");
+        MerthanAlphaBetaExperiment experiment = new MerthanAlphaBetaExperiment();
 
-        System.out.println("-------------------------------------------");
-        System.out.println("-------------------------------------------");
+        System.out.println(Tools.parseMoveToString(experiment.findBestMove(b,false,2000).get(0)));
         //b.displayBitboard(b.getPossibleMovesSingles(b.redSingles,false));
         //b.displayBitboard(b.getPossibleMovesDoubles(b.redDoubles,true));
         //System.out.println(b.checkWinCondition(b.redSingles, b.blueSingles));
