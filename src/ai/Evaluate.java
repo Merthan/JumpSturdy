@@ -54,12 +54,7 @@ public class Evaluate {
 
     @Deprecated
     public static int evaluateComplex(boolean isRed, long r, long b, long rr, long bb, long br, long rb) {
-/*        long ownSingles = isRed ? r : b;
-        long enemySingles = isRed ? b : r;
-        long ownDoubles = isRed ? rr : bb;
-        long enemyDoubles = isRed ? bb : rr;
-        long ownOnEnemy = isRed ? br : rb;
-        long enemyOnOwn = isRed ? rb : br;*/
+
 
         long redFigures = (r|rr|br);
         long blueFigures = (b|bb|rb);
@@ -100,21 +95,6 @@ public class Evaluate {
             }
         }
 
-
-        //start: 12, max 12 unless all enemies turned into bottom_on_double, then a single is worth double.
-        // Red_on_blue blue has zero value here, maybe too little? But worse than a single (1) cause blocked so maybe fitting
-        //doubles have double the value, (at least, as 2 figures inside) red_on_blue also has 2x value (change?)
-/*        int pieceWorthValue = Long.bitCount(isRed ? r : b) + (2 * Long.bitCount(isRed ? rr : bb)) + 2 * Long.bitCount(isRed ? br : rb);
-        int enemyPieceWorthValue = Long.bitCount(!isRed ? r : b) + (2 * Long.bitCount(!isRed ? rr : bb)) + 2 * Long.bitCount(!isRed ? br : rb);
-
-        long attackedFrom = BitBoardManipulation.calculateAttackedPositions(!isRed, r, b, rr, bb, br, rb); // Checks if attacking more than being attacked
-        long attacking = BitBoardManipulation.calculateAttackedPositions(isRed, r, b, rr, bb, br, rb);
-
-        int attackedMoreThanEnemy = Long.bitCount(attacking)-Long.bitCount(attackedFrom);
-
-        int distanceToEnd =  (isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
-        int enemyDistanceToEnd = (!isRed ? Long.numberOfLeadingZeros(redFigures) : Long.numberOfTrailingZeros(blueFigures))/8;//Reverse*/
-
         int pieceWorthValue = Long.bitCount(r) + (2 * Long.bitCount(rr)) + 2 * Long.bitCount(br);
         int enemyPieceWorthValue = Long.bitCount(b) + (2 * Long.bitCount(bb)) + 2 * Long.bitCount(rb);
 
@@ -128,18 +108,6 @@ public class Evaluate {
 
         int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(redFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(blueFiguresThatCanWinIfPromotedAndCloseFigures);
 
-        //DEBUG: COMMENT OUT WHEN NOT NEEDED/ALPHABETA
-        //System.out.println("pieceWorthValue: " + pieceWorthValue);
-        //System.out.println("enemyPieceWorthValue: " + enemyPieceWorthValue);
-
-        //System.out.println("8 - distanceToEnd: " + (8 - distanceToEnd));
-
-/*        System.out.println("pieceWorthValue - enemyPieceWorthValue: " + (pieceWorthValue - enemyPieceWorthValue));
-        System.out.println("attackedMoreThanEnemy: " + attackedMoreThanEnemy);
-        System.out.println("distanceToEndMoreThanEnemy:"+(enemyDistanceToEnd-distanceToEnd));
-        System.out.println("thirdLastRowMoreFiguresThanEnemy: " + thirdLastRowMoreFiguresThanEnemy);*/
-        //if(true) return 0;
-
         return (pieceWorthValue - enemyPieceWorthValue) +
                 (attackedMoreThanEnemy) +
                 //(8-distanceToEnd) +
@@ -148,12 +116,7 @@ public class Evaluate {
     }
 
     public static int evaluateComplex(long r, long b, long rr, long bb, long br, long rb) {
-/*        long ownSingles = isRed ? r : b;
-        long enemySingles = isRed ? b : r;
-        long ownDoubles = isRed ? rr : bb;
-        long enemyDoubles = isRed ? bb : rr;
-        long ownOnEnemy = isRed ? br : rb;
-        long enemyOnOwn = isRed ? rb : br;*/
+
 
         long redFigures = (r|rr|br);
         long blueFigures = (b|bb|rb);
@@ -230,18 +193,6 @@ public class Evaluate {
         int enemyDistanceToEnd = (Long.numberOfTrailingZeros(blueFigures))/8;//Reverse
 
         int thirdLastRowMoreFiguresThanEnemy = Long.bitCount(redFiguresThatCanWinIfPromotedAndCloseFigures) - Long.bitCount(blueFiguresThatCanWinIfPromotedAndCloseFigures);
-
-        //DEBUG: COMMENT OUT WHEN NOT NEEDED/ALPHABETA
-        //System.out.println("pieceWorthValue: " + pieceWorthValue);
-        //System.out.println("enemyPieceWorthValue: " + enemyPieceWorthValue);
-
-        //System.out.println("8 - distanceToEnd: " + (8 - distanceToEnd));
-
-/*        System.out.println("pieceWorthValue - enemyPieceWorthValue: " + (pieceWorthValue - enemyPieceWorthValue));
-        System.out.println("attackedMoreThanEnemy: " + attackedMoreThanEnemy);
-        System.out.println("distanceToEndMoreThanEnemy:"+(enemyDistanceToEnd-distanceToEnd));
-        System.out.println("thirdLastRowMoreFiguresThanEnemy: " + thirdLastRowMoreFiguresThanEnemy);*/
-        //if(true) return 0;
 
         //Now with weights, simple cast no rounding for performance
         //Now 100x so 0.3 values might not be ignored?

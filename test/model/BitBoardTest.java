@@ -2,7 +2,6 @@ package model;
 
 import ai.BitBoardManipulation;
 import ai.Evaluate;
-import misc.deprecated.JumpSturdyBoard;
 import misc.Tools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class BitBoardTest {
 
     public final String DEFAULT_BOARD = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0";
-    JumpSturdyBoard jumpSturdyBoard = new JumpSturdyBoard();
+    //JumpSturdyBoard jumpSturdyBoard = new JumpSturdyBoard();
     BitBoard board = new BitBoard();
 
     //Helper methods
@@ -46,7 +45,7 @@ public class BitBoardTest {
         setupBoardsWithFen(DEFAULT_BOARD);
     }
 
-    @Test
+/*    @Test
     void coordinatesTest() {
         String position = "F7-F6";
         int[] expected = new int[]{1, 5, 2, 5};
@@ -54,7 +53,7 @@ public class BitBoardTest {
         position = "B1-G8";
         expected = new int[]{7, 1, 0, 6};
         assertArrayEquals(JumpSturdyBoard.coordinatesFromMove(position), expected);
-    }
+    }*/
 
     @Test
     void fromFenTest() {

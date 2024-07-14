@@ -3,7 +3,7 @@ package model;
 import ai.Game;
 import ai.MerthanAlphaBetaExperiment;
 import ai.transpotest.FastTranspo;
-import ai.transpotest.TemporaryTranspositionDisabledAlphaBeta;
+import misc.deprecated.TemporaryTranspositionDisabledAlphaBeta;
 import ai.transpotest.Zobrist;
 import misc.Tools;
 import org.junit.jupiter.api.Test;

@@ -7,12 +7,20 @@ import misc.Tools;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static misc.deprecated.JumpSturdyBoard.*;
-import static misc.deprecated.JumpSturdyBoard.BLUE;
-import static misc.deprecated.JumpSturdyBoard.RED;
+
 import static misc.Tools.*;
 
 public class BitBoard {
+    //Imported from deleted old Jumpsturdyboard
+    public static final int EMPTY = 0;
+    public static final int CORNER = 9; // -1
+    public static final int RED_ON_RED = 1;  // 'A'
+    public static final int RED_ON_BLUE = 2; // 'B'
+    public static final int BLUE_ON_BLUE = 3; // 'C'
+    public static final int BLUE_ON_RED = 4;  // 'D'
+    public static final int RED = 5;          // 'X'
+    public static final int BLUE = 6;         // 'Y'
+
 
     public boolean redsTurn = true;
     private static final int BOARD_WIDTH = 8;
@@ -225,32 +233,6 @@ public class BitBoard {
         return redSingleBitSet || redDoubleBitSet || redOnBlueBitSet;//No check for all necessary as otherwise would throw, blues turn otherwise
     }
 
-    //Static as it might be used in other classes too
-    //TODO: REMOVE LATER FOR PERFORMANCE REASONS WHEN NOT THROWING
-/*    public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {  //Should not be called after bug has been detected/only in tests for performance reasons
-        boolean noOverlap = true;
-
-        for (byte position = 0; position < 64; position++) {
-            int bitCount = 0;
-
-            if ((redSingles & (1L << position)) != 0) bitCount++;
-            if ((blueSingles & (1L << position)) != 0) bitCount++;
-            if ((redDoubles & (1L << position)) != 0) bitCount++;
-            if ((blueDoubles & (1L << position)) != 0) bitCount++;
-            if ((red_on_blue & (1L << position)) != 0) bitCount++;
-            if ((blue_on_red & (1L << position)) != 0) bitCount++;
-
-            if (bitCount > 1) {
-                noOverlap = false;
-                Tools.printInColor("Overlap detected at position: " + position + " " + Tools.indexToStringPosition(position), true);
-            }
-        }
-
-        if (!noOverlap) {
-            // Tools.printInColor("No overlap in bit positions.", false);
-            throw new IllegalStateException("Overlaps in bitboards detected");
-        }
-    }*/
 
     public static void detectOverlap(long redSingles, long blueSingles, long redDoubles, long blueDoubles, long red_on_blue, long blue_on_red) {
         boolean noOverlap = true;
@@ -450,35 +432,6 @@ public class BitBoard {
         return !isRedTurn; //Now optionally returns whose turn it is in case we test chaining same team calls etc in later steps
     }
 
-    /*
-    public void doMoveVoid(String move, boolean isRedTurn,boolean checkIfPossible) {
-        byte[] indices = parseMove(move);
-        if(isItRedsTurnByPositionOfPieces(indices[0])!=isRedTurn){
-            throw new IllegalMoveException("Player cant move enemy piece");
-        }
-        if(checkIfPossible){
-            long possibleMoves =getPossibleMovesForIndividualPiece(indices[0],isRedTurn);
-
-            if((possibleMoves & (1L << indices[1])) == 0){//Move not included, index conversion
-                throw new IllegalMoveException("Move is not possible:" +move);
-            }
-        }
-        if (isRedTurn) {
-            if ((redDoubles != 0 && (redDoubles & (1L << indices[0])) != 0)
-                    ||(red_on_blue != 0 && (red_on_blue & (1L << indices[0])) != 0)    ) {
-                moveDoublePiece(indices[0], indices[1], true);
-            } else {
-                moveSinglePiece(indices[0], indices[1], true);
-            }
-        } else {
-            if ((blueDoubles != 0 && (blueDoubles & (1L << indices[0])) != 0)||(blue_on_red != 0 && (blue_on_red & (1L << indices[0])) != 0)) {
-                moveDoublePiece(indices[0], indices[1], false);
-            } else {
-                moveSinglePiece(indices[0], indices[1], false);
-            }
-        }
-    }*/
-
 
     public void moveSinglePiece(byte fromIndex, byte toIndex, boolean isRed) {
         long ownSingles = isRed ? redSingles : blueSingles;
@@ -591,12 +544,6 @@ public class BitBoard {
         long emptySpaces = ~(redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red) & CORNER_MASK; // All empty spaces
         long enemyPieces = isRed ? (blue_on_red | blueDoubles | blueSingles) : (redSingles | redDoubles | red_on_blue); // Enemy single figures
 
-        //commentedBits("Empty:",emptySpaces);
-        //commentedBits("Cornermask",CORNER_MASK);
-        //commentedBits("not_a",NOT_A_FILE);
-        //commentedBits("Enemy:",enemyPieces);
-        //commentedBits("Own:",singles);
-
         long jumpable = (emptySpaces | (isRed ? redSingles : blueSingles));
         // Forward moves (no capture)
         long forwardMoves = shift(singles, direction) & jumpable;//Removes all occupied spaces, TODO: maybe read doubleGenesis
@@ -611,68 +558,6 @@ public class BitBoard {
         //System.out.println("Possible moves:");
         return forwardMoves | leftMoves | rightMoves | leftCapture | rightCapture;
     }
-
-    //Die Version von @Merthan
-   /*public long getPossibleMovesDoubles(long doubles, boolean isRed) {
-        int[] moves = {17, 15, 10, 6};// Precalculated, negative for other direction,
-
-        // All occupied spaces
-        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
-        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
-
-        // Define jumpable spaces for doubles , TODO: Assuming you can jump from red double to red single to create another double
-        long jumpableSpaces = isRed ? (blue_on_red | blueDoubles | blueSingles | redSingles) : (red_on_blue | redDoubles | redSingles | blueSingles);
-
-        // Calculate moves
-        long possibleMoves = 0L;
-        for (int i = 0; i < moves.length; i++) {
-            long moveTargets;
-            int move = isRed ? moves[i] : -moves[i]; //Negative
-            moveTargets = shift(doubles, move) & (emptySpaces | jumpableSpaces); // Shift right or down
-            possibleMoves |= moveTargets;
-        }
-
-        return possibleMoves;
-    }*/
-
-
-/*    public long getPossibleMovesDoubles(long doubles, boolean isRed){//TODO: FIX KNIGHTS ON EDGES WRONG POSSIBLE MOVES
-        int[] moves = {17, 15, 10, 6};
-
-        // All occupied spaces
-        long occupiedSpaces = redSingles | blueSingles | redDoubles | blueDoubles | red_on_blue | blue_on_red;
-        long emptySpaces = ~occupiedSpaces & CORNER_MASK; // All empty spaces, excluding corners
-
-        //long emptyOrSingleDoubleable = (emptySpaces | (isRed ? redSingles : blueSingles) | (isRed? redDoubles : blueDoubles));
-        long jumpable = (emptySpaces | (redSingles|blueSingles) | (isRed?blueDoubles:redDoubles) | (isRed?blue_on_red:red_on_blue));
-
-        //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
-*//*        long twoLeftOneForwardMoves = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed ? moves[1] : -moves[1]) & jumpable;
-        long twoForwardOneLeftMoves = shift(doubles & NOT_AB_FILE, isRed ? moves[3] : -moves[3]) & jumpable;
-
-        long twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[0] : -moves[0]) & jumpable;
-        long twoForwardOneRightMoves = shift(doubles & NOT_GH_FILE, isRed ? moves[2] : -moves[2]) & jumpable;*//*
-        long twoLeftOneForwardMoves, twoForwardOneLeftMoves, twoRightOneForwardMoves, twoForwardOneRightMoves;
-
-        if (isRed) {
-            twoLeftOneForwardMoves = shift(doubles & NOT_AB_FILE, moves[1]) & jumpable;
-            twoForwardOneLeftMoves = shift(doubles & NOT_A_FILE, moves[3]) & jumpable;
-
-            twoRightOneForwardMoves = shift(doubles & NOT_GH_FILE, moves[0]) & jumpable;
-            twoForwardOneRightMoves = shift(doubles & NOT_H_FILE, moves[2]) & jumpable;
-        } else {
-            twoLeftOneForwardMoves = shift(doubles & NOT_GH_FILE, -moves[1]) & jumpable;
-            twoForwardOneLeftMoves = shift(doubles & NOT_H_FILE, -moves[3]) & jumpable;
-
-            twoRightOneForwardMoves = shift(doubles & NOT_AB_FILE, -moves[0]) & jumpable;
-            twoForwardOneRightMoves = shift(doubles & NOT_A_FILE, -moves[2]) & jumpable;
-        }
-
-
-        System.out.println("BB moves,"+isRed);
-        displayBitboard(twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves);
-        return twoLeftOneForwardMoves | twoForwardOneLeftMoves | twoRightOneForwardMoves | twoForwardOneRightMoves;
-    }*/
 
     public long getPossibleMovesDoubles(long doubles, boolean isRed) {//FIXED
         // All occupied spaces
@@ -691,26 +576,6 @@ public class BitBoard {
         return jumpable & (twoForwardOneLeft | oneForwardTwoLeft | twoForwardOneRight | oneForwardTwoRight);
         //All possible moves for doubles. We can capture on all 4 fields, though do we need extra capture?
 
-/*        long twoLeftOneForwardMoves = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?15:-15) & jumpable;
-        long twoForwardOneLeftMoves = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?6:-6) & jumpable;
-        long twoRightOneForwardMoves = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?17:-17) & jumpable;
-        long twoForwardOneRightMoves = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?10:-10) & jumpable;*/
-
-/*        long twoForwardOneLeft = shift(doubles & (isRed?NOT_H_FILE:NOT_A_FILE), isRed?15:-15) & jumpable;
-        long oneForwardTwoLeft = shift(doubles & (isRed?NOT_GH_FILE:NOT_AB_FILE), isRed?6:-6) & jumpable;
-        System.out.println("HERE");
-        Tools.displayBitboard(oneForwardTwoLeft);
-        Tools.displayBitboard(doubles);
-        Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));
-
-
-        long twoForwardOneRight = shift(doubles & (isRed?NOT_A_FILE:NOT_H_FILE), isRed?17:-17) & jumpable;
-        long oneForwardTwoRight = shift(doubles & (isRed?NOT_AB_FILE:NOT_GH_FILE), isRed?10:-10) & jumpable;*/
-
-        /*      System.out.println("HERE");
-        Tools.displayBitboard(oneForwardTwoLeft);
-        Tools.displayBitboard(doubles);
-        Tools.displayBitboard((isRed?NOT_GH_FILE:NOT_AB_FILE));*/
     }
 
     /**
@@ -784,26 +649,6 @@ public class BitBoard {
     }
 
 
-/*    public byte[][] generateByteMovesForPieces(boolean isRed) {
-        //TODO: only used for correct byte[] sizing, performance impact might or might not be worth it. Testing
-        long allMoves = getPossibleMovesForTeam(isRed);
-        byte[][] moveArray = new byte[Long.bitCount(allMoves)][2];
-        long ourPieces = (isRed?(redSingles|redDoubles|red_on_blue):(blueSingles|blueDoubles|blue_on_red));
-        int counter = 0;
-        for (byte fromIndex = 1; fromIndex < 63; fromIndex++) {
-            if((ourPieces & (1L << fromIndex)) != 0){//IF there is a piece at position
-                long moves = getPossibleMovesForIndividualPiece(fromIndex,isRed);
-                for (byte toIndex = 0; toIndex < 64; toIndex++) {
-                    if ((moves & (1L << toIndex)) != 0) {  // Valid move to toIndex
-                        //moveList.add(indexToStringPosition(fromIndex) + "-" + indexToStringPosition(toIndex));
-                        moveArray[counter++] = new byte[]{fromIndex,toIndex};
-                    }
-                }
-            }
-
-        }
-        return moveArray;
-    }*/
 
     /**
      *
@@ -973,16 +818,6 @@ public class BitBoard {
         //Removed move variable, returning directly as cant be both single and double
     }
 
-/*    public BitBoard longToBit (long[] bitBoards){ removed, member method taking performance and readability
-        BitBoard newBoard = new BitBoard();
-        newBoard.redSingles = bitBoards[0];
-        newBoard.blueSingles = bitBoards[1];
-        newBoard.redDoubles = bitBoards[2];
-        newBoard.blueDoubles = bitBoards[3];
-        newBoard.red_on_blue = bitBoards[4];
-        newBoard.blue_on_red = bitBoards[5];
-        return newBoard;
-    }*/
 
     public static BitBoard fromLongArray(long[] bitBoards) {
         BitBoard newBoard = new BitBoard();
@@ -1219,21 +1054,6 @@ public class BitBoard {
 
         return "";
     }
-
-
-/*    private String determineMoveEmoji(int start, int end) {
-        if(end-start==8) return "\uD83E\uDC83";
-        if(end-start==-8) return "\uD83E\uDC81";
-        if(end-start==1)return "\uD83E\uDC82";
-        if(end-start==-1)return "\uD83E\uDC80";
-
-        if(end-start==9)return "\uD83E\uDC86";
-        if(end-start==-9)return "\uD83E\uDC84";
-        if(end-start==7)return "\uD83E\uDC87";
-        if(end-start==-7)return "\uD83E\uDC85";
-
-        return null;
-    }*/
 
 
 }

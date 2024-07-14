@@ -1,9 +1,9 @@
-package ai.transpotest;
+package misc.deprecated;
 
 import ai.*;
+import ai.transpotest.FastTranspo;
+import ai.transpotest.Zobrist;
 import misc.Tools;
-import misc.deprecated.TranspositionTable;
-import misc.deprecated.ZobristHashing;
 import model.BitBoard;
 
 import java.util.ArrayList;
@@ -19,15 +19,15 @@ public class TemporaryTranspositionDisabledAlphaBeta {
 
     public long endTime;
     public int bestDepthReached;
-    private final ZobristHashing zobristHashing;
-    private final TranspositionTable transpositionTable;
+    //private final ZobristHashing zobristHashing;
+    //private final TranspositionTable transpositionTable;
 
     private final FastTranspo fastTranspo;
     private final Zobrist zobrist;
 
     public TemporaryTranspositionDisabledAlphaBeta() {
-        zobristHashing = new ZobristHashing();
-        transpositionTable = new TranspositionTable();
+        //zobristHashing = new ZobristHashing();
+        //transpositionTable = new TranspositionTable();
         fastTranspo = new FastTranspo();
         zobrist= fastTranspo.zobrist;
     }
@@ -497,7 +497,7 @@ public class TemporaryTranspositionDisabledAlphaBeta {
         counter=0;
         endReachedCounter =0;
         transpoCounter=0;
-        transpositionTable.clear();
+        //transpositionTable.clear();
 
 
         return bestMoveSequence;

@@ -3,8 +3,6 @@ package ai;
 import ai.transpotest.FastTranspo;
 import ai.transpotest.Zobrist;
 import misc.Tools;
-import misc.deprecated.TranspositionTable;
-import misc.deprecated.ZobristHashing;
 import model.BitBoard;
 import model.BoardException;
 

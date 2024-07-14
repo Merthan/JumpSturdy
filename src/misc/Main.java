@@ -1,9 +1,7 @@
 package misc;
 
-import ai.Game;
 import ai.MerthanAlphaBetaExperiment;
 import model.*;
-import misc.deprecated.JumpSturdyBoard;
 
 import java.util.List;
 import java.util.Random;
@@ -51,7 +49,6 @@ public class Main {
 
         //System.out.println("DISPLAYall");
         //System.out.println(b.getPossibleMovesSinglesString(b.redSingles,true)) ;
-    
       /*  System.out.println(b.getAllPossibleMoves(false));
         long[] move = BitBoard.parseMove(b.getAllPossibleMoves(false).get(4));
 
@@ -75,10 +72,10 @@ public class Main {
 
 
         System.out.println("FEN: " + fen);
-        JumpSturdyBoard board = new JumpSturdyBoard(fen);
+        //JumpSturdyBoard board = new JumpSturdyBoard(fen);
         //JumpSturdyBoard board = new JumpSturdyBoard("r0r0r0r0r0r0/1r0r0r0r0r0r0/8/8/8/8/1b0b0b0b0b0b0/b0b0b0b0b0b0");
-        System.out.println(board);
-        board.printBoard();
+        //System.out.println(board);
+        //board.printBoard();
 
 
     }
